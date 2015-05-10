@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Passwordgenerator</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="domain">Domain:</string>
+    <string name="masterpassword">Master-Passwort:</string>
+    <string name="special_characters">Sonderzeichen</string>
+    <string name="letters">Buchstaben</string>
+    <string name="numbers">Zahlen</string>
+    <string name="length">Länge:</string>
+    <string name="generator_button">Erzeugen</string>
+    <string name="password">Passwort:</string>
+    <string name="init_password"></string>
+</resources>
