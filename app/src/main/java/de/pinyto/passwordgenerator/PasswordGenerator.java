@@ -8,7 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by jonny on 10.05.15.
+ * This class handles the hashing and the creation of passwords. Please initialize first.
+ * Do not forget to hash at least once because otherwise the password might look not very
+ * random. It is safe to hash often because an attacker has to hash as often as you did for
+ * every try of a brute-force attack. getPassword creates a password string out of the hash
+ * digest.
  */
 public class PasswordGenerator {
 
@@ -34,64 +38,89 @@ public class PasswordGenerator {
 
     public String getPassword(boolean specialCharacters, boolean letters,
                             boolean numbers, int length) {
-        BigInteger hashNumber = BigInteger.valueOf(0);
-        for (int i = 0; i < hashValue.length; i++) {
-            hashNumber = hashNumber.multiply(BigInteger.valueOf(8)).
-                    add(BigInteger.valueOf(hashValue[i] & 0xFF));
-        }
+        byte[] positiveHashValue = new byte[hashValue.length + 1];
+        positiveHashValue[0] = 0;
+        System.arraycopy(hashValue, 0, positiveHashValue, 1, hashValue.length);
+        BigInteger hashNumber = new BigInteger(positiveHashValue);
         String password = "";
         if (specialCharacters || letters || numbers) {
-            List<String> characterSet = new ArrayList<String>();
+            List<String> characterSet = new ArrayList<>();
             if (specialCharacters) {
                 characterSet.add("#");
-                characterSet.add("$");
-                characterSet.add("|");
-                characterSet.add(";");
-                characterSet.add("&");
                 characterSet.add("!");
-                characterSet.add("{");
-                characterSet.add("}");
+                characterSet.add("\"");
+                characterSet.add("§");
+                characterSet.add("$");
+                characterSet.add("%");
+                characterSet.add("&");
+                characterSet.add("/");
                 characterSet.add("(");
                 characterSet.add(")");
-                characterSet.add("§");
+                characterSet.add("[");
+                characterSet.add("]");
+                characterSet.add("{");
+                characterSet.add("}");
+                characterSet.add("=");
+                characterSet.add("-");
+                characterSet.add("_");
+                characterSet.add("+");
+                characterSet.add("*");
                 characterSet.add("<");
                 characterSet.add(">");
-                characterSet.add("=");
-                characterSet.add("*");
-                characterSet.add("?");
-                characterSet.add("-");
+                characterSet.add(";");
                 characterSet.add(":");
-                characterSet.add("@");
-                characterSet.add("%");
-                characterSet.add("+");
+                characterSet.add(".");
             }
             if (letters) {
-                characterSet.add("a"); characterSet.add("A");
-                characterSet.add("b"); characterSet.add("B");
-                characterSet.add("c"); characterSet.add("C");
-                characterSet.add("d"); characterSet.add("D");
-                characterSet.add("e"); characterSet.add("E");
-                characterSet.add("f"); characterSet.add("F");
-                characterSet.add("g"); characterSet.add("G");
-                characterSet.add("h"); characterSet.add("H");
+                characterSet.add("A");
+                characterSet.add("B");
+                characterSet.add("C");
+                characterSet.add("D");
+                characterSet.add("E");
+                characterSet.add("F");
+                characterSet.add("G");
+                characterSet.add("H");
+                characterSet.add("J");
+                characterSet.add("K");
+                characterSet.add("L");
+                characterSet.add("M");
+                characterSet.add("N");
+                characterSet.add("P");
+                characterSet.add("Q");
+                characterSet.add("R");
+                characterSet.add("T");
+                characterSet.add("U");
+                characterSet.add("V");
+                characterSet.add("W");
+                characterSet.add("X");
+                characterSet.add("Y");
+                characterSet.add("Z");
+                characterSet.add("a");
+                characterSet.add("b");
+                characterSet.add("c");
+                characterSet.add("d");
+                characterSet.add("e");
+                characterSet.add("f");
+                characterSet.add("g");
+                characterSet.add("h");
                 characterSet.add("i");
-                characterSet.add("j"); characterSet.add("J");
-                characterSet.add("k"); characterSet.add("K");
-                                       characterSet.add("L");
-                characterSet.add("m"); characterSet.add("M");
-                characterSet.add("n"); characterSet.add("N");
+                characterSet.add("j");
+                characterSet.add("k");
+                characterSet.add("l");
+                characterSet.add("m");
+                characterSet.add("n");
                 characterSet.add("o");
-                characterSet.add("p"); characterSet.add("P");
-                characterSet.add("q"); characterSet.add("Q");
-                characterSet.add("r"); characterSet.add("R");
+                characterSet.add("p");
+                characterSet.add("q");
+                characterSet.add("r");
                 characterSet.add("s");
-                characterSet.add("t"); characterSet.add("T");
-                characterSet.add("u"); characterSet.add("U");
-                characterSet.add("v"); characterSet.add("V");
-                characterSet.add("w"); characterSet.add("W");
-                characterSet.add("x"); characterSet.add("X");
-                characterSet.add("y"); characterSet.add("Y");
-                characterSet.add("z"); characterSet.add("Z");
+                characterSet.add("t");
+                characterSet.add("u");
+                characterSet.add("v");
+                characterSet.add("w");
+                characterSet.add("x");
+                characterSet.add("y");
+                characterSet.add("z");
             }
             if (numbers) {
                 characterSet.add("0");
@@ -108,13 +137,13 @@ public class PasswordGenerator {
             BigInteger setSize = BigInteger.valueOf(characterSet.size());
             while (hashNumber.compareTo(setSize) >= 0) {
                 BigInteger[] divAndMod = hashNumber.divideAndRemainder(setSize);
-                hashNumber = divAndMod[0].add(BigInteger.valueOf(1));
+                hashNumber = divAndMod[0].subtract(BigInteger.valueOf(1));
                 int mod = divAndMod[1].intValue();
                 password = password + characterSet.get(mod);
             }
             password = password + characterSet.get(hashNumber.intValue());
         }
-        return password.substring(0, Math.min(length, password.length()));
+        return password.substring(Math.max(0, password.length()-length));
     }
 
 }
