@@ -5,6 +5,8 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -68,6 +70,22 @@ public class MainActivity extends ActionBarActivity {
                 invalidateOptionsMenu();
             }
         });
+        TextWatcher changeEditTextListener = new TextWatcher(){
+            public void beforeTextChanged(CharSequence s, int start, int count, int after){}
+            public void onTextChanged(CharSequence s, int start, int before, int count){}
+            public void afterTextChanged(Editable editable) {
+                isGenerated = false;
+                invalidateOptionsMenu();
+                TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
+                textViewPassword.setText("");
+            }
+        };
+        EditText editTextDomain =
+                (EditText) findViewById(R.id.editTextDomain);
+        editTextDomain.addTextChangedListener(changeEditTextListener);
+        EditText editTextMasterPassword =
+                (EditText) findViewById(R.id.editTextMasterPassword);
+        editTextMasterPassword.addTextChangedListener(changeEditTextListener);
     }
 
     @Override
