@@ -1,5 +1,8 @@
 package de.pinyto.passwordgenerator;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -13,6 +16,8 @@ import android.widget.TextView;
 
 
 public class MainActivity extends ActionBarActivity {
+
+    private boolean isGenerated = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,7 +39,6 @@ public class MainActivity extends ActionBarActivity {
         });
         Button generateButton = (Button) findViewById(R.id.generatorButton);
         generateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
             public void onClick(View v) {
                 EditText editTextDomain =
                         (EditText) findViewById(R.id.editTextDomain);
@@ -60,6 +64,8 @@ public class MainActivity extends ActionBarActivity {
                         seekBarLength.getProgress() + 4);
                 TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
                 textViewPassword.setText(password);
+                isGenerated = true;
+                invalidateOptionsMenu();
             }
         });
     }
@@ -67,8 +73,10 @@ public class MainActivity extends ActionBarActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        // getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+        getMenuInflater().inflate(R.menu.activity_main_actions, menu);
+        MenuItem copyItem = menu.findItem(R.id.action_copy);
+        copyItem.setVisible(isGenerated);
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -79,7 +87,15 @@ public class MainActivity extends ActionBarActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_copy) {
+            TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
+            ClipData clipDataPassword = ClipData.newPlainText(
+                    "password",
+                    textViewPassword.getText()
+            );
+            ClipboardManager clipboard =
+                    (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            clipboard.setPrimaryClip(clipDataPassword);
             return true;
         }
 

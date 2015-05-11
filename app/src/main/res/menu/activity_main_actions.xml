@@ -1,0 +1,10 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
+    <!-- Search, should appear as action button -->
+    <item android:id="@+id/action_copy"
+          android:icon="@drawable/ic_action_copy"
+          android:title="@string/action_copy"
+          android:orderInCategory="100"
+          app:showAsAction="ifRoom" />
+</menu>
