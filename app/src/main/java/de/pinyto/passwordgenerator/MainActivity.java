@@ -25,6 +25,18 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ClipboardManager clipboard =
+                (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboard.hasPrimaryClip()) {
+            ClipData clipDataCurrent = clipboard.getPrimaryClip();
+            CharSequence pasteData = clipDataCurrent.getItemAt(0).getText();
+            if (pasteData != null) {
+                DomainExtractor extractor = new DomainExtractor();
+                EditText editTextDomain =
+                        (EditText) findViewById(R.id.editTextDomain);
+                editTextDomain.setText(extractor.extract(pasteData.toString()));
+            }
+        }
         SeekBar seekBarLength = (SeekBar) findViewById(R.id.seekBarLength);
         seekBarLength.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
