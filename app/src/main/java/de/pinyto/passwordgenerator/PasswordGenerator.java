@@ -131,7 +131,7 @@ public class PasswordGenerator {
             BigInteger setSize = BigInteger.valueOf(characterSet.size());
             while (hashNumber.compareTo(setSize) >= 0 && password.length() < length) {
                 BigInteger[] divAndMod = hashNumber.divideAndRemainder(setSize);
-                hashNumber = divAndMod[0].subtract(BigInteger.valueOf(1));
+                hashNumber = divAndMod[0];
                 int mod = divAndMod[1].intValue();
                 password += characterSet.get(mod);
             }
