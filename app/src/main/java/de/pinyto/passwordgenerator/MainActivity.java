@@ -62,7 +62,7 @@ public class MainActivity extends ActionBarActivity {
                 generator.initialize(
                         editTextDomain.getText().toString(),
                         editTextMasterPassword.getText().toString());
-                generator.hash(1);
+                generator.hash(4096);
                 CheckBox checkBoxSpecialCharacters =
                         (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
                 CheckBox checkBoxLetters =
@@ -82,7 +82,25 @@ public class MainActivity extends ActionBarActivity {
                 invalidateOptionsMenu();
             }
         });
-        TextWatcher changeEditTextListener = new TextWatcher(){
+        EditText editTextDomain =
+                (EditText) findViewById(R.id.editTextDomain);
+        editTextDomain.addTextChangedListener(new TextWatcher(){
+            public void beforeTextChanged(CharSequence s, int start, int count, int after){}
+            public void onTextChanged(CharSequence s, int start, int before, int count){}
+            public void afterTextChanged(Editable editable) {
+                EditText editTextDomain =
+                        (EditText) findViewById(R.id.editTextDomain);
+                Button generateButton = (Button) findViewById(R.id.generatorButton);
+                generateButton.setEnabled(editTextDomain.getText().length() >= 1);
+                isGenerated = false;
+                invalidateOptionsMenu();
+                TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
+                textViewPassword.setText("");
+            }
+        });
+        EditText editTextMasterPassword =
+                (EditText) findViewById(R.id.editTextMasterPassword);
+        editTextMasterPassword.addTextChangedListener(new TextWatcher(){
             public void beforeTextChanged(CharSequence s, int start, int count, int after){}
             public void onTextChanged(CharSequence s, int start, int before, int count){}
             public void afterTextChanged(Editable editable) {
@@ -91,13 +109,7 @@ public class MainActivity extends ActionBarActivity {
                 TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
                 textViewPassword.setText("");
             }
-        };
-        EditText editTextDomain =
-                (EditText) findViewById(R.id.editTextDomain);
-        editTextDomain.addTextChangedListener(changeEditTextListener);
-        EditText editTextMasterPassword =
-                (EditText) findViewById(R.id.editTextMasterPassword);
-        editTextMasterPassword.addTextChangedListener(changeEditTextListener);
+        });
     }
 
     @Override

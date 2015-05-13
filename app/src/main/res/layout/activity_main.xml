@@ -103,6 +103,7 @@
         android:layout_centerVertical="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
+        android:enabled="false"
         android:visibility="visible" />
 
     <TextView

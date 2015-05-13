@@ -2,8 +2,6 @@ package de.pinyto.passwordgenerator;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,23 +15,19 @@ import java.util.List;
 public class PasswordGenerator {
 
     private byte[] hashValue;
+    private byte[] salt;
 
     public void initialize(String domain, String masterPassword) {
         try {
-            hashValue = (domain + masterPassword + "c't ist toll!").getBytes("UTF-8");
+            hashValue = (domain + masterPassword).getBytes("UTF-8");
+            salt = ("pepper").getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
     }
 
     public void hash(int iterations) {
-        try {
-            MessageDigest hasher = MessageDigest.getInstance("SHA-256");
-            hasher.update(hashValue);
-            hashValue = hasher.digest();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
+        hashValue = PBKDF2_HMAC.sha512(hashValue, salt, iterations);
     }
 
     public String getPassword(boolean specialCharacters, boolean letters,
@@ -45,56 +39,7 @@ public class PasswordGenerator {
         String password = "";
         if (specialCharacters || letters || numbers) {
             List<String> characterSet = new ArrayList<>();
-            if (specialCharacters) {
-                characterSet.add("#");
-                characterSet.add("!");
-                characterSet.add("\"");
-                characterSet.add("§");
-                characterSet.add("$");
-                characterSet.add("%");
-                characterSet.add("&");
-                characterSet.add("/");
-                characterSet.add("(");
-                characterSet.add(")");
-                characterSet.add("[");
-                characterSet.add("]");
-                characterSet.add("{");
-                characterSet.add("}");
-                characterSet.add("=");
-                characterSet.add("-");
-                characterSet.add("_");
-                characterSet.add("+");
-                characterSet.add("*");
-                characterSet.add("<");
-                characterSet.add(">");
-                characterSet.add(";");
-                characterSet.add(":");
-                characterSet.add(".");
-            }
             if (letters) {
-                characterSet.add("A");
-                characterSet.add("B");
-                characterSet.add("C");
-                characterSet.add("D");
-                characterSet.add("E");
-                characterSet.add("F");
-                characterSet.add("G");
-                characterSet.add("H");
-                characterSet.add("J");
-                characterSet.add("K");
-                characterSet.add("L");
-                characterSet.add("M");
-                characterSet.add("N");
-                characterSet.add("P");
-                characterSet.add("Q");
-                characterSet.add("R");
-                characterSet.add("T");
-                characterSet.add("U");
-                characterSet.add("V");
-                characterSet.add("W");
-                characterSet.add("X");
-                characterSet.add("Y");
-                characterSet.add("Z");
                 characterSet.add("a");
                 characterSet.add("b");
                 characterSet.add("c");
@@ -121,6 +66,29 @@ public class PasswordGenerator {
                 characterSet.add("x");
                 characterSet.add("y");
                 characterSet.add("z");
+                characterSet.add("A");
+                characterSet.add("B");
+                characterSet.add("C");
+                characterSet.add("D");
+                characterSet.add("E");
+                characterSet.add("F");
+                characterSet.add("G");
+                characterSet.add("H");
+                characterSet.add("J");
+                characterSet.add("K");
+                characterSet.add("L");
+                characterSet.add("M");
+                characterSet.add("N");
+                characterSet.add("P");
+                characterSet.add("Q");
+                characterSet.add("R");
+                characterSet.add("T");
+                characterSet.add("U");
+                characterSet.add("V");
+                characterSet.add("W");
+                characterSet.add("X");
+                characterSet.add("Y");
+                characterSet.add("Z");
             }
             if (numbers) {
                 characterSet.add("0");
@@ -134,16 +102,44 @@ public class PasswordGenerator {
                 characterSet.add("8");
                 characterSet.add("9");
             }
+            if (specialCharacters) {
+                characterSet.add("#");
+                characterSet.add("!");
+                characterSet.add("\"");
+                characterSet.add("§");
+                characterSet.add("$");
+                characterSet.add("%");
+                characterSet.add("&");
+                characterSet.add("/");
+                characterSet.add("(");
+                characterSet.add(")");
+                characterSet.add("[");
+                characterSet.add("]");
+                characterSet.add("{");
+                characterSet.add("}");
+                characterSet.add("=");
+                characterSet.add("-");
+                characterSet.add("_");
+                characterSet.add("+");
+                characterSet.add("*");
+                characterSet.add("<");
+                characterSet.add(">");
+                characterSet.add(";");
+                characterSet.add(":");
+                characterSet.add(".");
+            }
             BigInteger setSize = BigInteger.valueOf(characterSet.size());
-            while (hashNumber.compareTo(setSize) >= 0) {
+            while (hashNumber.compareTo(setSize) >= 0 && password.length() < length) {
                 BigInteger[] divAndMod = hashNumber.divideAndRemainder(setSize);
                 hashNumber = divAndMod[0].subtract(BigInteger.valueOf(1));
                 int mod = divAndMod[1].intValue();
-                password = password + characterSet.get(mod);
+                password += characterSet.get(mod);
             }
-            password = password + characterSet.get(hashNumber.intValue());
+            if (hashNumber.compareTo(setSize) < 0 && password.length() < length) {
+                password += characterSet.get(hashNumber.intValue());
+            }
         }
-        return password.substring(Math.max(0, password.length()-length));
+        return password;
     }
 
 }
