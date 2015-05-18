@@ -11,17 +11,18 @@
         android:layout_height="wrap_content"
         android:id="@+id/textViewDomainHeading" />
 
-    <EditText
+    <AutoCompleteTextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/textViewDomainHeading"
-        android:id="@+id/editTextDomain" />
+        android:id="@+id/autoCompleteTextViewDomain"
+        android:completionThreshold="@integer/completionThreshold" />
 
     <TextView
         android:text="@string/masterpassword"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/editTextDomain"
+        android:layout_below="@+id/autoCompleteTextViewDomain"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:id="@+id/textViewMasterpasswordHeading" />
@@ -82,7 +83,7 @@
         android:id="@+id/textViewLengthDisplay"
         android:layout_below="@+id/checkBoxNumbers"
         android:layout_toRightOf="@+id/textViewLengthHeading"
-        android:layout_marginLeft="4dp"/>
+        android:layout_marginLeft="4dp" />
 
     <SeekBar
         android:layout_width="match_parent"
@@ -124,7 +125,37 @@
         android:layout_below="@+id/textViewMPasswordHeading"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
+        android:gravity="center"
         android:textAlignment="center" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="@string/iteration_count_beginning"
+        android:id="@+id/iterationCountBeginning"
+        android:layout_below="@+id/textViewPassword"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="4096"
+        android:id="@+id/iterationCount"
+        android:layout_below="@+id/textViewPassword"
+        android:layout_toRightOf="@+id/iterationCountBeginning"
+        android:layout_marginLeft="4dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="@string/iteration_count_end"
+        android:id="@+id/iterationCountEnd"
+        android:layout_below="@+id/textViewPassword"
+        android:layout_toRightOf="@+id/iterationCount"
+        android:layout_marginLeft="4dp" />
 
 </RelativeLayout>

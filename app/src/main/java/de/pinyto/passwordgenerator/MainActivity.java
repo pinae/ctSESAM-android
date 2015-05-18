@@ -3,6 +3,7 @@ package de.pinyto.passwordgenerator;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.Editable;
@@ -10,21 +11,56 @@ import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import java.util.Iterator;
+import java.util.Set;
+import java.util.HashSet;
+
 
 public class MainActivity extends ActionBarActivity {
 
     private boolean isGenerated = false;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    private void setIterationCountVisibility(int visible) {
+        TextView textViewIterationCountBeginning =
+                (TextView) findViewById(R.id.iterationCountBeginning);
+        textViewIterationCountBeginning.setVisibility(visible);
+        TextView textViewIterationCount =
+                (TextView) findViewById(R.id.iterationCount);
+        textViewIterationCount.setVisibility(visible);
+        TextView textViewIterationCountEnd =
+                (TextView) findViewById(R.id.iterationCountEnd);
+        textViewIterationCountEnd.setVisibility(visible);
+    }
+
+    private void loadAutoCompleteFromSettings() {
+        SharedPreferences savedDomains = getSharedPreferences("savedDomains", MODE_PRIVATE);
+        Set<String> domainSet = savedDomains.getStringSet("domainSet", new HashSet<String>());
+        String[] domainList = new String[0];
+        if (domainSet != null) {
+            domainList = new String[domainSet.size()];
+            Iterator it = domainSet.iterator();
+            int i = 0;
+            while (it.hasNext()) {
+                domainList[i] = (String) it.next();
+                i++;
+            }
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                    android.R.layout.simple_dropdown_item_1line, domainList);
+            AutoCompleteTextView autoCompleteTextViewDomain =
+                    (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
+            autoCompleteTextViewDomain.setAdapter(adapter);
+        }
+    }
+
+    private void setDomainFieldFromClipboard() {
         ClipboardManager clipboard =
                 (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
         if (clipboard.hasPrimaryClip()) {
@@ -32,11 +68,91 @@ public class MainActivity extends ActionBarActivity {
             CharSequence pasteData = clipDataCurrent.getItemAt(0).getText();
             if (pasteData != null) {
                 DomainExtractor extractor = new DomainExtractor();
-                EditText editTextDomain =
-                        (EditText) findViewById(R.id.editTextDomain);
-                editTextDomain.setText(extractor.extract(pasteData.toString()));
+                AutoCompleteTextView autoCompleteTextViewDomain =
+                        (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
+                autoCompleteTextViewDomain.setText(extractor.extract(pasteData.toString()));
             }
         }
+    }
+
+    private String generatePassword(int iterations) {
+        AutoCompleteTextView autoCompleteTextViewDomain =
+                (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
+        String domain = autoCompleteTextViewDomain.getText().toString();
+        EditText editTextMasterPassword =
+                (EditText) findViewById(R.id.editTextMasterPassword);
+        PasswordGenerator generator = new PasswordGenerator();
+        generator.initialize(
+                domain,
+                editTextMasterPassword.getText().toString());
+        generator.hash(iterations);
+        CheckBox checkBoxSpecialCharacters =
+                (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
+        CheckBox checkBoxLetters =
+                (CheckBox) findViewById(R.id.checkBoxLetters);
+        CheckBox checkBoxNumbers =
+                (CheckBox) findViewById(R.id.checkBoxNumbers);
+        SeekBar seekBarLength =
+                (SeekBar) findViewById(R.id.seekBarLength);
+        return generator.getPassword(
+                checkBoxSpecialCharacters.isChecked(),
+                checkBoxLetters.isChecked(),
+                checkBoxNumbers.isChecked(),
+                seekBarLength.getProgress() + 4);
+    }
+
+    private void saveSettings(int iterations) {
+        AutoCompleteTextView autoCompleteTextViewDomain =
+                (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
+        String domain = autoCompleteTextViewDomain.getText().toString();
+        CheckBox checkBoxSpecialCharacters =
+                (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
+        CheckBox checkBoxLetters =
+                (CheckBox) findViewById(R.id.checkBoxLetters);
+        CheckBox checkBoxNumbers =
+                (CheckBox) findViewById(R.id.checkBoxNumbers);
+        SeekBar seekBarLength =
+                (SeekBar) findViewById(R.id.seekBarLength);
+        SharedPreferences savedDomains = getSharedPreferences("savedDomains", MODE_PRIVATE);
+        Set<String> domainSet = savedDomains.getStringSet(
+                "domainSet",
+                new HashSet<String>()
+        );
+        if (domainSet != null) {
+            domainSet.add(domain);
+        }
+        SharedPreferences.Editor savedDomainsEditor = savedDomains.edit();
+        savedDomainsEditor.putStringSet("domainSet", domainSet);
+        savedDomainsEditor.putBoolean(
+                domain + "_letters",
+                checkBoxLetters.isChecked()
+        );
+        savedDomainsEditor.putBoolean(
+                domain + "_numbers",
+                checkBoxNumbers.isChecked()
+        );
+        savedDomainsEditor.putBoolean(
+                domain + "_special_characters",
+                checkBoxSpecialCharacters.isChecked()
+        );
+        savedDomainsEditor.putInt(
+                domain + "_length",
+                seekBarLength.getProgress() + 4
+        );
+        savedDomainsEditor.putInt(
+                domain + "_iterations",
+                iterations
+        );
+        savedDomainsEditor.commit();
+    }
+
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        setIterationCountVisibility(View.INVISIBLE);
+        loadAutoCompleteFromSettings();
+        setDomainFieldFromClipboard();
+
         SeekBar seekBarLength = (SeekBar) findViewById(R.id.seekBarLength);
         seekBarLength.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -51,53 +167,92 @@ public class MainActivity extends ActionBarActivity {
             public void onStopTrackingTouch(SeekBar seekBar) {
             }
         });
+
         Button generateButton = (Button) findViewById(R.id.generatorButton);
         generateButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                EditText editTextDomain =
-                        (EditText) findViewById(R.id.editTextDomain);
-                EditText editTextMasterPassword =
-                        (EditText) findViewById(R.id.editTextMasterPassword);
-                PasswordGenerator generator = new PasswordGenerator();
-                generator.initialize(
-                        editTextDomain.getText().toString(),
-                        editTextMasterPassword.getText().toString());
-                generator.hash(4096);
-                CheckBox checkBoxSpecialCharacters =
-                        (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
-                CheckBox checkBoxLetters =
-                        (CheckBox) findViewById(R.id.checkBoxLetters);
-                CheckBox checkBoxNumbers =
-                        (CheckBox) findViewById(R.id.checkBoxNumbers);
-                SeekBar seekBarLength =
-                        (SeekBar) findViewById(R.id.seekBarLength);
-                String password = generator.getPassword(
-                        checkBoxSpecialCharacters.isChecked(),
-                        checkBoxLetters.isChecked(),
-                        checkBoxNumbers.isChecked(),
-                        seekBarLength.getProgress() + 4);
+                // Load fields
+                AutoCompleteTextView autoCompleteTextViewDomain =
+                        (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
+                String domain = autoCompleteTextViewDomain.getText().toString();
+                // Load iteration count from settings
+                SharedPreferences savedDomains = getSharedPreferences("savedDomains", MODE_PRIVATE);
+                int iterations = savedDomains.getInt(
+                        domain + "_iterations",
+                        4096
+                );
+                if (isGenerated) {
+                    iterations++;
+                }
+                // Generate password
                 TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
-                textViewPassword.setText(password);
+                textViewPassword.setText(generatePassword(iterations));
                 isGenerated = true;
                 invalidateOptionsMenu();
+                Button generateButton = (Button) findViewById(R.id.generatorButton);
+                generateButton.setText(getResources().getString(R.string.re_generator_button));
+                TextView textViewIterationCount =
+                        (TextView) findViewById(R.id.iterationCount);
+                textViewIterationCount.setText(Integer.toString(iterations));
+                setIterationCountVisibility(View.VISIBLE);
+                // Save domain and settings
+                saveSettings(iterations);
+                loadAutoCompleteFromSettings();
             }
         });
-        EditText editTextDomain =
-                (EditText) findViewById(R.id.editTextDomain);
-        editTextDomain.addTextChangedListener(new TextWatcher(){
+
+        AutoCompleteTextView autoCompleteTextViewDomain =
+                (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
+        autoCompleteTextViewDomain.addTextChangedListener(new TextWatcher(){
             public void beforeTextChanged(CharSequence s, int start, int count, int after){}
             public void onTextChanged(CharSequence s, int start, int before, int count){}
             public void afterTextChanged(Editable editable) {
-                EditText editTextDomain =
-                        (EditText) findViewById(R.id.editTextDomain);
+                AutoCompleteTextView autoCompleteTextViewDomain =
+                        (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
+                // Load settings
+                SharedPreferences savedDomains = getSharedPreferences("savedDomains", MODE_PRIVATE);
+                Set<String> domainSet = savedDomains.getStringSet(
+                        "domainSet",
+                        new HashSet<String>()
+                );
+                if (domainSet != null) {
+                    String domain = autoCompleteTextViewDomain.getText().toString();
+                    if (domainSet.contains(domain)) {
+                        CheckBox checkBoxSpecialCharacters =
+                                (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
+                        CheckBox checkBoxLetters =
+                                (CheckBox) findViewById(R.id.checkBoxLetters);
+                        CheckBox checkBoxNumbers =
+                                (CheckBox) findViewById(R.id.checkBoxNumbers);
+                        SeekBar seekBarLength =
+                                (SeekBar) findViewById(R.id.seekBarLength);
+                        checkBoxLetters.setChecked(
+                                savedDomains.getBoolean(domain + "_letters", true)
+                        );
+                        checkBoxNumbers.setChecked(
+                                savedDomains.getBoolean(domain + "_numbers", true)
+                        );
+                        checkBoxSpecialCharacters.setChecked(
+                                savedDomains.getBoolean(domain + "_special_characters", true)
+                        );
+                        seekBarLength.setProgress(
+                                savedDomains.getInt(domain + "_length", 10) - 4
+                        );
+                    }
+                }
+                // disable button if the domain is empty
                 Button generateButton = (Button) findViewById(R.id.generatorButton);
-                generateButton.setEnabled(editTextDomain.getText().length() >= 1);
+                generateButton.setEnabled(autoCompleteTextViewDomain.getText().length() >= 1);
+                // set to not generated
                 isGenerated = false;
+                generateButton.setText(getResources().getString(R.string.generator_button));
+                setIterationCountVisibility(View.INVISIBLE);
                 invalidateOptionsMenu();
                 TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
                 textViewPassword.setText("");
             }
         });
+
         EditText editTextMasterPassword =
                 (EditText) findViewById(R.id.editTextMasterPassword);
         editTextMasterPassword.addTextChangedListener(new TextWatcher(){
@@ -105,6 +260,7 @@ public class MainActivity extends ActionBarActivity {
             public void onTextChanged(CharSequence s, int start, int before, int count){}
             public void afterTextChanged(Editable editable) {
                 isGenerated = false;
+                setIterationCountVisibility(View.INVISIBLE);
                 invalidateOptionsMenu();
                 TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
                 textViewPassword.setText("");
