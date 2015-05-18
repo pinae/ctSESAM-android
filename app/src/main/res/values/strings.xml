@@ -11,7 +11,7 @@
     <string name="generator_button">Erzeugen</string>
     <string name="re_generator_button">anderes Passwort Erzeugen</string>
     <string name="password">Passwort:</string>
-    <string name="init_password"></string>
+    <string name="init_password"/>
     <string name="iteration_count_beginning">Das Passwort wurde</string>
     <string name="iteration_count_end">mal gehasht.</string>
 </resources>
