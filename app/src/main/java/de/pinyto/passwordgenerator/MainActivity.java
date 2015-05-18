@@ -15,6 +15,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -213,6 +214,7 @@ public class MainActivity extends ActionBarActivity {
                 TextView textViewLengthDisplay =
                         (TextView) findViewById(R.id.textViewLengthDisplay);
                 textViewLengthDisplay.setText(Integer.toString(progress + 4));
+                setToNotGenerated();
             }
 
             public void onStartTrackingTouch(SeekBar seekBar) {
@@ -257,9 +259,13 @@ public class MainActivity extends ActionBarActivity {
 
         AutoCompleteTextView autoCompleteTextViewDomain =
                 (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
-        autoCompleteTextViewDomain.addTextChangedListener(new TextWatcher(){
-            public void beforeTextChanged(CharSequence s, int start, int count, int after){}
-            public void onTextChanged(CharSequence s, int start, int before, int count){}
+        autoCompleteTextViewDomain.addTextChangedListener(new TextWatcher() {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
             public void afterTextChanged(Editable editable) {
                 loadSettings();
                 setButtonEnabledByDomainLegth();
@@ -269,13 +275,37 @@ public class MainActivity extends ActionBarActivity {
 
         EditText editTextMasterPassword =
                 (EditText) findViewById(R.id.editTextMasterPassword);
-        editTextMasterPassword.addTextChangedListener(new TextWatcher(){
-            public void beforeTextChanged(CharSequence s, int start, int count, int after){}
-            public void onTextChanged(CharSequence s, int start, int before, int count){}
+        editTextMasterPassword.addTextChangedListener(new TextWatcher() {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
             public void afterTextChanged(Editable editable) {
                 setToNotGenerated();
             }
         });
+
+        CheckBox.OnCheckedChangeListener settingCheckboxChange =
+                new CheckBox.OnCheckedChangeListener()
+                {
+                    @Override
+                    public void onCheckedChanged(
+                            CompoundButton compoundButton,
+                            boolean isChecked) {
+                        setToNotGenerated();
+                    }
+                };
+        CheckBox checkBoxSpecialCharacters =
+                (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
+        checkBoxSpecialCharacters.setOnCheckedChangeListener(settingCheckboxChange);
+        CheckBox checkBoxLetters =
+                (CheckBox) findViewById(R.id.checkBoxLetters);
+        checkBoxLetters.setOnCheckedChangeListener(settingCheckboxChange);
+        CheckBox checkBoxNumbers =
+                (CheckBox) findViewById(R.id.checkBoxNumbers);
+        checkBoxNumbers.setOnCheckedChangeListener(settingCheckboxChange);
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
