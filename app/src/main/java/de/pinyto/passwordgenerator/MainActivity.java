@@ -146,12 +146,67 @@ public class MainActivity extends ActionBarActivity {
         savedDomainsEditor.commit();
     }
 
+    private void setToNotGenerated() {
+        isGenerated = false;
+        Button generateButton = (Button) findViewById(R.id.generatorButton);
+        generateButton.setText(getResources().getString(R.string.generator_button));
+        setIterationCountVisibility(View.INVISIBLE);
+        invalidateOptionsMenu();
+        TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
+        textViewPassword.setText("");
+    }
+
+    private void loadSettings() {
+        SharedPreferences savedDomains = getSharedPreferences("savedDomains", MODE_PRIVATE);
+        Set<String> domainSet = savedDomains.getStringSet(
+                "domainSet",
+                new HashSet<String>()
+        );
+        if (domainSet != null) {
+            AutoCompleteTextView autoCompleteTextViewDomain =
+                    (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
+            String domain = autoCompleteTextViewDomain.getText().toString();
+            if (domainSet.contains(domain)) {
+                CheckBox checkBoxSpecialCharacters =
+                        (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
+                CheckBox checkBoxLetters =
+                        (CheckBox) findViewById(R.id.checkBoxLetters);
+                CheckBox checkBoxNumbers =
+                        (CheckBox) findViewById(R.id.checkBoxNumbers);
+                SeekBar seekBarLength =
+                        (SeekBar) findViewById(R.id.seekBarLength);
+                checkBoxLetters.setChecked(
+                        savedDomains.getBoolean(domain + "_letters", true)
+                );
+                checkBoxNumbers.setChecked(
+                        savedDomains.getBoolean(domain + "_numbers", true)
+                );
+                checkBoxSpecialCharacters.setChecked(
+                        savedDomains.getBoolean(domain + "_special_characters", true)
+                );
+                seekBarLength.setProgress(
+                        savedDomains.getInt(domain + "_length", 10) - 4
+                );
+            }
+        }
+    }
+
+    private void setButtonEnabledByDomainLegth() {
+        Button generateButton = (Button) findViewById(R.id.generatorButton);
+        AutoCompleteTextView autoCompleteTextViewDomain =
+                (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
+        generateButton.setEnabled(autoCompleteTextViewDomain.getText().length() >= 1);
+    }
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setIterationCountVisibility(View.INVISIBLE);
         loadAutoCompleteFromSettings();
         setDomainFieldFromClipboard();
+        loadSettings();
+        setButtonEnabledByDomainLegth();
+        setToNotGenerated();
 
         SeekBar seekBarLength = (SeekBar) findViewById(R.id.seekBarLength);
         seekBarLength.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -207,49 +262,9 @@ public class MainActivity extends ActionBarActivity {
             public void beforeTextChanged(CharSequence s, int start, int count, int after){}
             public void onTextChanged(CharSequence s, int start, int before, int count){}
             public void afterTextChanged(Editable editable) {
-                AutoCompleteTextView autoCompleteTextViewDomain =
-                        (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
-                // Load settings
-                SharedPreferences savedDomains = getSharedPreferences("savedDomains", MODE_PRIVATE);
-                Set<String> domainSet = savedDomains.getStringSet(
-                        "domainSet",
-                        new HashSet<String>()
-                );
-                if (domainSet != null) {
-                    String domain = autoCompleteTextViewDomain.getText().toString();
-                    if (domainSet.contains(domain)) {
-                        CheckBox checkBoxSpecialCharacters =
-                                (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
-                        CheckBox checkBoxLetters =
-                                (CheckBox) findViewById(R.id.checkBoxLetters);
-                        CheckBox checkBoxNumbers =
-                                (CheckBox) findViewById(R.id.checkBoxNumbers);
-                        SeekBar seekBarLength =
-                                (SeekBar) findViewById(R.id.seekBarLength);
-                        checkBoxLetters.setChecked(
-                                savedDomains.getBoolean(domain + "_letters", true)
-                        );
-                        checkBoxNumbers.setChecked(
-                                savedDomains.getBoolean(domain + "_numbers", true)
-                        );
-                        checkBoxSpecialCharacters.setChecked(
-                                savedDomains.getBoolean(domain + "_special_characters", true)
-                        );
-                        seekBarLength.setProgress(
-                                savedDomains.getInt(domain + "_length", 10) - 4
-                        );
-                    }
-                }
-                // disable button if the domain is empty
-                Button generateButton = (Button) findViewById(R.id.generatorButton);
-                generateButton.setEnabled(autoCompleteTextViewDomain.getText().length() >= 1);
-                // set to not generated
-                isGenerated = false;
-                generateButton.setText(getResources().getString(R.string.generator_button));
-                setIterationCountVisibility(View.INVISIBLE);
-                invalidateOptionsMenu();
-                TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
-                textViewPassword.setText("");
+                loadSettings();
+                setButtonEnabledByDomainLegth();
+                setToNotGenerated();
             }
         });
 
@@ -259,16 +274,11 @@ public class MainActivity extends ActionBarActivity {
             public void beforeTextChanged(CharSequence s, int start, int count, int after){}
             public void onTextChanged(CharSequence s, int start, int before, int count){}
             public void afterTextChanged(Editable editable) {
-                isGenerated = false;
-                setIterationCountVisibility(View.INVISIBLE);
-                invalidateOptionsMenu();
-                TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
-                textViewPassword.setText("");
+                setToNotGenerated();
             }
         });
     }
 
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.activity_main_actions, menu);
