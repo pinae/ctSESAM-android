@@ -43,16 +43,15 @@ public class MainActivity extends ActionBarActivity {
     private void loadAutoCompleteFromSettings() {
         SharedPreferences savedDomains = getSharedPreferences("savedDomains", MODE_PRIVATE);
         Set<String> domainSet = savedDomains.getStringSet("domainSet", new HashSet<String>());
-        String[] domainList = new String[0];
         if (domainSet != null) {
-            domainList = new String[domainSet.size()];
+            String[] domainList = new String[domainSet.size()];
             Iterator it = domainSet.iterator();
             int i = 0;
             while (it.hasNext()) {
                 domainList[i] = (String) it.next();
                 i++;
             }
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
                     android.R.layout.simple_dropdown_item_1line, domainList);
             AutoCompleteTextView autoCompleteTextViewDomain =
                     (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
@@ -143,7 +142,7 @@ public class MainActivity extends ActionBarActivity {
                 domain + "_iterations",
                 iterations
         );
-        savedDomainsEditor.commit();
+        savedDomainsEditor.apply();
     }
 
     private void setToNotGenerated() {
