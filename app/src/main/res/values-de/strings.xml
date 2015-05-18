@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Passwortgenerator</string>
+    <string name="domain">Domain:</string>
+    <string name="action_copy">Passwort in die Zwischenablage kopieren</string>
+    <string name="generator_button">Erzeugen</string>
+    <string name="iteration_count_beginning">Das Passwort wurde</string>
+    <string name="iteration_count_end">mal gehasht.</string>
+    <string name="length">Länge:</string>
+    <string name="letters">Buchstaben</string>
+    <string name="masterpassword">Master-Passwort:</string>
+    <string name="numbers">Zahlen</string>
+    <string name="password">Passwort:</string>
+    <string name="re_generator_button">anderes Passwort Erzeugen</string>
+    <string name="special_characters">Sonderzeichen</string>
+    <string name="init_password"></string>
+</resources>
