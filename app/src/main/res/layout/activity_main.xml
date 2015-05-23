@@ -16,6 +16,8 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/textViewDomainHeading"
         android:id="@+id/autoCompleteTextViewDomain"
+        android:inputType="textUri"
+        android:imeOptions="actionNext"
         android:completionThreshold="@integer/completionThreshold" />
 
     <TextView
