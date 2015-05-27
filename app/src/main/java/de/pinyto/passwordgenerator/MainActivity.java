@@ -146,14 +146,23 @@ public class MainActivity extends ActionBarActivity {
         savedDomainsEditor.apply();
     }
 
+    private void clearPassword() {
+        TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
+        Editable password = (Editable) textViewPassword.getText();
+        CharSequence zero = "0";
+        for (int i = 0; i < password.length(); i++) {
+            password.replace(i, i+1, zero);
+        }
+        textViewPassword.setText("", TextView.BufferType.EDITABLE);
+    }
+
     private void setToNotGenerated() {
         isGenerated = false;
         Button generateButton = (Button) findViewById(R.id.generatorButton);
         generateButton.setText(getResources().getString(R.string.generator_button));
         setIterationCountVisibility(View.INVISIBLE);
         invalidateOptionsMenu();
-        TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
-        textViewPassword.setText("");
+        clearPassword();
     }
 
     private void loadSettings() {
@@ -206,6 +215,7 @@ public class MainActivity extends ActionBarActivity {
         setDomainFieldFromClipboard();
         loadSettings();
         setButtonEnabledByDomainLegth();
+        ((TextView) findViewById(R.id.textViewPassword)).setText("", TextView.BufferType.EDITABLE);
         setToNotGenerated();
 
         SeekBar seekBarLength = (SeekBar) findViewById(R.id.seekBarLength);
