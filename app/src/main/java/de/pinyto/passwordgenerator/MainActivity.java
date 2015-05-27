@@ -146,14 +146,14 @@ public class MainActivity extends ActionBarActivity {
         savedDomainsEditor.apply();
     }
 
-    private void clearPassword() {
-        TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
-        Editable password = (Editable) textViewPassword.getText();
+    private void clearMasterPassword() {
+        EditText editTextMasterPassword = (EditText) findViewById(R.id.editTextMasterPassword);
+        Editable password = editTextMasterPassword.getText();
         CharSequence zero = "0";
         for (int i = 0; i < password.length(); i++) {
             password.replace(i, i+1, zero);
         }
-        textViewPassword.setText("", TextView.BufferType.EDITABLE);
+        editTextMasterPassword.setText("", TextView.BufferType.EDITABLE);
     }
 
     private void setToNotGenerated() {
@@ -162,7 +162,8 @@ public class MainActivity extends ActionBarActivity {
         generateButton.setText(getResources().getString(R.string.generator_button));
         setIterationCountVisibility(View.INVISIBLE);
         invalidateOptionsMenu();
-        clearPassword();
+        TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
+        textViewPassword.setText("");
     }
 
     private void loadSettings() {
@@ -207,6 +208,7 @@ public class MainActivity extends ActionBarActivity {
         generateButton.setEnabled(autoCompleteTextViewDomain.getText().length() >= 1);
     }
 
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -215,8 +217,10 @@ public class MainActivity extends ActionBarActivity {
         setDomainFieldFromClipboard();
         loadSettings();
         setButtonEnabledByDomainLegth();
-        ((TextView) findViewById(R.id.textViewPassword)).setText("", TextView.BufferType.EDITABLE);
+        EditText editTextMasterPassword = (EditText) findViewById(R.id.editTextMasterPassword);
+        editTextMasterPassword.setText("", TextView.BufferType.EDITABLE);
         setToNotGenerated();
+        clearMasterPassword();
 
         SeekBar seekBarLength = (SeekBar) findViewById(R.id.seekBarLength);
         seekBarLength.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -283,8 +287,6 @@ public class MainActivity extends ActionBarActivity {
             }
         });
 
-        EditText editTextMasterPassword =
-                (EditText) findViewById(R.id.editTextMasterPassword);
         editTextMasterPassword.addTextChangedListener(new TextWatcher() {
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
@@ -316,6 +318,13 @@ public class MainActivity extends ActionBarActivity {
         CheckBox checkBoxNumbers =
                 (CheckBox) findViewById(R.id.checkBoxNumbers);
         checkBoxNumbers.setOnCheckedChangeListener(settingCheckboxChange);
+    }
+
+    @Override
+    protected void onPause() {
+        setToNotGenerated();
+        clearMasterPassword();
+        super.onPause();
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
