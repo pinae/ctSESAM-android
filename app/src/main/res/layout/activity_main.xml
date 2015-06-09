@@ -9,27 +9,9 @@
     tools:context=".MainActivity">
 
     <TextView
-        android:text="@string/domain"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/textViewDomainHeading" />
-
-    <AutoCompleteTextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/textViewDomainHeading"
-        android:id="@+id/autoCompleteTextViewDomain"
-        android:inputType="textUri"
-        android:imeOptions="actionNext"
-        android:completionThreshold="@integer/completionThreshold" />
-
-    <TextView
         android:text="@string/masterpassword"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/autoCompleteTextViewDomain"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
         android:id="@+id/textViewMasterpasswordHeading" />
 
     <EditText
@@ -41,12 +23,28 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 
+    <TextView
+        android:text="@string/domain"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/editTextMasterPassword"
+        android:id="@+id/textViewDomainHeading" />
+
+    <AutoCompleteTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewDomainHeading"
+        android:id="@+id/autoCompleteTextViewDomain"
+        android:inputType="textUri"
+        android:imeOptions="actionNext"
+        android:completionThreshold="@integer/completionThreshold" />
+
     <CheckBox
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/special_characters"
         android:id="@+id/checkBoxSpecialCharacter"
-        android:layout_below="@+id/editTextMasterPassword"
+        android:layout_below="@+id/autoCompleteTextViewDomain"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:checked="true" />

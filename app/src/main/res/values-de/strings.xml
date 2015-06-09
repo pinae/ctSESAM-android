@@ -14,4 +14,5 @@
     <string name="re_generator_button">anderes Passwort Erzeugen</string>
     <string name="special_characters">Sonderzeichen</string>
     <string name="init_password"/>
+    <string name="action_sync">Einstellungen synchronisieren</string>
 </resources>

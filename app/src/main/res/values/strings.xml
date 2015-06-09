@@ -2,6 +2,7 @@
     <string name="app_name">Passwordgenerator</string>
 
     <string name="action_copy">Copy the password to the clipboard</string>
+    <string name="action_sync">Syncronize password settings</string>
     <string name="domain">Domain:</string>
     <string name="masterpassword">Master-password:</string>
     <string name="letters">Letters</string>

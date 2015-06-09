@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,7 +21,11 @@ import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -142,6 +147,25 @@ public class MainActivity extends AppCompatActivity {
         savedDomainsEditor.putInt(
                 domain + "_iterations",
                 iterations
+        );
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH);
+        String cDate = savedDomains.getString(domain + "_cDate", "");
+        int cDateLength = 0;
+        try {
+            assert cDate != null;
+            cDateLength = cDate.length();
+        } catch (NullPointerException | AssertionError e) {
+            e.printStackTrace();
+        }
+        if (cDateLength < 1) {
+            savedDomainsEditor.putString(
+                    domain + "_cDate",
+                    df.format(Calendar.getInstance().getTime())
+            );
+        }
+        savedDomainsEditor.putString(
+                domain + "_mDate",
+                df.format(Calendar.getInstance().getTime())
         );
         savedDomainsEditor.apply();
     }
@@ -332,6 +356,8 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.activity_main_actions, menu);
         MenuItem copyItem = menu.findItem(R.id.action_copy);
         copyItem.setVisible(isGenerated);
+        MenuItem syncItem = menu.findItem(R.id.action_sync);
+        syncItem.setVisible(true);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -352,6 +378,14 @@ public class MainActivity extends AppCompatActivity {
             ClipboardManager clipboard =
                     (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
             clipboard.setPrimaryClip(clipDataPassword);
+            return true;
+        }
+
+        if (id == R.id.action_sync) {
+            SettingsPacker packer = new SettingsPacker(getBaseContext());
+            byte[] blob = packer.getBlob();
+            Log.d("packed data", Hextools.bytesToHex(blob));
+            packer.updateFromBlob(blob);
             return true;
         }
 
