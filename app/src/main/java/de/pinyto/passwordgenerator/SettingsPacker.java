@@ -220,6 +220,7 @@ public class SettingsPacker {
 
     public boolean updateFromBlob(byte[] blob) {
         String jsonString = uncompress(blob);
+        Log.d("recieved JSON", jsonString);
         try {
             JSONArray loadedSettings = new JSONArray(jsonString);
             boolean updateRemote = false;

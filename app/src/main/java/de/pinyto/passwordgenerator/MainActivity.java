@@ -2,12 +2,22 @@ package de.pinyto.passwordgenerator;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,6 +31,10 @@ import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -32,7 +46,86 @@ import java.util.HashSet;
 
 public class MainActivity extends AppCompatActivity {
 
+    static final String syncAppName = "de.pinyto.passwordsettingssync";
+    static final String syncServiceName = "SyncService";
+    Messenger mService = null;
+    boolean mBound;
+    static final int REQUEST_SYNC = 1;
+    static final int SEND_UPDATE = 2;
+    static final int SYNC_RESPONSE = 1;
+    static final int SEND_UPDATE_RESPONSE = 2;
+
     private boolean isGenerated = false;
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            mService = new Messenger(service);
+            mBound = true;
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            mService = null;
+            mBound = false;
+        }
+    };
+
+    class ResponseHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            int respCode = msg.what;
+
+            switch (respCode) {
+                case SYNC_RESPONSE: {
+                    String syncData = msg.getData().getString("respData");
+                    try {
+                        JSONObject syncDataObject = new JSONObject(syncData);
+                        if (!syncDataObject.getString("status").equals("ok")) break;
+                        EditText editTextMasterPassword = (EditText) findViewById(
+                                R.id.editTextMasterPassword);
+                        byte[] password;
+                        try {
+                            password = editTextMasterPassword.getText().toString().getBytes(
+                                    "UTF-8");
+                        } catch (UnsupportedEncodingException e) {
+                            Log.d("Key generation error", "UTF-8 is not supported. Using default encoding.");
+                            password = editTextMasterPassword.getText().toString().getBytes();
+                        }
+                        Crypter crypter = new Crypter(password);
+                        SettingsPacker packer = new SettingsPacker(getBaseContext());
+                        if (syncDataObject.has("result")) {
+                            byte[] decrypted = crypter.decrypt(Base64.decode(
+                                    syncDataObject.getString("result"),
+                                    Base64.DEFAULT));
+                            packer.updateFromBlob(decrypted);
+                        }
+                        byte[] blob = packer.getBlob();
+                        byte[] encryptedBlob = crypter.encrypt(blob);
+                        if (mBound) {
+                            Message updateMsg = Message.obtain(null, SEND_UPDATE, 0, 0);
+                            updateMsg.replyTo = new Messenger(new ResponseHandler());
+                            Bundle bUpdateMsg = new Bundle();
+                            bUpdateMsg.putString("updatedData",
+                                    Base64.encodeToString(encryptedBlob, Base64.DEFAULT));
+                            updateMsg.setData(bUpdateMsg);
+                            try {
+                                mService.send(updateMsg);
+                            } catch (RemoteException e) {
+                                Log.d("Sync error", "Could not send update message to sync service.");
+                                e.printStackTrace();
+                            }
+                        }
+                    } catch (JSONException e) {
+                        Log.d("Sync error", "The response is not valid JSON.");
+                        e.printStackTrace();
+                    }
+                }
+                case SEND_UPDATE_RESPONSE: {
+                    String updateRequestAnswer = msg.getData().getString("respData");
+                    Log.d("updateResponseData", updateRequestAnswer);
+                }
+            }
+        }
+    }
 
     private void setIterationCountVisibility(int visible) {
         TextView textViewIterationCountBeginning =
@@ -225,7 +318,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setButtonEnabledByDomainLegth() {
+    private void setButtonEnabledByDomainLength() {
         Button generateButton = (Button) findViewById(R.id.generatorButton);
         AutoCompleteTextView autoCompleteTextViewDomain =
                 (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
@@ -240,7 +333,7 @@ public class MainActivity extends AppCompatActivity {
         loadAutoCompleteFromSettings();
         setDomainFieldFromClipboard();
         loadSettings();
-        setButtonEnabledByDomainLegth();
+        setButtonEnabledByDomainLength();
         EditText editTextMasterPassword = (EditText) findViewById(R.id.editTextMasterPassword);
         editTextMasterPassword.setText("", TextView.BufferType.EDITABLE);
         setToNotGenerated();
@@ -306,7 +399,7 @@ public class MainActivity extends AppCompatActivity {
 
             public void afterTextChanged(Editable editable) {
                 loadSettings();
-                setButtonEnabledByDomainLegth();
+                setButtonEnabledByDomainLength();
                 setToNotGenerated();
             }
         });
@@ -344,6 +437,32 @@ public class MainActivity extends AppCompatActivity {
         checkBoxNumbers.setOnCheckedChangeListener(settingCheckboxChange);
     }
 
+    private boolean isAppInstalled(String packageName) {
+        PackageManager pm = getPackageManager();
+        boolean installed;
+        try {
+            pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
+            installed = true;
+        } catch (PackageManager.NameNotFoundException e) {
+            installed = false;
+        }
+        return installed;
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (isAppInstalled(syncAppName)) {
+            // Bind to the service
+            Intent intent = new Intent();
+            intent.setComponent(new ComponentName(
+                    syncAppName,
+                    syncAppName + "." + syncServiceName));
+            bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+        }
+        invalidateOptionsMenu();
+    }
+
     @Override
     protected void onPause() {
         setToNotGenerated();
@@ -357,7 +476,7 @@ public class MainActivity extends AppCompatActivity {
         MenuItem copyItem = menu.findItem(R.id.action_copy);
         copyItem.setVisible(isGenerated);
         MenuItem syncItem = menu.findItem(R.id.action_sync);
-        syncItem.setVisible(true);
+        syncItem.setVisible(isAppInstalled(syncAppName));
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -382,10 +501,18 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (id == R.id.action_sync) {
-            SettingsPacker packer = new SettingsPacker(getBaseContext());
-            byte[] blob = packer.getBlob();
-            Log.d("packed data", Hextools.bytesToHex(blob));
-            packer.updateFromBlob(blob);
+            if (!mBound) {
+                Log.d("Sync error", "Sync service is not bound. This button should not be visible.");
+                return true;
+            }
+            Message msg = Message.obtain(null, REQUEST_SYNC, 0, 0);
+            msg.replyTo = new Messenger(new ResponseHandler());
+            try {
+                mService.send(msg);
+            } catch (RemoteException e) {
+                Log.d("Sync error", "Could not send message to sync service.");
+                e.printStackTrace();
+            }
             return true;
         }
 
