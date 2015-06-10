@@ -3,6 +3,7 @@ package de.pinyto.passwordgenerator;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -114,6 +115,11 @@ public class SettingsPacker {
 
     private String uncompress(byte[] data) {
         int length = ByteBuffer.wrap(Arrays.copyOfRange(data, 0, 4)).getInt();
+        if (length > 100000) {
+            // This is a sanity check. More than 100kb of password settings make no sense.
+            Log.d("Decompression error", "The trasferred length is too big.");
+            return "";
+        }
         Inflater inflater = new Inflater();
         inflater.setInput(data, 4, data.length-4);
         byte[] decompressedBytes = new byte[length];

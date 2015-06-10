@@ -17,4 +17,5 @@
     <string name="action_sync">Einstellungen synchronisieren</string>
     <string name="sync_error">Einstellungen konnten nicht synchronisiert werden</string>
     <string name="sync_successful">Einstellungen synchronisiert</string>
+    <string name="wrong_password">Synchronisation fehlgeschlagen. Falsches Passwort?</string>
 </resources>

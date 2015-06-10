@@ -19,4 +19,5 @@
     <string name="special_characters">Special characters</string>
     <string name="sync_successful">Successfully synchronized settings</string>
     <string name="sync_error">Could not synchronize settings</string>
+    <string name="wrong_password">Could not synchronize. Wrong password?</string>
 </resources>

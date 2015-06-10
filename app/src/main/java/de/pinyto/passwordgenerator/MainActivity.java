@@ -88,7 +88,8 @@ public class MainActivity extends AppCompatActivity {
                             password = editTextMasterPassword.getText().toString().getBytes(
                                     "UTF-8");
                         } catch (UnsupportedEncodingException e) {
-                            Log.d("Key generation error", "UTF-8 is not supported. Using default encoding.");
+                            Log.d("Key generation error",
+                                    "UTF-8 is not supported. Using default encoding.");
                             password = editTextMasterPassword.getText().toString().getBytes();
                         }
                         Crypter crypter = new Crypter(password);
@@ -98,7 +99,12 @@ public class MainActivity extends AppCompatActivity {
                             byte[] decrypted = crypter.decrypt(Base64.decode(
                                     syncDataObject.getString("result"),
                                     Base64.DEFAULT));
-                            changed = packer.updateFromBlob(decrypted);
+                            if (decrypted.length > 0) {
+                                changed = packer.updateFromBlob(decrypted);
+                            } else {
+                                Toast.makeText(getApplicationContext(),
+                                        R.string.wrong_password, Toast.LENGTH_SHORT).show();
+                            }
                         }
                         if (changed) {
                             byte[] blob = packer.getBlob();
@@ -495,7 +501,10 @@ public class MainActivity extends AppCompatActivity {
         MenuItem copyItem = menu.findItem(R.id.action_copy);
         copyItem.setVisible(isGenerated);
         MenuItem syncItem = menu.findItem(R.id.action_sync);
-        syncItem.setVisible(isAppInstalled(syncAppName));
+        EditText editTextMasterPassword = (EditText) findViewById(R.id.editTextMasterPassword);
+        syncItem.setVisible(
+                isAppInstalled(syncAppName) &&
+                (editTextMasterPassword.getText().length() > 0));
         return super.onCreateOptionsMenu(menu);
     }
 
