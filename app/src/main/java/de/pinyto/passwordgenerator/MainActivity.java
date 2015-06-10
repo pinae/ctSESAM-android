@@ -30,6 +30,7 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -92,36 +93,54 @@ public class MainActivity extends AppCompatActivity {
                         }
                         Crypter crypter = new Crypter(password);
                         SettingsPacker packer = new SettingsPacker(getBaseContext());
+                        boolean changed = false;
                         if (syncDataObject.has("result")) {
                             byte[] decrypted = crypter.decrypt(Base64.decode(
                                     syncDataObject.getString("result"),
                                     Base64.DEFAULT));
-                            packer.updateFromBlob(decrypted);
+                            changed = packer.updateFromBlob(decrypted);
                         }
-                        byte[] blob = packer.getBlob();
-                        byte[] encryptedBlob = crypter.encrypt(blob);
-                        if (mBound) {
-                            Message updateMsg = Message.obtain(null, SEND_UPDATE, 0, 0);
-                            updateMsg.replyTo = new Messenger(new ResponseHandler());
-                            Bundle bUpdateMsg = new Bundle();
-                            bUpdateMsg.putString("updatedData",
-                                    Base64.encodeToString(encryptedBlob, Base64.DEFAULT));
-                            updateMsg.setData(bUpdateMsg);
-                            try {
-                                mService.send(updateMsg);
-                            } catch (RemoteException e) {
-                                Log.d("Sync error", "Could not send update message to sync service.");
-                                e.printStackTrace();
+                        if (changed) {
+                            byte[] blob = packer.getBlob();
+                            byte[] encryptedBlob = crypter.encrypt(blob);
+                            if (mBound) {
+                                Message updateMsg = Message.obtain(null, SEND_UPDATE, 0, 0);
+                                updateMsg.replyTo = new Messenger(new ResponseHandler());
+                                Bundle bUpdateMsg = new Bundle();
+                                bUpdateMsg.putString("updatedData",
+                                        Base64.encodeToString(encryptedBlob, Base64.DEFAULT));
+                                updateMsg.setData(bUpdateMsg);
+                                try {
+                                    mService.send(updateMsg);
+                                } catch (RemoteException e) {
+                                    Log.d("Sync error",
+                                            "Could not send update message to sync service.");
+                                    e.printStackTrace();
+                                }
                             }
                         }
                     } catch (JSONException e) {
                         Log.d("Sync error", "The response is not valid JSON.");
                         e.printStackTrace();
                     }
+                    break;
                 }
                 case SEND_UPDATE_RESPONSE: {
                     String updateRequestAnswer = msg.getData().getString("respData");
-                    Log.d("updateResponseData", updateRequestAnswer);
+                    try {
+                        JSONObject syncDataObject = new JSONObject(updateRequestAnswer);
+                        if (syncDataObject.getString("status").equals("ok")) {
+                            Toast.makeText(getApplicationContext(),
+                                    R.string.sync_successful, Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getApplicationContext(),
+                                    R.string.sync_error, Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (JSONException e) {
+                        Log.d("update Settings error", "Server response is not JSON.");
+                        e.printStackTrace();
+                    }
+                    break;
                 }
             }
         }

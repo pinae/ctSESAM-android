@@ -137,37 +137,42 @@ public class SettingsPacker {
         return compress(stringify());
     }
 
+    private void removeDeletedSettings(Set<String> domainSet) {
+        for (String domain : domainSet) {
+            boolean found = false;
+            for (int i = 0; i < settings.length(); i++) {
+                try {
+                    if (settings.getJSONObject(i).getString("domain").equals(domain)) {
+                        found = true;
+                        break;
+                    }
+                } catch (JSONException e) {
+                    Log.d("update Settings error", "Unable to get JSON data for setting.");
+                    e.printStackTrace();
+                }
+            }
+            if (!found) {
+                Log.d("removing", domain);
+                SharedPreferences.Editor savedDomainsEditor = savedDomains.edit();
+                savedDomainsEditor.remove(domain + "_letters");
+                savedDomainsEditor.remove(domain + "_numbers");
+                savedDomainsEditor.remove(domain + "_special_characters");
+                savedDomainsEditor.remove(domain + "_length");
+                savedDomainsEditor.remove(domain + "_iterations");
+                savedDomainsEditor.remove(domain + "_cDate");
+                savedDomainsEditor.remove(domain + "_mDate");
+                savedDomainsEditor.apply();
+            }
+        }
+    }
+
     private void updateSettings() {
         Set<String> domainSet = savedDomains.getStringSet(
                 "domainSet",
                 new HashSet<String>()
         );
         if (domainSet != null) {
-            for (String domain : domainSet) {
-                boolean found = false;
-                for (int i = 0; i < settings.length(); i++) {
-                    try {
-                        if (settings.getJSONObject(i).getString("domain").equals(domain)) {
-                            found = true;
-                            break;
-                        }
-                    } catch (JSONException e) {
-                        Log.d("update Settings error", "Unable to get JSON data for setting.");
-                        e.printStackTrace();
-                    }
-                }
-                if (!found) {
-                    SharedPreferences.Editor savedDomainsEditor = savedDomains.edit();
-                    savedDomainsEditor.remove(domain + "_letters");
-                    savedDomainsEditor.remove(domain + "_numbers");
-                    savedDomainsEditor.remove(domain + "_special_characters");
-                    savedDomainsEditor.remove(domain + "_length");
-                    savedDomainsEditor.remove(domain + "_iterations");
-                    savedDomainsEditor.remove(domain + "_cDate");
-                    savedDomainsEditor.remove(domain + "_mDate");
-                    savedDomainsEditor.apply();
-                }
-            }
+            removeDeletedSettings(domainSet);
             domainSet.clear();
         } else {
             domainSet = new HashSet<>();
@@ -220,7 +225,6 @@ public class SettingsPacker {
 
     public boolean updateFromBlob(byte[] blob) {
         String jsonString = uncompress(blob);
-        Log.d("recieved JSON", jsonString);
         try {
             JSONArray loadedSettings = new JSONArray(jsonString);
             boolean updateRemote = false;
@@ -229,8 +233,8 @@ public class SettingsPacker {
                 JSONObject loadedSetting = (JSONObject) loadedSettings.get(i);
                 boolean found = false;
                 for (int j = 0; j < settings.length(); j++) {
-                    JSONObject setting = (JSONObject) settings.get(j);
-                    if (setting.get("domain") == loadedSetting.get("domain")) {
+                    JSONObject setting = settings.getJSONObject(j);
+                    if (setting.get("domain").equals(loadedSetting.get("domain"))) {
                         found = true;
                         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH);
                         Date modifiedRemote = df.parse(loadedSetting.getString("mDate"));
@@ -238,7 +242,7 @@ public class SettingsPacker {
                         if (modifiedLocal.after(modifiedRemote)) {
                             updateRemote = true;
                         } else {
-                            settings.put(i, loadedSetting);
+                            settings.put(j, loadedSetting);
                             modified = true;
                         }
                         break;
@@ -249,11 +253,11 @@ public class SettingsPacker {
                 }
             }
             for (int i = 0; i < settings.length(); i++) {
-                JSONObject setting = (JSONObject) settings.get(i);
+                JSONObject setting = settings.getJSONObject(i);
                 boolean found = false;
                 for (int j = 0; j < loadedSettings.length(); j++) {
-                    JSONObject loadedSetting = (JSONObject) loadedSettings.get(j);
-                    if (setting.get("domain") == loadedSetting.get("domain")) {
+                    JSONObject loadedSetting = loadedSettings.getJSONObject(j);
+                    if (setting.get("domain").equals(loadedSetting.get("domain"))) {
                         found = true;
                     }
                 }

@@ -15,4 +15,6 @@
     <string name="special_characters">Sonderzeichen</string>
     <string name="init_password"/>
     <string name="action_sync">Einstellungen synchronisieren</string>
+    <string name="sync_error">Einstellungen konnten nicht synchronisiert werden</string>
+    <string name="sync_successful">Einstellungen synchronisiert</string>
 </resources>
