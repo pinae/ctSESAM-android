@@ -12,6 +12,9 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class PBKDF2_HMAC {
     public static byte[] sha512HMAC(byte[] key, byte[] password) {
+        if (key.length == 0) {
+            key = new byte[] { 0x00 };
+        }
         try {
             Mac sha512_HMAC = Mac.getInstance("HmacSHA512");
             sha512_HMAC.init(new SecretKeySpec(key, "HmacSHA512"));
