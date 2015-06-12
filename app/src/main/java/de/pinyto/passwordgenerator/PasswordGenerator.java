@@ -18,6 +18,7 @@ public class PasswordGenerator {
 
     private byte[] hashValue;
     private byte[] salt;
+    private int iterations;
 
     public PasswordGenerator(String domain, String masterPassword) {
         try {
@@ -29,14 +30,29 @@ public class PasswordGenerator {
             this.hashValue = (domain + masterPassword).getBytes();
             this.salt = "pepper".getBytes();
         }
+        this.iterations = 0;
     }
 
-    public void hash(int iterations) {
-        hashValue = PBKDF2_HMAC.sha512(hashValue, salt, iterations);
+    public void hash(int iterations) throws NotHashedException {
+        this.iterations = this.iterations + iterations;
+        if (this.iterations > 0) {
+            if (iterations >= 0) {
+                hashValue = PBKDF2_HMAC.sha512(hashValue, salt, iterations);
+            } else {
+                throw new NotHashedException("Negative iterations.");
+            }
+        } else {
+            throw new NotHashedException(Integer.toString(this.iterations) +
+                    " iterations means the password is not hashed at all.");
+        }
     }
 
     public String getPassword(boolean specialCharacters, boolean letters,
-                            boolean numbers, int length) {
+                            boolean numbers, int length) throws NotHashedException {
+        if (this.iterations <= 0) {
+            throw new NotHashedException(Integer.toString(this.iterations) +
+                    " iterations means the password is not hashed at all.");
+        }
         byte[] positiveHashValue = new byte[hashValue.length + 1];
         positiveHashValue[0] = 0;
         System.arraycopy(hashValue, 0, positiveHashValue, 1, hashValue.length);

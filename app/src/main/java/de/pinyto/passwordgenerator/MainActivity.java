@@ -206,20 +206,25 @@ public class MainActivity extends AppCompatActivity {
         PasswordGenerator generator = new PasswordGenerator(
                 domain,
                 editTextMasterPassword.getText().toString());
-        generator.hash(iterations);
-        CheckBox checkBoxSpecialCharacters =
-                (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
-        CheckBox checkBoxLetters =
-                (CheckBox) findViewById(R.id.checkBoxLetters);
-        CheckBox checkBoxNumbers =
-                (CheckBox) findViewById(R.id.checkBoxNumbers);
-        SeekBar seekBarLength =
-                (SeekBar) findViewById(R.id.seekBarLength);
-        return generator.getPassword(
-                checkBoxSpecialCharacters.isChecked(),
-                checkBoxLetters.isChecked(),
-                checkBoxNumbers.isChecked(),
-                seekBarLength.getProgress() + 4);
+        try {
+            generator.hash(iterations);
+            CheckBox checkBoxSpecialCharacters =
+                    (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
+            CheckBox checkBoxLetters =
+                    (CheckBox) findViewById(R.id.checkBoxLetters);
+            CheckBox checkBoxNumbers =
+                    (CheckBox) findViewById(R.id.checkBoxNumbers);
+            SeekBar seekBarLength =
+                    (SeekBar) findViewById(R.id.seekBarLength);
+            return generator.getPassword(
+                    checkBoxSpecialCharacters.isChecked(),
+                    checkBoxLetters.isChecked(),
+                    checkBoxNumbers.isChecked(),
+                    seekBarLength.getProgress() + 4);
+        } catch (NotHashedException e) {
+            e.printStackTrace();
+            return "Not hashed.";
+        }
     }
 
     private void saveSettings(int iterations) {
