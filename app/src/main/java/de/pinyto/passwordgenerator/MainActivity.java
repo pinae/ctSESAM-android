@@ -190,10 +190,9 @@ public class MainActivity extends AppCompatActivity {
             ClipData clipDataCurrent = clipboard.getPrimaryClip();
             CharSequence pasteData = clipDataCurrent.getItemAt(0).getText();
             if (pasteData != null) {
-                DomainExtractor extractor = new DomainExtractor();
                 AutoCompleteTextView autoCompleteTextViewDomain =
                         (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
-                autoCompleteTextViewDomain.setText(extractor.extract(pasteData.toString()));
+                autoCompleteTextViewDomain.setText(DomainExtractor.extract(pasteData.toString()));
             }
         }
     }
