@@ -203,8 +203,7 @@ public class MainActivity extends AppCompatActivity {
         String domain = autoCompleteTextViewDomain.getText().toString();
         EditText editTextMasterPassword =
                 (EditText) findViewById(R.id.editTextMasterPassword);
-        PasswordGenerator generator = new PasswordGenerator();
-        generator.initialize(
+        PasswordGenerator generator = new PasswordGenerator(
                 domain,
                 editTextMasterPassword.getText().toString());
         generator.hash(iterations);

@@ -1,5 +1,7 @@
 package de.pinyto.passwordgenerator;
 
+import android.util.Log;
+
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -17,12 +19,15 @@ public class PasswordGenerator {
     private byte[] hashValue;
     private byte[] salt;
 
-    public void initialize(String domain, String masterPassword) {
+    public PasswordGenerator(String domain, String masterPassword) {
         try {
-            hashValue = (domain + masterPassword).getBytes("UTF-8");
-            salt = ("pepper").getBytes("UTF-8");
+            this.hashValue = (domain + masterPassword).getBytes("UTF-8");
+            this.salt = "pepper".getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            Log.d("pwd generation error",
+                    "UTF-8 is not supported. Using default encoding instead.");
+            this.hashValue = (domain + masterPassword).getBytes();
+            this.salt = "pepper".getBytes();
         }
     }
 
