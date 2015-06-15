@@ -6,7 +6,7 @@
     <string name="domain">Domain:</string>
     <string name="masterpassword">Master-password:</string>
     <string name="letters">Letters</string>
-    <string name="numbers">Digits</string>
+    <string name="digits">Digits</string>
     <string name="length">Length:</string>
     <string name="length_init">10</string>
     <string name="generator_button">Create</string>

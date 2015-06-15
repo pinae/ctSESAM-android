@@ -3,7 +3,6 @@ package de.pinyto.passwordgenerator;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -50,7 +49,7 @@ public class SettingsPacker {
                     domainObject.put("useUpperCase",
                             savedDomains.getBoolean(domain + "_letters", true));
                     domainObject.put("useDigits",
-                            savedDomains.getBoolean(domain + "_numbers", true));
+                            savedDomains.getBoolean(domain + "_digits", true));
                     domainObject.put("useExtra",
                             savedDomains.getBoolean(domain + "_special_characters", true));
                     domainObject.put("iterations",
@@ -161,7 +160,7 @@ public class SettingsPacker {
                 Log.d("removing", domain);
                 SharedPreferences.Editor savedDomainsEditor = savedDomains.edit();
                 savedDomainsEditor.remove(domain + "_letters");
-                savedDomainsEditor.remove(domain + "_numbers");
+                savedDomainsEditor.remove(domain + "_digits");
                 savedDomainsEditor.remove(domain + "_special_characters");
                 savedDomainsEditor.remove(domain + "_length");
                 savedDomainsEditor.remove(domain + "_iterations");

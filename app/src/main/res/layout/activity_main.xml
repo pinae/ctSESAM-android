@@ -62,8 +62,8 @@
     <CheckBox
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/numbers"
-        android:id="@+id/checkBoxNumbers"
+        android:text="@string/digits"
+        android:id="@+id/checkBoxDigits"
         android:layout_below="@+id/checkBoxLetters"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
@@ -73,7 +73,7 @@
         android:text="@string/length"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/checkBoxNumbers"
+        android:layout_below="@+id/checkBoxDigits"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:id="@+id/textViewLengthHeading" />
@@ -84,7 +84,7 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="@string/length_init"
         android:id="@+id/textViewLengthDisplay"
-        android:layout_below="@+id/checkBoxNumbers"
+        android:layout_below="@+id/checkBoxDigits"
         android:layout_toEndOf="@+id/textViewLengthHeading"
         android:layout_toRightOf="@+id/textViewLengthHeading"
         android:layout_marginStart="4dp"

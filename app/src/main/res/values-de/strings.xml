@@ -9,7 +9,7 @@
     <string name="length">Länge:</string>
     <string name="letters">Buchstaben</string>
     <string name="masterpassword">Master-Passwort:</string>
-    <string name="numbers">Zahlen</string>
+    <string name="digits">Zahlen</string>
     <string name="password">Passwort:</string>
     <string name="re_generator_button">anderes Passwort Erzeugen</string>
     <string name="special_characters">Sonderzeichen</string>
