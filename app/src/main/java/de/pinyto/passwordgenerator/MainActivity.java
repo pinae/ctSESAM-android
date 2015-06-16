@@ -34,10 +34,6 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-
 
 public class MainActivity extends AppCompatActivity {
 
@@ -79,11 +75,7 @@ public class MainActivity extends AppCompatActivity {
                         EditText editTextMasterPassword = (EditText) findViewById(
                                 R.id.editTextMasterPassword);
                         if (syncDataObject.has("result")) {
-                            CharBuffer passwordCharBuffer = CharBuffer.wrap(
-                                    editTextMasterPassword.getText());
-                            ByteBuffer passwordByteBuffer = Charset.forName("UTF-8").encode(
-                                    passwordCharBuffer);
-                            byte[] password = passwordByteBuffer.array();
+                            byte[] password = UTF8.encode(editTextMasterPassword.getText());
                             boolean changed = settingsManager.updateFromExportData(
                                     password, Base64.decode(syncDataObject.getString("result"),
                                             Base64.DEFAULT));
@@ -120,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         JSONObject syncDataObject = new JSONObject(updateRequestAnswer);
                         if (syncDataObject.getString("status").equals("ok")) {
+                            settingsManager.setAllSettingsToSynced();
                             Toast.makeText(getApplicationContext(),
                                     R.string.sync_successful, Toast.LENGTH_SHORT).show();
                         } else {

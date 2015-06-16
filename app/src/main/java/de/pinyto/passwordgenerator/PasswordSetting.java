@@ -38,7 +38,6 @@ public class PasswordSetting {
     private String validatorRegEx;
     private Date cDate;
     private Date mDate;
-    private boolean syced;
     private String notes;
     private boolean synced = false;
 
@@ -136,15 +135,6 @@ public class PasswordSetting {
         return this.mDate;
     }
 
-    public void setMDate(Date mDate) {
-        this.mDate = mDate;
-        if (this.cDate.compareTo(this.mDate) > 0) {
-            System.out.println("The modification date was before the creation Date. " +
-                    "Set the creation date to the earlier date.");
-            this.cDate = this.mDate;
-        }
-    }
-
     public void setModificationDate(String mDate) {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH);
         try {
@@ -159,6 +149,7 @@ public class PasswordSetting {
                     "Set the creation date to the earlier date.");
             this.cDate = this.mDate;
         }
+        this.synced = false;
     }
 
     public void setModificationDateToNow() {
@@ -168,6 +159,7 @@ public class PasswordSetting {
                     "Set the creation date to the earlier date.");
             this.cDate = this.mDate;
         }
+        this.synced = false;
     }
 
     public JSONObject getJSON() {

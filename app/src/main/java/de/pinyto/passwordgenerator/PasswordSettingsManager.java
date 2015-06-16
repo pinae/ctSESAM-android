@@ -87,6 +87,10 @@ public class PasswordSettingsManager {
                 newSetting.getDomain() + "_mDate",
                 newSetting.getModificationDate()
         );
+        savedDomainsEditor.putBoolean(
+                newSetting.getDomain() + "_synced",
+                newSetting.isSynced()
+        );
         savedDomainsEditor.apply();
     }
 
@@ -187,6 +191,17 @@ public class PasswordSettingsManager {
             Log.d("Update settings error", "Unable to parse the date.");
             e.printStackTrace();
             return false;
+        }
+    }
+
+    public void setAllSettingsToSynced() {
+        Set<String> domainSet = savedDomains.getStringSet("domainSet", new HashSet<String>());
+        if (domainSet != null) {
+            SharedPreferences.Editor savedDomainsEditor = savedDomains.edit();
+            for (String domain : domainSet) {
+                savedDomainsEditor.putBoolean(domain + "_synced", true);
+            }
+            savedDomainsEditor.apply();
         }
     }
 }
