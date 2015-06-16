@@ -19,7 +19,7 @@ public class PasswordGenerator {
     private int iterations;
 
     public PasswordGenerator(byte[] domain, byte[] masterPassword) {
-        hashValue = new byte[Math.max(domain.length + masterPassword.length, 64)];
+        hashValue = new byte[domain.length + masterPassword.length];
         int i = 0;
         while (i < domain.length) {
             hashValue[i] = domain[i];
@@ -27,10 +27,6 @@ public class PasswordGenerator {
         }
         while (i < domain.length + masterPassword.length) {
             hashValue[i] = masterPassword[i - domain.length];
-            i++;
-        }
-        while (i < hashValue.length) {
-            hashValue[i] = 0x00;
             i++;
         }
         try {
@@ -46,7 +42,11 @@ public class PasswordGenerator {
         this.iterations = this.iterations + iterations;
         if (this.iterations > 0) {
             if (iterations >= 0) {
-                hashValue = PBKDF2_HMAC.sha512(hashValue, salt, iterations);
+                byte[] newHashValue = PBKDF2_HMAC.sha512(hashValue, salt, iterations);
+                for (int i = 0; i < hashValue.length; i++) {
+                    hashValue[i] = 0x00;
+                }
+                hashValue = newHashValue;
             } else {
                 throw new NotHashedException("Negative iterations.");
             }
@@ -172,4 +172,10 @@ public class PasswordGenerator {
         return password;
     }
 
+    protected void finalize() throws Throwable {
+        for (int i = 0; i < hashValue.length; i++) {
+            hashValue[i] = 0x00;
+        }
+        super.finalize();
+    }
 }

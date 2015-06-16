@@ -2,13 +2,25 @@ package de.pinyto.passwordgenerator;
 
 import junit.framework.TestCase;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+
 /**
  * Tests for the PasswordGenerator class.
  */
 public class PasswordGeneratorTest extends TestCase {
 
     public void testHashOnceAndGetPassword () {
-        PasswordGenerator pg = new PasswordGenerator("test.de", "secret");
+        byte[] domain = UTF8.encode("test.de");
+        byte[] password = UTF8.encode("secret");
+        PasswordGenerator pg = new PasswordGenerator(domain, password);
         try {
             pg.hash(2);
             assertEquals("U§G8+6}m[+", pg.getPassword(true, true, true, 10));
@@ -18,7 +30,9 @@ public class PasswordGeneratorTest extends TestCase {
     }
 
     public void testHashTwiceAndGetPassword () {
-        PasswordGenerator pg = new PasswordGenerator("test.de", "secret");
+        byte[] domain = UTF8.encode("test.de");
+        byte[] password = UTF8.encode("secret");
+        PasswordGenerator pg = new PasswordGenerator(domain, password);
         try {
             pg.hash(2);
             pg.hash(5);
@@ -29,7 +43,7 @@ public class PasswordGeneratorTest extends TestCase {
     }
 
     public void testHashOnceAndGetPasswordEmptyInputs () {
-        PasswordGenerator pg = new PasswordGenerator("", "");
+        PasswordGenerator pg = new PasswordGenerator(new byte[] {}, new byte[] {});
         try {
             pg.hash(2);
             assertEquals("/ZsQWL>MJ$", pg.getPassword(true, true, true, 10));
@@ -39,7 +53,9 @@ public class PasswordGeneratorTest extends TestCase {
     }
 
     public void testHashOnceAndGetPasswordLengthZero () {
-        PasswordGenerator pg = new PasswordGenerator("test.de", "secret");
+        byte[] domain = UTF8.encode("test.de");
+        byte[] password = UTF8.encode("secret");
+        PasswordGenerator pg = new PasswordGenerator(domain, password);
         try {
             pg.hash(2);
             assertEquals("", pg.getPassword(true, true, true, 0));
@@ -49,7 +65,7 @@ public class PasswordGeneratorTest extends TestCase {
     }
 
     public void testHashOnceAndGetPasswordLengthMax () {
-        PasswordGenerator pg = new PasswordGenerator("", "");
+        PasswordGenerator pg = new PasswordGenerator(new byte[] {}, new byte[] {});
         try {
             pg.hash(2);
             assertEquals(80, pg.getPassword(true, true, true, 1000).length());
@@ -62,7 +78,7 @@ public class PasswordGeneratorTest extends TestCase {
     }
 
     public void testHashOnceAndGetPasswordEmptyInputsZeroHashes () {
-        PasswordGenerator pg = new PasswordGenerator("", "");
+        PasswordGenerator pg = new PasswordGenerator(new byte[] {}, new byte[] {});
         boolean thrown = false;
         try {
             pg.hash(0);
@@ -73,7 +89,9 @@ public class PasswordGeneratorTest extends TestCase {
     }
 
     public void testNoHashRaisesError () {
-        PasswordGenerator pg = new PasswordGenerator("test.de", "secret");
+        byte[] domain = UTF8.encode("test.de");
+        byte[] password = UTF8.encode("secret");
+        PasswordGenerator pg = new PasswordGenerator(domain, password);
         boolean thrown = false;
         try {
             pg.getPassword(true, true, true, 1000);
@@ -84,7 +102,9 @@ public class PasswordGeneratorTest extends TestCase {
     }
 
     public void testHashWithNegativeIterationCountRaisesError () {
-        PasswordGenerator pg = new PasswordGenerator("test.de", "secret");
+        byte[] domain = UTF8.encode("test.de");
+        byte[] password = UTF8.encode("secret");
+        PasswordGenerator pg = new PasswordGenerator(domain, password);
         boolean thrown = false;
         try {
             pg.hash(-3);
@@ -95,7 +115,9 @@ public class PasswordGeneratorTest extends TestCase {
     }
 
     public void testHashTwiceWithPositiveAndNegativeIterationCountRaisesError () {
-        PasswordGenerator pg = new PasswordGenerator("test.de", "secret");
+        byte[] domain = UTF8.encode("test.de");
+        byte[] password = UTF8.encode("secret");
+        PasswordGenerator pg = new PasswordGenerator(domain, password);
         boolean thrown = false;
         try {
             pg.hash(2);

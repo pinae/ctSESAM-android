@@ -173,18 +173,10 @@ public class MainActivity extends AppCompatActivity {
     private String generatePassword(int iterations) {
         AutoCompleteTextView autoCompleteTextViewDomain =
                 (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
-        CharBuffer domainCharBuffer = CharBuffer.wrap(
-                autoCompleteTextViewDomain.getText());
-        ByteBuffer domainByteBuffer = Charset.forName("UTF-8").encode(
-                domainCharBuffer);
-        byte[] domain = domainByteBuffer.array();
+        byte[] domain = UTF8.encode(autoCompleteTextViewDomain.getText());
         EditText editTextMasterPassword =
                 (EditText) findViewById(R.id.editTextMasterPassword);
-        CharBuffer passwordCharBuffer = CharBuffer.wrap(
-                editTextMasterPassword.getText());
-        ByteBuffer passwordByteBuffer = Charset.forName("UTF-8").encode(
-                passwordCharBuffer);
-        byte[] password = passwordByteBuffer.array();
+        byte[] password = UTF8.encode(editTextMasterPassword.getText());
         String generatedPassword;
         PasswordGenerator generator = new PasswordGenerator(domain, password);
         try {
