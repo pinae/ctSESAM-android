@@ -1,5 +1,10 @@
 package de.pinyto.passwordgenerator;
 
+import android.util.Log;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -35,6 +40,7 @@ public class PasswordSetting {
     private Date mDate;
     private boolean syced;
     private String notes;
+    private boolean synced = false;
 
     PasswordSetting(String domain) {
         this.domain = domain;
@@ -60,6 +66,14 @@ public class PasswordSetting {
     public void setUseLetters(boolean useLetters) {
         this.useLowerCase = useLetters;
         this.useUpperCase = useLetters;
+    }
+
+    public void setUseUpperCase(boolean useUpperCase) {
+        this.useUpperCase = useUpperCase;
+    }
+
+    public void setUseLowerCase(boolean useLowerCase) {
+        this.useLowerCase = useLowerCase;
     }
 
     public boolean useDigits() {
@@ -118,6 +132,19 @@ public class PasswordSetting {
         return df.format(this.mDate);
     }
 
+    public Date getMDate() {
+        return this.mDate;
+    }
+
+    public void setMDate(Date mDate) {
+        this.mDate = mDate;
+        if (this.cDate.compareTo(this.mDate) > 0) {
+            System.out.println("The modification date was before the creation Date. " +
+                    "Set the creation date to the earlier date.");
+            this.cDate = this.mDate;
+        }
+    }
+
     public void setModificationDate(String mDate) {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH);
         try {
@@ -125,7 +152,7 @@ public class PasswordSetting {
         } catch (ParseException e) {
             System.out.println("This date has a wrong format: " + mDate);
             e.printStackTrace();
-            this.cDate = Calendar.getInstance().getTime();
+            this.mDate = Calendar.getInstance().getTime();
         }
         if (this.cDate.compareTo(this.mDate) > 0) {
             System.out.println("The modification date was before the creation Date. " +
@@ -141,5 +168,38 @@ public class PasswordSetting {
                     "Set the creation date to the earlier date.");
             this.cDate = this.mDate;
         }
+    }
+
+    public JSONObject getJSON() {
+        JSONObject domainObject = new JSONObject();
+        try {
+            domainObject.put("domain", this.domain);
+            domainObject.put("useLowerCase", this.useLowerCase);
+            domainObject.put("useUpperCase", this.useUpperCase);
+            domainObject.put("useDigits", this.useDigits);
+            domainObject.put("useExtra", this.useExtra);
+            domainObject.put("iterations", this.iterations);
+            domainObject.put("length", this.length);
+            domainObject.put("cDate", this.getCreationDate());
+            domainObject.put("mDate", this.getModificationDate());
+        } catch (JSONException e) {
+            System.out.println("Settings packing error: Unable to pack the JSON data.");
+        }
+        return domainObject;
+    }
+
+    public void loadFromJSON(JSONObject loadedSetting) throws JSONException {
+        this.setCreationDate(loadedSetting.getString("cDate"));
+        this.setModificationDate(loadedSetting.getString("mDate"));
+        this.setIterations(loadedSetting.getInt("iterations"));
+        this.setLength(loadedSetting.getInt("length"));
+        this.setUseUpperCase(loadedSetting.getBoolean("useUpperCase"));
+        this.setUseLowerCase(loadedSetting.getBoolean("useLowerCase"));
+        this.setUseDigits(loadedSetting.getBoolean("useDigits"));
+        this.setUseExtra(loadedSetting.getBoolean("useExtra"));
+    }
+
+    public boolean isSynced() {
+        return this.synced;
     }
 }

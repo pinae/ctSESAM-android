@@ -34,7 +34,9 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -76,45 +78,34 @@ public class MainActivity extends AppCompatActivity {
                         if (!syncDataObject.getString("status").equals("ok")) break;
                         EditText editTextMasterPassword = (EditText) findViewById(
                                 R.id.editTextMasterPassword);
-                        byte[] password;
-                        try {
-                            password = editTextMasterPassword.getText().toString().getBytes(
-                                    "UTF-8");
-                        } catch (UnsupportedEncodingException e) {
-                            Log.d("Key generation error",
-                                    "UTF-8 is not supported. Using default encoding.");
-                            password = editTextMasterPassword.getText().toString().getBytes();
-                        }
-                        Crypter crypter = new Crypter(password);
-                        SettingsPacker packer = new SettingsPacker(getBaseContext());
-                        boolean changed = false;
                         if (syncDataObject.has("result")) {
-                            byte[] decrypted = crypter.decrypt(Base64.decode(
-                                    syncDataObject.getString("result"),
-                                    Base64.DEFAULT));
-                            if (decrypted.length > 0) {
-                                changed = packer.updateFromBlob(decrypted);
-                            } else {
-                                Toast.makeText(getApplicationContext(),
-                                        R.string.wrong_password, Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                        if (changed) {
-                            byte[] blob = packer.getBlob();
-                            byte[] encryptedBlob = crypter.encrypt(blob);
-                            if (mBound) {
-                                Message updateMsg = Message.obtain(null, SEND_UPDATE, 0, 0);
-                                updateMsg.replyTo = new Messenger(new ResponseHandler());
-                                Bundle bUpdateMsg = new Bundle();
-                                bUpdateMsg.putString("updatedData",
-                                        Base64.encodeToString(encryptedBlob, Base64.DEFAULT));
-                                updateMsg.setData(bUpdateMsg);
-                                try {
-                                    mService.send(updateMsg);
-                                } catch (RemoteException e) {
-                                    Log.d("Sync error",
-                                            "Could not send update message to sync service.");
-                                    e.printStackTrace();
+                            CharBuffer passwordCharBuffer = CharBuffer.wrap(
+                                    editTextMasterPassword.getText());
+                            ByteBuffer passwordByteBuffer = Charset.forName("UTF-8").encode(
+                                    passwordCharBuffer);
+                            byte[] password = passwordByteBuffer.array();
+                            boolean changed = settingsManager.updateFromExportData(
+                                    password, Base64.decode(syncDataObject.getString("result"),
+                                            Base64.DEFAULT));
+                            if (changed) {
+                                byte[] encryptedBlob = settingsManager.getExportData(password);
+                                for (int i = 0; i < password.length; i++) {
+                                    password[i] = 0x00;
+                                }
+                                if (mBound) {
+                                    Message updateMsg = Message.obtain(null, SEND_UPDATE, 0, 0);
+                                    updateMsg.replyTo = new Messenger(new ResponseHandler());
+                                    Bundle bUpdateMsg = new Bundle();
+                                    bUpdateMsg.putString("updatedData",
+                                            Base64.encodeToString(encryptedBlob, Base64.DEFAULT));
+                                    updateMsg.setData(bUpdateMsg);
+                                    try {
+                                        mService.send(updateMsg);
+                                    } catch (RemoteException e) {
+                                        Log.d("Sync error",
+                                                "Could not send update message to sync service.");
+                                        e.printStackTrace();
+                                    }
                                 }
                             }
                         }
@@ -182,12 +173,20 @@ public class MainActivity extends AppCompatActivity {
     private String generatePassword(int iterations) {
         AutoCompleteTextView autoCompleteTextViewDomain =
                 (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
-        String domain = autoCompleteTextViewDomain.getText().toString();
+        CharBuffer domainCharBuffer = CharBuffer.wrap(
+                autoCompleteTextViewDomain.getText());
+        ByteBuffer domainByteBuffer = Charset.forName("UTF-8").encode(
+                domainCharBuffer);
+        byte[] domain = domainByteBuffer.array();
         EditText editTextMasterPassword =
                 (EditText) findViewById(R.id.editTextMasterPassword);
-        PasswordGenerator generator = new PasswordGenerator(
-                domain,
-                editTextMasterPassword.getText().toString());
+        CharBuffer passwordCharBuffer = CharBuffer.wrap(
+                editTextMasterPassword.getText());
+        ByteBuffer passwordByteBuffer = Charset.forName("UTF-8").encode(
+                passwordCharBuffer);
+        byte[] password = passwordByteBuffer.array();
+        String generatedPassword;
+        PasswordGenerator generator = new PasswordGenerator(domain, password);
         try {
             generator.hash(iterations);
             CheckBox checkBoxSpecialCharacters =
@@ -198,15 +197,19 @@ public class MainActivity extends AppCompatActivity {
                     (CheckBox) findViewById(R.id.checkBoxDigits);
             SeekBar seekBarLength =
                     (SeekBar) findViewById(R.id.seekBarLength);
-            return generator.getPassword(
+            generatedPassword = generator.getPassword(
                     checkBoxSpecialCharacters.isChecked(),
                     checkBoxLetters.isChecked(),
                     checkBoxDigits.isChecked(),
                     seekBarLength.getProgress() + 4);
         } catch (NotHashedException e) {
             e.printStackTrace();
-            return "Not hashed.";
+            generatedPassword = "Not hashed.";
         }
+        for (int i = 0; i < password.length; i++) {
+            password[i] = 0x00;
+        }
+        return generatedPassword;
     }
 
     private void saveSettings(int iterations) {
@@ -263,11 +266,14 @@ public class MainActivity extends AppCompatActivity {
                 (CheckBox) findViewById(R.id.checkBoxDigits);
         SeekBar seekBarLength =
                 (SeekBar) findViewById(R.id.seekBarLength);
+        TextView lengthLabel =
+                (TextView) findViewById(R.id.textViewLengthDisplay);
         PasswordSetting passwordSetting = settingsManager.getSetting(domain);
         checkBoxLetters.setChecked(passwordSetting.useLetters());
         checkBoxDigits.setChecked(passwordSetting.useDigits());
         checkBoxSpecialCharacters.setChecked(passwordSetting.useExtra());
         seekBarLength.setProgress(passwordSetting.getLength() - 4);
+        lengthLabel.setText(Integer.toString(passwordSetting.getLength()));
     }
 
     private void setButtonEnabledByDomainLength() {
