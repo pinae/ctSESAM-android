@@ -94,6 +94,27 @@ public class PasswordSettingsManager {
         savedDomainsEditor.apply();
     }
 
+    public void deleteSetting(String domain) {
+        Set<String> domainSet = savedDomains.getStringSet(
+                "domainSet",
+                new HashSet<String>()
+        );
+        if ((domainSet != null) && (domainSet.contains(domain))) {
+            domainSet.remove(domain);
+        }
+        SharedPreferences.Editor savedDomainsEditor = savedDomains.edit();
+        savedDomainsEditor.putStringSet("domainSet", domainSet);
+        savedDomainsEditor.remove(domain + "_letters");
+        savedDomainsEditor.remove(domain + "_digits");
+        savedDomainsEditor.remove(domain + "_special_characters");
+        savedDomainsEditor.remove(domain + "_length");
+        savedDomainsEditor.remove(domain + "_iterations");
+        savedDomainsEditor.remove(domain + "_cDate");
+        savedDomainsEditor.remove(domain + "_mDate");
+        savedDomainsEditor.remove(domain + "_synced");
+        savedDomainsEditor.apply();
+    }
+
     public String[] getDomainList() {
         Set<String> domainSet = savedDomains.getStringSet("domainSet", new HashSet<String>());
         String[] domainList;

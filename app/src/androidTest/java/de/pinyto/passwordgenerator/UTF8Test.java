@@ -1,6 +1,5 @@
 package de.pinyto.passwordgenerator;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import java.io.UnsupportedEncodingException;
