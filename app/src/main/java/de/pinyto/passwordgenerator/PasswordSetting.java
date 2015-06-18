@@ -56,6 +56,10 @@ public class PasswordSetting {
         return this.domain;
     }
 
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
     public boolean useLetters() {
         return this.useLowerCase && this.useUpperCase;
     }
@@ -160,7 +164,7 @@ public class PasswordSetting {
         this.synced = false;
     }
 
-    public JSONObject getJSON() {
+    public JSONObject toJSON() {
         JSONObject domainObject = new JSONObject();
         try {
             domainObject.put("domain", this.domain);
@@ -179,17 +183,40 @@ public class PasswordSetting {
     }
 
     public void loadFromJSON(JSONObject loadedSetting) throws JSONException {
-        this.setCreationDate(loadedSetting.getString("cDate"));
-        this.setModificationDate(loadedSetting.getString("mDate"));
-        this.setIterations(loadedSetting.getInt("iterations"));
-        this.setLength(loadedSetting.getInt("length"));
-        this.setUseUpperCase(loadedSetting.getBoolean("useUpperCase"));
-        this.setUseLowerCase(loadedSetting.getBoolean("useLowerCase"));
-        this.setUseDigits(loadedSetting.getBoolean("useDigits"));
-        this.setUseExtra(loadedSetting.getBoolean("useExtra"));
+        if (loadedSetting.has("domain")) {
+            this.setDomain(loadedSetting.getString("domain"));
+        }
+        if (loadedSetting.has("cDate")) {
+            this.setCreationDate(loadedSetting.getString("cDate"));
+        }
+        if (loadedSetting.has("mDate")) {
+            this.setModificationDate(loadedSetting.getString("mDate"));
+        }
+        if (loadedSetting.has("iterations")) {
+            this.setIterations(loadedSetting.getInt("iterations"));
+        }
+        if (loadedSetting.has("length")) {
+            this.setLength(loadedSetting.getInt("length"));
+        }
+        if (loadedSetting.has("useUpperCase")) {
+            this.setUseUpperCase(loadedSetting.getBoolean("useUpperCase"));
+        }
+        if (loadedSetting.has("useLowerCase")) {
+            this.setUseLowerCase(loadedSetting.getBoolean("useLowerCase"));
+        }
+        if (loadedSetting.has("useDigits")) {
+            this.setUseDigits(loadedSetting.getBoolean("useDigits"));
+        }
+        if (loadedSetting.has("useExtra")) {
+            this.setUseExtra(loadedSetting.getBoolean("useExtra"));
+        }
     }
 
     public boolean isSynced() {
         return this.synced;
+    }
+
+    public void setSynced(boolean isSynced) {
+        this.synced = isSynced;
     }
 }

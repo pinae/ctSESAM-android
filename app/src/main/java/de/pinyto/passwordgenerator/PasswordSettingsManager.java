@@ -44,6 +44,15 @@ public class PasswordSettingsManager {
                 setting.setUseExtra(savedDomains.getBoolean(domain + "_special_characters", true));
                 setting.setLength(savedDomains.getInt(domain + "_length", 10));
                 setting.setIterations(savedDomains.getInt(domain + "_iterations", 4096));
+                String dateString = savedDomains.getString(domain + "_cDate", "");
+                if (dateString != null && dateString.length() > 0) {
+                    setting.setCreationDate(dateString);
+                }
+                dateString = savedDomains.getString(domain + "_mDate", "");
+                if (dateString != null && dateString.length() > 0) {
+                    setting.setModificationDate(dateString);
+                }
+                setting.setSynced(savedDomains.getBoolean(domain + "_synced", false));
             }
         }
         return setting;
@@ -141,14 +150,14 @@ public class PasswordSettingsManager {
         if (domainSet != null) {
             for (String domain : domainSet) {
                 PasswordSetting domainSetting = getSetting(domain);
-                settings.put(domainSetting.getJSON());
+                settings.put(domainSetting.toJSON());
             }
         }
         return settings;
     }
 
     public byte[] getExportData(byte[] password) {
-        byte[] compressedData = Packer.compress(getSettingsAsJSON().toString());
+        byte[] compressedData = Packer.compress(this.getSettingsAsJSON().toString());
         Crypter crypter = new Crypter(password);
         return crypter.encrypt(compressedData);
     }
@@ -157,7 +166,8 @@ public class PasswordSettingsManager {
         Crypter crypter = new Crypter(password);
         byte[] decryptedBlob = crypter.decrypt(blob);
         if (decryptedBlob.length <= 0) {
-            Toast.makeText(contentContext, R.string.wrong_password, Toast.LENGTH_SHORT).show();
+            Toast.makeText(contentContext, R.string.wrong_password,
+                    Toast.LENGTH_SHORT).show();
             return false;
         }
         String jsonString = Packer.decompress(decryptedBlob);
@@ -174,11 +184,11 @@ public class PasswordSettingsManager {
                         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss",
                                 Locale.ENGLISH);
                         Date modifiedRemote = df.parse(loadedSetting.getString("mDate"));
-                        if (setting.getMDate().after(modifiedRemote)) {
-                            updateRemote = true;
-                        } else {
+                        if (modifiedRemote.after(setting.getMDate())) {
                             setting.loadFromJSON(loadedSetting);
                             this.saveSetting(setting);
+                        } else {
+                            updateRemote = true;
                         }
                         break;
                     }
@@ -197,9 +207,10 @@ public class PasswordSettingsManager {
                     JSONObject loadedSetting = loadedSettings.getJSONObject(j);
                     if (setting.getDomain().equals(loadedSetting.getString("domain"))) {
                         found = true;
+                        break;
                     }
                 }
-                if (!found) {
+                if (!found && setting.isSynced()) {
                     updateRemote = true;
                 }
             }
