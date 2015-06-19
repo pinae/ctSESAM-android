@@ -72,6 +72,18 @@ public class PasswordSetting {
         this.username = username;
     }
 
+    public String getLegacyPassword() {
+        if (this.legacyPassword != null) {
+            return this.legacyPassword;
+        } else {
+            return "";
+        }
+    }
+
+    public void setLegacyPassword(String legacyPassword) {
+        this.legacyPassword = legacyPassword;
+    }
+
     public boolean useLetters() {
         return this.useLowerCase && this.useUpperCase;
     }

@@ -14,6 +14,13 @@ public class PasswordSettingTest extends TestCase {
         assertEquals("Hugo", s.getUsername());
     }
 
+    public void testLegacyPassword() {
+        PasswordSetting s = new PasswordSetting("unit.test");
+        assertEquals("", s.getLegacyPassword());
+        s.setLegacyPassword("K6x/vyG9(p");
+        assertEquals("K6x/vyG9(p", s.getLegacyPassword());
+    }
+
     public void testSetCreationDate() {
         PasswordSetting s = new PasswordSetting("unit.test");
         s.setModificationDate("1995-01-01T01:14:12");
