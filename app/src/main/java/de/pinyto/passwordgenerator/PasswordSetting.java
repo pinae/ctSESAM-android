@@ -24,6 +24,11 @@ public class PasswordSetting {
     private boolean useExtra = true;
     private boolean useCustom = false;
     private boolean avoidAmbiguous = true;
+    private final String defaultCharacterSet =
+            "abcdefghijklmnopqrstuvwxyz" +
+            "ABCDEFGHJKLMNPQRTUVWXYZ" +
+            "0123456789" +
+            "#!\"§$%&/()[]{}=-_+*<>;:.";
     private String customCharacterSet;
     private int iterations = 4096;
     private int length = 10;
@@ -115,6 +120,32 @@ public class PasswordSetting {
 
     public void setUseExtra(boolean useExtra) {
         this.useExtra = useExtra;
+    }
+
+    public boolean useCustomCharacterSet() {
+        return this.useCustom;
+    }
+
+    public boolean avoidAmbiguousCharacters() {
+        return this.avoidAmbiguous;
+    }
+
+    public String getCustomCharacterSet() {
+        if (this.customCharacterSet != null) {
+            return this.customCharacterSet;
+        } else {
+            return "";
+        }
+    }
+
+    public void setCustomCharacterSet(String characterSet) {
+        if (characterSet.equals(this.defaultCharacterSet)) {
+            this.customCharacterSet = null;
+            this.useCustom = false;
+        } else {
+            this.useCustom = true;
+            this.customCharacterSet = characterSet;
+        }
     }
 
     public int getLength() {
