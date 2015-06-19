@@ -180,6 +180,14 @@ public class PasswordSetting {
         return characterSet;
     }
 
+    public byte[] getSalt() {
+        return this.salt;
+    }
+
+    public void setSalt(byte[] salt) {
+        this.salt = salt;
+    }
+
     public int getLength() {
         return this.length;
     }

@@ -2,6 +2,8 @@ package de.pinyto.passwordgenerator;
 
 import junit.framework.TestCase;
 
+import java.io.UnsupportedEncodingException;
+
 /**
  * Testing the setting container class.
  */
@@ -30,9 +32,9 @@ public class PasswordSettingTest extends TestCase {
         assertEquals("&=Oo0wWsS$#uUvVzZ", s.getCustomCharacterSet());
         s.setCustomCharacterSet(
                 "abcdefghijklmnopqrstuvwxyz" +
-                "ABCDEFGHJKLMNPQRTUVWXYZ" +
-                "0123456789" +
-                "#!\"§$%&/()[]{}=-_+*<>;:.");
+                        "ABCDEFGHJKLMNPQRTUVWXYZ" +
+                        "0123456789" +
+                        "#!\"§$%&/()[]{}=-_+*<>;:.");
         assertFalse(s.useCustomCharacterSet());
         assertEquals("", s.getCustomCharacterSet());
     }
@@ -55,6 +57,29 @@ public class PasswordSettingTest extends TestCase {
         assertEquals(6, s.getCharacterSet().size());
         assertEquals("F", s.getCharacterSet().get(2));
         assertEquals("0", s.getCharacterSet().get(5));
+    }
+
+    public void testSalt() {
+        byte[] expected;
+        try {
+            expected = "pepper".getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            assertTrue(false);
+            expected = "pepper".getBytes();
+        }
+        PasswordSetting s = new PasswordSetting("unit.test");
+        byte[] actual = s.getSalt();
+        assertEquals(expected.length, actual.length);
+        for (int i = 0; i < expected.length; i++) {
+            assertEquals(expected[i], actual[i]);
+        }
+        expected = "somethingelse".getBytes();
+        s.setSalt(expected);
+        actual = s.getSalt();
+        assertEquals(expected.length, actual.length);
+        for (int i = 0; i < expected.length; i++) {
+            assertEquals(expected[i], actual[i]);
+        }
     }
 
     public void testSetCreationDate() {
