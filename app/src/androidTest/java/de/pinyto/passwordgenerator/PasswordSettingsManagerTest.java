@@ -125,4 +125,31 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
         settingsManager.deleteSetting("unit.test");
     }
 
+    public void testSetAllSettingsToSynced() {
+        PasswordSetting setting = new PasswordSetting("unit.test");
+        setting.setUseDigits(true);
+        setting.setUseLetters(false);
+        setting.setUseExtra(false);
+        setting.setLength(4);
+        setting.setCreationDate("2001-01-01T02:14:12");
+        setting.setModificationDate("2001-01-01T02:14:13");
+        settingsManager.saveSetting(setting);
+        assertFalse(setting.isSynced());
+        String[] domainList = settingsManager.getDomainList();
+        PasswordSetting[] allSettings = new PasswordSetting[domainList.length];
+        for (int i = 0; i < domainList.length; i++) {
+            allSettings[i] = settingsManager.getSetting(domainList[i]);
+        }
+        settingsManager.setAllSettingsToSynced();
+        assertTrue(settingsManager.getSetting("unit.test").isSynced());
+        for (String domain : domainList) {
+            assertTrue(settingsManager.getSetting(domain).isSynced());
+        }
+        // restoring
+        for (PasswordSetting s : allSettings) {
+            settingsManager.saveSetting(s);
+        }
+        settingsManager.deleteSetting("unit.test");
+    }
+
 }
