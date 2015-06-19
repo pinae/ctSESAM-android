@@ -146,4 +146,49 @@ public class PasswordSettingTest extends TestCase {
         }
     }
 
+    public void testLoadFromJSON() {
+        String json = "{\"domain\": \"unit.test\", \"username\": \"testilinius\", " +
+                "\"notes\": \"interesting note\", \"legacyPassword\": \"rtSr?bS,mi\", " +
+                "\"useLowerCase\": true, \"useUpperCase\": false, \"useDigits\": true, " +
+                "\"useExtra\": false, \"useCustom\": true, \"avoidAmbiguous\": true, " +
+                "\"customCharacterSet\": \"AEIOUaeiou\", \"iterations\": 5341, " +
+                "\"length\": 16, \"salt\": \"ZmFzY2luYXRpbmc=\", \"forceLowerCase\": false, " +
+                "\"forceUpperCase\": true, \"forceDigits\": true, \"forceExtra\": true, " +
+                "\"forceRegexValidation\": false, \"validatorRegEx\": \"[A-Za-z0-9]+\", " +
+                "\"cDate\": \"2001-01-01T02:14:12\", \"mDate\": \"2005-01-01T01:14:12\"}";
+        try {
+            JSONObject data = new JSONObject(json);
+            PasswordSetting s = new PasswordSetting(data.getString("domain"));
+            s.loadFromJSON(data);
+            assertEquals("unit.test", s.getDomain());
+            assertEquals("testilinius", s.getUsername());
+            assertEquals("interesting note", s.getNotes());
+            assertEquals("rtSr?bS,mi", s.getLegacyPassword());
+            assertTrue(s.useLowerCase());
+            assertFalse(s.useUpperCase());
+            assertTrue(s.useDigits());
+            assertFalse(s.useExtra());
+            assertTrue(s.useCustomCharacterSet());
+            assertTrue(s.avoidAmbiguousCharacters());
+            assertEquals("AEIOUaeiou", s.getCustomCharacterSet());
+            assertEquals(5341, s.getIterations());
+            assertEquals(16, s.getLength());
+            byte[] expectedSalt;
+            try {
+                expectedSalt = "fascinating".getBytes("UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                assertTrue(false);
+                expectedSalt = "fascinating".getBytes();
+            }
+            assertEquals(expectedSalt.length, s.getSalt().length);
+            for (int i = 0; i < expectedSalt.length; i++) {
+                assertEquals(expectedSalt[i], s.getSalt()[i]);
+            }
+            assertEquals("2001-01-01T02:14:12", s.getCreationDate());
+            assertEquals("2005-01-01T01:14:12", s.getModificationDate());
+        } catch (JSONException e) {
+            assertTrue(false);
+        }
+    }
+
 }

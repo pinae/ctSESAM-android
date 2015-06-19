@@ -101,8 +101,16 @@ public class PasswordSetting {
         this.useUpperCase = useLetters;
     }
 
+    public boolean useLowerCase() {
+        return this.useLowerCase;
+    }
+
     public void setUseUpperCase(boolean useUpperCase) {
         this.useUpperCase = useUpperCase;
+    }
+
+    public boolean useUpperCase() {
+        return this.useUpperCase;
     }
 
     public void setUseLowerCase(boolean useLowerCase) {
@@ -131,6 +139,10 @@ public class PasswordSetting {
 
     public boolean avoidAmbiguousCharacters() {
         return this.avoidAmbiguous;
+    }
+
+    public void setAvoidAmbiguousCharacters(boolean avoidAmbiguous) {
+        this.avoidAmbiguous = avoidAmbiguous;
     }
 
     public String getCustomCharacterSet() {
@@ -313,6 +325,15 @@ public class PasswordSetting {
         if (loadedSetting.has("domain")) {
             this.setDomain(loadedSetting.getString("domain"));
         }
+        if (loadedSetting.has("username")) {
+            this.setUsername(loadedSetting.getString("username"));
+        }
+        if (loadedSetting.has("legacyPassword")) {
+            this.setLegacyPassword(loadedSetting.getString("legacyPassword"));
+        }
+        if (loadedSetting.has("salt")) {
+            this.setSalt(Base64.decode(loadedSetting.getString("salt"), Base64.DEFAULT));
+        }
         if (loadedSetting.has("cDate")) {
             this.setCreationDate(loadedSetting.getString("cDate"));
         }
@@ -336,6 +357,18 @@ public class PasswordSetting {
         }
         if (loadedSetting.has("useExtra")) {
             this.setUseExtra(loadedSetting.getBoolean("useExtra"));
+        }
+        if (loadedSetting.has("avoidAmbiguous")) {
+            this.setAvoidAmbiguousCharacters(loadedSetting.getBoolean("avoidAmbiguous"));
+        }
+        if (loadedSetting.has("useCustom") &&
+                loadedSetting.getBoolean("useCustom") &&
+                loadedSetting.has("customCharacterSet") &&
+                (loadedSetting.getString("customCharacterSet").length() > 0)) {
+            this.setCustomCharacterSet(loadedSetting.getString("customCharacterSet"));
+        }
+        if (loadedSetting.has("notes")) {
+            this.setNotes(loadedSetting.getString("notes"));
         }
     }
 }
