@@ -60,6 +60,18 @@ public class PasswordSetting {
         this.domain = domain;
     }
 
+    public String getUsername() {
+        if (this.username != null) {
+            return this.username;
+        } else {
+            return "";
+        }
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     public boolean useLetters() {
         return this.useLowerCase && this.useUpperCase;
     }

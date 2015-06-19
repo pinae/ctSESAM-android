@@ -7,6 +7,13 @@ import junit.framework.TestCase;
  */
 public class PasswordSettingTest extends TestCase {
 
+    public void testUsername() {
+        PasswordSetting s = new PasswordSetting("unit.test");
+        assertEquals("", s.getUsername());
+        s.setUsername("Hugo");
+        assertEquals("Hugo", s.getUsername());
+    }
+
     public void testSetCreationDate() {
         PasswordSetting s = new PasswordSetting("unit.test");
         s.setModificationDate("1995-01-01T01:14:12");
