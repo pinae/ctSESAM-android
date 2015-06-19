@@ -98,4 +98,11 @@ public class PasswordSettingTest extends TestCase {
         assertEquals("2005-01-01T01:14:12", s.getModificationDate());
     }
 
+    public void testNotes() {
+        PasswordSetting s = new PasswordSetting("unit.test");
+        assertEquals("", s.getNotes());
+        s.setNotes("Beware of the password!");
+        assertEquals("Beware of the password!", s.getNotes());
+    }
+
 }

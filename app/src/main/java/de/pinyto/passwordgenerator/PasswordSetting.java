@@ -259,6 +259,26 @@ public class PasswordSetting {
         this.synced = false;
     }
 
+    public String getNotes() {
+        if (this.notes != null) {
+            return this.notes;
+        } else {
+            return "";
+        }
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
+    public boolean isSynced() {
+        return this.synced;
+    }
+
+    public void setSynced(boolean isSynced) {
+        this.synced = isSynced;
+    }
+
     public JSONObject toJSON() {
         JSONObject domainObject = new JSONObject();
         try {
@@ -305,13 +325,5 @@ public class PasswordSetting {
         if (loadedSetting.has("useExtra")) {
             this.setUseExtra(loadedSetting.getBoolean("useExtra"));
         }
-    }
-
-    public boolean isSynced() {
-        return this.synced;
-    }
-
-    public void setSynced(boolean isSynced) {
-        this.synced = isSynced;
     }
 }
