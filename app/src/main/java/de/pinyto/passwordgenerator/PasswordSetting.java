@@ -1,5 +1,7 @@
 package de.pinyto.passwordgenerator;
 
+import android.util.Base64;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -291,6 +293,16 @@ public class PasswordSetting {
             domainObject.put("length", this.length);
             domainObject.put("cDate", this.getCreationDate());
             domainObject.put("mDate", this.getModificationDate());
+            if (this.salt != null) {
+                domainObject.put("salt", Base64.encodeToString(this.salt, Base64.DEFAULT));
+            }
+            if (this.useCustomCharacterSet()) {
+                domainObject.put("useCustom", this.useCustomCharacterSet());
+                domainObject.put("customCharacterSet", this.getCustomCharacterSet());
+            }
+            if (this.notes != null) {
+                domainObject.put("notes", this.getNotes());
+            }
         } catch (JSONException e) {
             System.out.println("Settings packing error: Unable to pack the JSON data.");
         }

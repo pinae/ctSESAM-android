@@ -1,6 +1,11 @@
 package de.pinyto.passwordgenerator;
 
+import android.util.Base64;
+
 import junit.framework.TestCase;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 
@@ -103,6 +108,42 @@ public class PasswordSettingTest extends TestCase {
         assertEquals("", s.getNotes());
         s.setNotes("Beware of the password!");
         assertEquals("Beware of the password!", s.getNotes());
+    }
+
+    public void testToJson() {
+        PasswordSetting s = new PasswordSetting("unit.test");
+        s.setModificationDate("2005-01-01T01:14:12");
+        s.setCreationDate("2001-01-01T02:14:12");
+        s.setSalt("something".getBytes());
+        s.setIterations(213);
+        s.setLength(14);
+        s.setCustomCharacterSet("XVLCWKHGFQUIAEOSNRTDYÜÖÄPZBMJ");
+        s.setNotes("Some note.");
+        try {
+            assertTrue(s.toJSON().has("domain"));
+            assertEquals("unit.test", s.toJSON().getString("domain"));
+            assertTrue(s.toJSON().has("cDate"));
+            assertEquals("2001-01-01T02:14:12", s.toJSON().getString("cDate"));
+            assertTrue(s.toJSON().has("mDate"));
+            assertEquals("2005-01-01T01:14:12", s.toJSON().getString("mDate"));
+            assertTrue(s.toJSON().has("salt"));
+            assertEquals(
+                    Base64.encodeToString("something".getBytes(), Base64.DEFAULT),
+                    s.toJSON().getString("salt"));
+            assertTrue(s.toJSON().has("iterations"));
+            assertEquals(213, s.toJSON().getInt("iterations"));
+            assertTrue(s.toJSON().has("length"));
+            assertEquals(14, s.toJSON().getInt("length"));
+            assertTrue(s.toJSON().has("useCustom"));
+            assertTrue(s.toJSON().getBoolean("useCustom"));
+            assertTrue(s.toJSON().has("customCharacterSet"));
+            assertEquals("XVLCWKHGFQUIAEOSNRTDYÜÖÄPZBMJ",
+                    s.toJSON().getString("customCharacterSet"));
+            assertTrue(s.toJSON().has("notes"));
+            assertEquals("Some note.", s.toJSON().getString("notes"));
+        } catch (JSONException e) {
+            assertTrue(false);
+        }
     }
 
 }
