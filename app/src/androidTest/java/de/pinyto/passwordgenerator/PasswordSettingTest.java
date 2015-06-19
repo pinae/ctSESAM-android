@@ -37,6 +37,26 @@ public class PasswordSettingTest extends TestCase {
         assertEquals("", s.getCustomCharacterSet());
     }
 
+    public void testGetDefaultCharacterSet() {
+        PasswordSetting s = new PasswordSetting("unit.test");
+        s.setUseLetters(false);
+        assertEquals("0123456789#!\"§$%&/()[]{}=-_+*<>;:.", s.getDefaultCharacterSet());
+        s.setUseLetters(true);
+        s.setUseDigits(false);
+        s.setUseExtra(false);
+        assertEquals("abcdefghijklmnopqrstuvwxyzABCDEFGHJKLMNPQRTUVWXYZ",
+                s.getDefaultCharacterSet());
+    }
+
+    public void testGetCharacterSet() {
+        PasswordSetting s = new PasswordSetting("unit.test");
+        assertEquals("c", s.getCharacterSet().get(2));
+        s.setCustomCharacterSet("axFLp0");
+        assertEquals(6, s.getCharacterSet().size());
+        assertEquals("F", s.getCharacterSet().get(2));
+        assertEquals("0", s.getCharacterSet().get(5));
+    }
+
     public void testSetCreationDate() {
         PasswordSetting s = new PasswordSetting("unit.test");
         s.setModificationDate("1995-01-01T01:14:12");

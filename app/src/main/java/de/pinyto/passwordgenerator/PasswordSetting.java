@@ -7,8 +7,10 @@ import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -24,11 +26,10 @@ public class PasswordSetting {
     private boolean useExtra = true;
     private boolean useCustom = false;
     private boolean avoidAmbiguous = true;
-    private final String defaultCharacterSet =
-            "abcdefghijklmnopqrstuvwxyz" +
-            "ABCDEFGHJKLMNPQRTUVWXYZ" +
-            "0123456789" +
-            "#!\"§$%&/()[]{}=-_+*<>;:.";
+    private final String defaultCharacterSetLowerCase = "abcdefghijklmnopqrstuvwxyz";
+    private final String defaultCharacterSetUpperCase = "ABCDEFGHJKLMNPQRTUVWXYZ";
+    private final String defaultCharacterSetDigits = "0123456789";
+    private final String defaultCharacterSetExtra = "#!\"§$%&/()[]{}=-_+*<>;:.";
     private String customCharacterSet;
     private int iterations = 4096;
     private int length = 10;
@@ -138,14 +139,45 @@ public class PasswordSetting {
         }
     }
 
+    public String getDefaultCharacterSet() {
+        String set = "";
+        if (useLowerCase) {
+            set = set + this.defaultCharacterSetLowerCase;
+        }
+        if (useUpperCase) {
+            set = set + this.defaultCharacterSetUpperCase;
+        }
+        if (useDigits) {
+            set = set + this.defaultCharacterSetDigits;
+        }
+        if (useExtra) {
+            set = set + this.defaultCharacterSetExtra;
+        }
+        return set;
+    }
+
     public void setCustomCharacterSet(String characterSet) {
-        if (characterSet.equals(this.defaultCharacterSet)) {
+        if (characterSet.equals(this.getDefaultCharacterSet())) {
             this.customCharacterSet = null;
             this.useCustom = false;
         } else {
             this.useCustom = true;
             this.customCharacterSet = characterSet;
         }
+    }
+
+    public List<String> getCharacterSet() {
+        List<String> characterSet = new ArrayList<>();
+        String characters;
+        if (this.useCustomCharacterSet()) {
+            characters = this.getCustomCharacterSet();
+        } else {
+            characters = this.getDefaultCharacterSet();
+        }
+        for (int i = 0; i < characters.length(); i++) {
+            characterSet.add(Character.toString(characters.charAt(i)));
+        }
+        return characterSet;
     }
 
     public int getLength() {
