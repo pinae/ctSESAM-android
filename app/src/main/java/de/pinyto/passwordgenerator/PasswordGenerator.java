@@ -56,8 +56,7 @@ public class PasswordGenerator {
         }
     }
 
-    public String getPassword(boolean specialCharacters, boolean letters,
-                            boolean numbers, int length) throws NotHashedException {
+    public String getPassword(PasswordSetting setting) throws NotHashedException {
         if (this.iterations <= 0) {
             throw new NotHashedException(Integer.toString(this.iterations) +
                     " iterations means the password is not hashed at all.");
@@ -66,106 +65,20 @@ public class PasswordGenerator {
         positiveHashValue[0] = 0;
         System.arraycopy(hashValue, 0, positiveHashValue, 1, hashValue.length);
         BigInteger hashNumber = new BigInteger(positiveHashValue);
+        for (int i = 0; i < positiveHashValue.length; i++) {
+            positiveHashValue[i] = 0x00;
+        }
         String password = "";
-        if (specialCharacters || letters || numbers) {
-            List<String> characterSet = new ArrayList<>();
-            if (letters) {
-                characterSet.add("a");
-                characterSet.add("b");
-                characterSet.add("c");
-                characterSet.add("d");
-                characterSet.add("e");
-                characterSet.add("f");
-                characterSet.add("g");
-                characterSet.add("h");
-                characterSet.add("i");
-                characterSet.add("j");
-                characterSet.add("k");
-                characterSet.add("l");
-                characterSet.add("m");
-                characterSet.add("n");
-                characterSet.add("o");
-                characterSet.add("p");
-                characterSet.add("q");
-                characterSet.add("r");
-                characterSet.add("s");
-                characterSet.add("t");
-                characterSet.add("u");
-                characterSet.add("v");
-                characterSet.add("w");
-                characterSet.add("x");
-                characterSet.add("y");
-                characterSet.add("z");
-                characterSet.add("A");
-                characterSet.add("B");
-                characterSet.add("C");
-                characterSet.add("D");
-                characterSet.add("E");
-                characterSet.add("F");
-                characterSet.add("G");
-                characterSet.add("H");
-                characterSet.add("J");
-                characterSet.add("K");
-                characterSet.add("L");
-                characterSet.add("M");
-                characterSet.add("N");
-                characterSet.add("P");
-                characterSet.add("Q");
-                characterSet.add("R");
-                characterSet.add("T");
-                characterSet.add("U");
-                characterSet.add("V");
-                characterSet.add("W");
-                characterSet.add("X");
-                characterSet.add("Y");
-                characterSet.add("Z");
-            }
-            if (numbers) {
-                characterSet.add("0");
-                characterSet.add("1");
-                characterSet.add("2");
-                characterSet.add("3");
-                characterSet.add("4");
-                characterSet.add("5");
-                characterSet.add("6");
-                characterSet.add("7");
-                characterSet.add("8");
-                characterSet.add("9");
-            }
-            if (specialCharacters) {
-                characterSet.add("#");
-                characterSet.add("!");
-                characterSet.add("\"");
-                characterSet.add("§");
-                characterSet.add("$");
-                characterSet.add("%");
-                characterSet.add("&");
-                characterSet.add("/");
-                characterSet.add("(");
-                characterSet.add(")");
-                characterSet.add("[");
-                characterSet.add("]");
-                characterSet.add("{");
-                characterSet.add("}");
-                characterSet.add("=");
-                characterSet.add("-");
-                characterSet.add("_");
-                characterSet.add("+");
-                characterSet.add("*");
-                characterSet.add("<");
-                characterSet.add(">");
-                characterSet.add(";");
-                characterSet.add(":");
-                characterSet.add(".");
-            }
+        List<String> characterSet = setting.getCharacterSet();
+        if (characterSet.size() > 0) {
             BigInteger setSize = BigInteger.valueOf(characterSet.size());
-            while (hashNumber.compareTo(setSize) >= 0 && password.length() < length) {
+            while (hashNumber.compareTo(setSize) >= 0 && password.length() < setting.getLength()) {
                 BigInteger[] divAndMod = hashNumber.divideAndRemainder(setSize);
                 hashNumber = divAndMod[0];
                 int mod = divAndMod[1].intValue();
                 password += characterSet.get(mod);
             }
-            if (hashNumber.compareTo(setSize) < 0 && password.length() < length) {
+            if (hashNumber.compareTo(setSize) < 0 && password.length() < setting.getLength()) {
                 password += characterSet.get(hashNumber.intValue());
             }
         }

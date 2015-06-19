@@ -174,19 +174,24 @@ public class MainActivity extends AppCompatActivity {
         PasswordGenerator generator = new PasswordGenerator(domain, password);
         try {
             generator.hash(iterations);
+            PasswordSetting setting = settingsManager.getSetting(
+                    autoCompleteTextViewDomain.getText().toString());
             CheckBox checkBoxSpecialCharacters =
                     (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
+            setting.setUseExtra(checkBoxSpecialCharacters.isChecked());
             CheckBox checkBoxLetters =
                     (CheckBox) findViewById(R.id.checkBoxLetters);
+            setting.setUseLetters(checkBoxLetters.isChecked());
             CheckBox checkBoxDigits =
                     (CheckBox) findViewById(R.id.checkBoxDigits);
+            setting.setUseDigits(checkBoxDigits.isChecked());
             SeekBar seekBarLength =
                     (SeekBar) findViewById(R.id.seekBarLength);
-            generatedPassword = generator.getPassword(
-                    checkBoxSpecialCharacters.isChecked(),
-                    checkBoxLetters.isChecked(),
-                    checkBoxDigits.isChecked(),
-                    seekBarLength.getProgress() + 4);
+            setting.setLength(seekBarLength.getProgress() + 4);
+            setting.setIterations(iterations);
+            setting.setModificationDateToNow();
+            generatedPassword = generator.getPassword(setting);
+            settingsManager.saveSetting(setting);
         } catch (NotHashedException e) {
             e.printStackTrace();
             generatedPassword = "Not hashed.";
@@ -195,28 +200,6 @@ public class MainActivity extends AppCompatActivity {
             password[i] = 0x00;
         }
         return generatedPassword;
-    }
-
-    private void saveSettings(int iterations) {
-        AutoCompleteTextView autoCompleteTextViewDomain =
-                (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
-        CheckBox checkBoxSpecialCharacters =
-                (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
-        CheckBox checkBoxLetters =
-                (CheckBox) findViewById(R.id.checkBoxLetters);
-        CheckBox checkBoxDigits =
-                (CheckBox) findViewById(R.id.checkBoxDigits);
-        SeekBar seekBarLength =
-                (SeekBar) findViewById(R.id.seekBarLength);
-        PasswordSetting newSetting = settingsManager.getSetting(
-                autoCompleteTextViewDomain.getText().toString());
-        newSetting.setUseLetters(checkBoxLetters.isChecked());
-        newSetting.setUseDigits(checkBoxDigits.isChecked());
-        newSetting.setUseExtra(checkBoxSpecialCharacters.isChecked());
-        newSetting.setLength(seekBarLength.getProgress() + 4);
-        newSetting.setIterations(iterations);
-        newSetting.setModificationDateToNow();
-        settingsManager.saveSetting(newSetting);
     }
 
     private void clearMasterPassword() {
@@ -322,8 +305,7 @@ public class MainActivity extends AppCompatActivity {
                         (TextView) findViewById(R.id.iterationCount);
                 textViewIterationCount.setText(Integer.toString(iterations));
                 setIterationCountVisibility(View.VISIBLE);
-                // Save domain and settings
-                saveSettings(iterations);
+                // load settings because the domain might be new
                 loadAutoCompleteFromSettings();
             }
         });

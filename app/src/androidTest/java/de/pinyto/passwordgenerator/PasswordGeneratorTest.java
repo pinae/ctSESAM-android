@@ -2,16 +2,6 @@ package de.pinyto.passwordgenerator;
 
 import junit.framework.TestCase;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.Charset;
-
 /**
  * Tests for the PasswordGenerator class.
  */
@@ -23,7 +13,9 @@ public class PasswordGeneratorTest extends TestCase {
         PasswordGenerator pg = new PasswordGenerator(domain, password);
         try {
             pg.hash(2);
-            assertEquals("U§G8+6}m[+", pg.getPassword(true, true, true, 10));
+            PasswordSetting setting = new PasswordSetting("test.de");
+            setting.setLength(10);
+            assertEquals("U§G8+6}m[+", pg.getPassword(setting));
         } catch (NotHashedException e) {
             e.printStackTrace();
         }
@@ -36,7 +28,9 @@ public class PasswordGeneratorTest extends TestCase {
         try {
             pg.hash(2);
             pg.hash(5);
-            assertEquals(":xv[{xqCa%", pg.getPassword(true, true, true, 10));
+            PasswordSetting setting = new PasswordSetting("test.de");
+            setting.setLength(10);
+            assertEquals(":xv[{xqCa%", pg.getPassword(setting));
         } catch (NotHashedException e) {
             e.printStackTrace();
         }
@@ -46,7 +40,9 @@ public class PasswordGeneratorTest extends TestCase {
         PasswordGenerator pg = new PasswordGenerator(new byte[] {}, new byte[] {});
         try {
             pg.hash(2);
-            assertEquals("/ZsQWL>MJ$", pg.getPassword(true, true, true, 10));
+            PasswordSetting setting = new PasswordSetting("test.de");
+            setting.setLength(10);
+            assertEquals("/ZsQWL>MJ$", pg.getPassword(setting));
         } catch (NotHashedException e) {
             e.printStackTrace();
         }
@@ -58,7 +54,9 @@ public class PasswordGeneratorTest extends TestCase {
         PasswordGenerator pg = new PasswordGenerator(domain, password);
         try {
             pg.hash(2);
-            assertEquals("", pg.getPassword(true, true, true, 0));
+            PasswordSetting setting = new PasswordSetting("test.de");
+            setting.setLength(0);
+            assertEquals("", pg.getPassword(setting));
         } catch (NotHashedException e) {
             e.printStackTrace();
         }
@@ -68,10 +66,12 @@ public class PasswordGeneratorTest extends TestCase {
         PasswordGenerator pg = new PasswordGenerator(new byte[] {}, new byte[] {});
         try {
             pg.hash(2);
-            assertEquals(80, pg.getPassword(true, true, true, 1000).length());
+            PasswordSetting setting = new PasswordSetting("test.de");
+            setting.setLength(1000);
+            assertEquals(80, pg.getPassword(setting).length());
             assertEquals("/ZsQWL>MJ$f3h§;fBMQ_5u:;1DP4*EFZ[VkLUY2phD%\"i\"oJ\"GiD-4" +
                             "N./f%\"d##+JXPjb-:.bU*BZse/",
-                    pg.getPassword(true, true, true, 1000));
+                    pg.getPassword(setting));
         } catch (NotHashedException e) {
             e.printStackTrace();
         }
@@ -94,7 +94,9 @@ public class PasswordGeneratorTest extends TestCase {
         PasswordGenerator pg = new PasswordGenerator(domain, password);
         boolean thrown = false;
         try {
-            pg.getPassword(true, true, true, 1000);
+            PasswordSetting setting = new PasswordSetting("test.de");
+            setting.setLength(1000);
+            pg.getPassword(setting);
         } catch (NotHashedException e) {
             thrown = true;
         }
@@ -122,7 +124,9 @@ public class PasswordGeneratorTest extends TestCase {
         try {
             pg.hash(2);
             pg.hash(-1);
-            pg.getPassword(true, true, true, 1000);
+            PasswordSetting setting = new PasswordSetting("test.de");
+            setting.setLength(1000);
+            pg.getPassword(setting);
         } catch (NotHashedException e) {
             thrown = true;
         }
