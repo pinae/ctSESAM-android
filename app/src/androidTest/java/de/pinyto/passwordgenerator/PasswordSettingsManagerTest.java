@@ -46,6 +46,37 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
         assertFalse(found);
     }
 
+    public void testSaveUnsupportedSettings() {
+        PasswordSetting setting = new PasswordSetting("unit.test");
+        setting.setUseLowerCase(true);
+        setting.setUseUpperCase(false);
+        setting.setUseExtra(true);
+        setting.setUseDigits(false);
+        setting.setCustomCharacterSet("ABCKWXkwx345/$#");
+        setting.setLegacyPassword("Insecure");
+        setting.setUsername("hugo");
+        setting.setAvoidAmbiguousCharacters(true);
+        setting.setSalt("hmpf".getBytes());
+        setting.setNotes("12 is more than 5.");
+        settingsManager.saveSetting(setting);
+        PasswordSetting checkSetting = settingsManager.getSetting("unit.test");
+        assertTrue(checkSetting.useLowerCase());
+        assertFalse(checkSetting.useUpperCase());
+        assertTrue(checkSetting.useExtra());
+        assertFalse(checkSetting.useDigits());
+        assertTrue(checkSetting.useCustomCharacterSet());
+        assertEquals("ABCKWXkwx345/$#", checkSetting.getCustomCharacterSet());
+        assertEquals("Insecure", checkSetting.getLegacyPassword());
+        assertEquals("hugo", checkSetting.getUsername());
+        assertTrue(checkSetting.avoidAmbiguousCharacters());
+        assertEquals("hmpf".getBytes().length, checkSetting.getSalt().length);
+        for (int i = 0; i < checkSetting.getSalt().length; i++) {
+            assertEquals("hmpf".getBytes()[i], checkSetting.getSalt()[i]);
+        }
+        assertEquals("12 is more than 5.", checkSetting.getNotes());
+        settingsManager.deleteSetting(checkSetting.getDomain());
+    }
+
     public void testGetBlob() {
         PasswordSetting setting = new PasswordSetting("unit.test");
         setting.setUseDigits(true);

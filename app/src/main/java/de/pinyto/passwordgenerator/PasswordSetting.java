@@ -35,6 +35,7 @@ public class PasswordSetting {
     private String customCharacterSet;
     private int iterations = 4096;
     private int length = 10;
+    private final byte[] defaultSalt = new byte[] { 0x70, 0x65, 0x70, 0x70, 0x65, 0x72 };
     private byte[] salt;
     private boolean forceLowerCase = false;
     private boolean forceUpperCase = false;
@@ -49,13 +50,7 @@ public class PasswordSetting {
 
     PasswordSetting(String domain) {
         this.domain = domain;
-        try {
-            this.salt = "pepper".getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            System.out.println("UTF-8 is not supported. Using default encoding.");
-            e.printStackTrace();
-            this.salt = "pepper".getBytes();
-        }
+        this.salt = defaultSalt;
         this.cDate = Calendar.getInstance().getTime();
         this.mDate = this.cDate;
     }
@@ -196,6 +191,10 @@ public class PasswordSetting {
 
     public byte[] getSalt() {
         return this.salt;
+    }
+
+    public byte[] getDefaultSalt() {
+        return this.defaultSalt;
     }
 
     public void setSalt(byte[] salt) {
