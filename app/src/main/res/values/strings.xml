@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">c't SESAM</string>
+    <string name="app_name">ct SESAM</string>
 
     <string name="action_copy">Copy the password to the clipboard</string>
     <string name="action_sync">Syncronize password settings</string>
