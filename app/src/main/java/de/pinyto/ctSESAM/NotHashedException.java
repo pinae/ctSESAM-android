@@ -1,4 +1,4 @@
-package de.pinyto.passwordgenerator;
+package de.pinyto.ctSESAM;
 
 /**
  * Exception for 0 iteration count or no call to hash in PasswordGenerator.

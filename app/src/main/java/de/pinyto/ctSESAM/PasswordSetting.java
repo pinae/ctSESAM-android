@@ -1,11 +1,10 @@
-package de.pinyto.passwordgenerator;
+package de.pinyto.ctSESAM;
 
 import android.util.Base64;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

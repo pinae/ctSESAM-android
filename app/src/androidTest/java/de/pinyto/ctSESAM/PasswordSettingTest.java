@@ -1,4 +1,4 @@
-package de.pinyto.passwordgenerator;
+package de.pinyto.ctSESAM;
 
 import android.util.Base64;
 

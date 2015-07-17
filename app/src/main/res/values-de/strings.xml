@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Passwortgenerator</string>
     <string name="domain">Domain:</string>
     <string name="action_copy">Passwort in die Zwischenablage kopieren</string>
     <string name="generator_button">Erzeugen</string>

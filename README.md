@@ -1,4 +1,4 @@
-# passwordGenerator-android
-This is the Android version of the c't password generator. 
+# ctSESAM-android
+This is the Android version of the c't SESAM password manager. 
 
-There might be other implementations of the same algorithm for other platforms.
+There might be other implementations of c't SESAM for other platforms.

@@ -1,4 +1,4 @@
-package de.pinyto.passwordgenerator;
+package de.pinyto.ctSESAM;
 
 /**
  * This is a utility class for outputting and reading hex encoded bytes.

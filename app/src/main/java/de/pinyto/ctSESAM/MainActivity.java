@@ -1,4 +1,4 @@
-package de.pinyto.passwordgenerator;
+package de.pinyto.ctSESAM;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;

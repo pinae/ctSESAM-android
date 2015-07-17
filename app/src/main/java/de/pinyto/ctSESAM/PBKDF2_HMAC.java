@@ -1,4 +1,4 @@
-package de.pinyto.passwordgenerator;
+package de.pinyto.ctSESAM;
 
 import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;

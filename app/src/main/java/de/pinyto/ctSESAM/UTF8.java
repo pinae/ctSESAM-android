@@ -1,4 +1,4 @@
-package de.pinyto.passwordgenerator;
+package de.pinyto.ctSESAM;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
