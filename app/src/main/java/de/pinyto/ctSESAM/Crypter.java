@@ -34,7 +34,7 @@ public class Crypter {
             e.printStackTrace();
             salt = new byte[] {};
         }
-        key = Arrays.copyOfRange(PBKDF2_HMAC.sha512(password, salt, 4096), 0, 32);
+        key = Arrays.copyOfRange(PBKDF2.hmac("SHA512", password, salt, 4096), 0, 32);
     }
 
     public byte[] encrypt(byte[] data) {

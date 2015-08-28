@@ -41,7 +41,7 @@ public class PasswordGenerator {
         this.iterations = this.iterations + iterations;
         if (this.iterations > 0) {
             if (iterations >= 0) {
-                byte[] newHashValue = PBKDF2_HMAC.sha512(hashValue, salt, iterations);
+                byte[] newHashValue = PBKDF2.hmac("SHA512", hashValue, salt, iterations);
                 for (int i = 0; i < hashValue.length; i++) {
                     hashValue[i] = 0x00;
                 }

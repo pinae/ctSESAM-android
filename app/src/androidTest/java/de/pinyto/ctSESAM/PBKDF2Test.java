@@ -7,7 +7,7 @@ import java.io.UnsupportedEncodingException;
 /**
  * Unit tests for the PBKDF2_HMAC implementation
  */
-public class PBKDF2_HMACTest extends TestCase {
+public class PBKDF2Test extends TestCase {
 
     public void testSha512Hmac () {
         byte[] key;
@@ -32,7 +32,7 @@ public class PBKDF2_HMACTest extends TestCase {
                 0x3D, (byte)0xCB, 0x17, (byte)0xF5, 0x5D, 0x22, (byte)0xAF, 0x49, (byte)0xA1,
                 (byte)0x80, 0x71, (byte)0xB7, 0x48, (byte)0xC5, (byte)0xC2, (byte)0xED, (byte)0xD7,
                 (byte)0xF7, (byte)0xA8, 0x29, (byte)0xC6, 0x32 };
-        byte[] digest = PBKDF2_HMAC.sha512HMAC(key, message);
+        byte[] digest = PBKDF2.shaHMAC("SHA512", key, message);
         assertEquals(expectedDigest.length, digest.length);
         for (int i = 0; i < digest.length; i++) {
             assertEquals(digest[i], expectedDigest[i]);
@@ -61,7 +61,7 @@ public class PBKDF2_HMACTest extends TestCase {
                 (byte)0x9D, 0x6C, (byte)0xF5, 0x00, 0x7A, (byte)0x86, 0x32, (byte)0xC2, 0x6E,
                 (byte)0xC8, (byte)0x9B, (byte)0xA8, 0x0A, 0x01, (byte)0xC7, 0x7A, 0x6C, (byte)0xDD,
                 0x38, (byte)0x9E, (byte)0xC2, (byte)0x8D, (byte)0xB4, 0x39, 0x01 };
-        byte[] digest = PBKDF2_HMAC.sha512HMAC(key, message);
+        byte[] digest = PBKDF2.shaHMAC("SHA512", key, message);
         assertEquals(expectedDigest.length, digest.length);
         for (int i = 0; i < digest.length; i++) {
             assertEquals(digest[i], expectedDigest[i]);
@@ -91,7 +91,7 @@ public class PBKDF2_HMACTest extends TestCase {
                 0x7C, 0x7F, (byte)0xED, (byte)0xBB, 0x01, 0x54, (byte)0xD5, 0x49, 0x3E, 0x41,
                 (byte)0xBB, 0x74, 0x59, (byte)0xF6, 0x3C, (byte)0x8E, 0x39, 0x55, 0x4E, (byte)0xA3,
                 0x65, 0x1B, (byte)0x81, 0x24, (byte)0x92 };
-        byte[] digest = PBKDF2_HMAC.sha512HMAC(key, message);
+        byte[] digest = PBKDF2.shaHMAC("SHA512", key, message);
         assertEquals(expectedDigest.length, digest.length);
         for (int i = 0; i < digest.length; i++) {
             assertEquals(digest[i], expectedDigest[i]);
@@ -121,7 +121,7 @@ public class PBKDF2_HMACTest extends TestCase {
                 (byte)0xcf, (byte)0xb8, (byte)0xb9, 0x6b, (byte)0x92, (byte)0xe7, (byte)0xa9,
                 (byte)0x94, 0x54, 0x25, (byte)0xba, (byte)0x88, (byte)0x9e, (byte)0x9a, (byte)0xd6,
                 0x45, 0x61, 0x45, 0x22, (byte)0xeb };
-        byte[] actual = PBKDF2_HMAC.sha512(message, salt, 3);
+        byte[] actual = PBKDF2.hmac("SHA512", message, salt, 3);
         assertEquals(expected.length, actual.length);
         for (int i = 0; i < actual.length; i++) {
             assertEquals(expected[i], actual[i]);
@@ -152,7 +152,7 @@ public class PBKDF2_HMACTest extends TestCase {
                 (byte)0xb1, 0x0f, 0x30, 0x05, (byte)0x8f, (byte)0xb7, (byte)0xa4, 0x53,
                 (byte)0xb2, 0x67, 0x50, 0x10, (byte)0xef, 0x2b, 0x5f, (byte)0x96, 0x48, 0x7a,
                 (byte)0xd3 };
-        byte[] actual = PBKDF2_HMAC.sha512(message, salt, 3);
+        byte[] actual = PBKDF2.hmac("SHA512", message, salt, 3);
         assertEquals(expected.length, actual.length);
         for (int i = 0; i < actual.length; i++) {
             assertEquals(expected[i], actual[i]);
@@ -182,7 +182,7 @@ public class PBKDF2_HMACTest extends TestCase {
                 0x3d, (byte)0xd7, (byte)0xed, (byte)0xae, (byte)0xf8, (byte)0xb1, 0x27, (byte)0x8a,
                 (byte)0xc3, 0x4e, (byte)0xab, (byte)0xfc, 0x2d, (byte)0xb7, 0x35, (byte)0xd9,
                 (byte)0x92, (byte)0xee };
-        byte[] actual = PBKDF2_HMAC.sha512(message, salt, 3);
+        byte[] actual = PBKDF2.hmac("SHA512", message, salt, 3);
         assertEquals(expected.length, actual.length);
         for (int i = 0; i < actual.length; i++) {
             assertEquals(expected[i], actual[i]);
@@ -214,7 +214,61 @@ public class PBKDF2_HMACTest extends TestCase {
                 (byte)0xc0, 0x74, 0x44, 0x7b, (byte)0xf4, 0x77, 0x7e, 0x70, (byte)0xe4, (byte)0x99,
                 (byte)0x9d, 0x29, (byte)0xd2, (byte)0xc2, (byte)0xf8, 0x4d, (byte)0xc5, 0x15, 0x02,
                 (byte)0xa1, (byte)0x95 };
-        byte[] actual = PBKDF2_HMAC.sha512(message, salt, 3);
+        byte[] actual = PBKDF2.hmac("SHA512", message, salt, 3);
+        assertEquals(expected.length, actual.length);
+        for (int i = 0; i < actual.length; i++) {
+            assertEquals(expected[i], actual[i]);
+        }
+    }
+
+    public void testSha384 () {
+        byte[] salt;
+        try {
+            salt = "salt".getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            salt = "salt".getBytes();
+        }
+        byte[] message;
+        try {
+            message = "message".getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            message = "message".getBytes();
+        }
+        byte[] expected = new byte[] { (byte)0xdc, (byte)0xbe, (byte)0xb0, (byte)0xb9, (byte)0x9a,
+                0x4c, (byte)0xf4, (byte)0xd1, (byte)0xc9, (byte)0xc1, (byte)0xe8, (byte)0xf6, 0x30,
+                (byte)0xf3, (byte)0xaa, (byte)0x86, 0x37, (byte)0xc8, (byte)0x90, 0x6f, 0x1c, 0x3e,
+                0x1c, 0x78, (byte)0xfb, 0x4f, 0x46, 0x2b, 0x16, 0x0d, (byte)0xf2, 0x0f, 0x74, 0x35,
+                (byte)0xbd, (byte)0xd6, (byte)0xa9, 0x04, (byte)0xdd, 0x3c, 0x3e, (byte)0xde, 0x7f,
+                (byte)0xf0, 0x4b, (byte)0xc5, 0x3e, (byte)0x90 };
+        byte[] actual = PBKDF2.hmac("SHA384", message, salt, 3);
+        assertEquals(expected.length, actual.length);
+        for (int i = 0; i < actual.length; i++) {
+            assertEquals(expected[i], actual[i]);
+        }
+    }
+
+    public void testSha256 () {
+        byte[] salt;
+        try {
+            salt = "salt".getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            salt = "salt".getBytes();
+        }
+        byte[] message;
+        try {
+            message = "message".getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            message = "message".getBytes();
+        }
+        byte[] expected = new byte[] { (byte)0xdb, 0x78, (byte)0xc5, 0x09, 0x14, 0x44, (byte)0x94,
+                0x0f, (byte)0x96, 0x42, (byte)0xfc, (byte)0xe5, 0x19, 0x09, 0x7e, (byte)0xe7,
+                (byte)0xad, (byte)0xfe, (byte)0xb3, 0x38, (byte)0xfd, 0x69, 0x70, (byte)0x85, 0x51,
+                0x35, 0x53, (byte)0x90, 0x20, (byte)0xb5, 0x3f, (byte)0xad };
+        byte[] actual = PBKDF2.hmac("SHA256", message, salt, 3);
         assertEquals(expected.length, actual.length);
         for (int i = 0; i < actual.length; i++) {
             assertEquals(expected[i], actual[i]);
