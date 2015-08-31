@@ -16,38 +16,59 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * Created by jme on 02.06.15.
+ * Encrypt with AES. Optionally creates a key.
  */
 public class Crypter {
-    final static byte[] iv = new byte[] { (byte)0xb5, 0x4f, (byte)0xcf, (byte)0xb0,
-            (byte)0x88, 0x09, 0x55, (byte)0xe5, (byte)0xbf, 0x79, (byte)0xaf, 0x37,
-            0x71, 0x1c, 0x28, (byte)0xb6 };
-
     private byte[] key;
+    private byte[] iv;
 
-    public Crypter(byte[] password) {
-        byte[] salt;
-        try {
-            salt = "pepper".getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            Log.d("Key generation error", "UTF-8 is not supported.");
-            e.printStackTrace();
-            salt = new byte[] {};
+    public Crypter(byte[] keyIv) {
+        switch (keyIv.length) {
+            case 32:
+                this.key = keyIv;
+                this.iv = new byte[]{(byte) 0xb5, 0x4f, (byte) 0xcf, (byte) 0xb0,
+                        (byte) 0x88, 0x09, 0x55, (byte) 0xe5, (byte) 0xbf, 0x79, (byte) 0xaf, 0x37,
+                        0x71, 0x1c, 0x28, (byte) 0xb6};
+                break;
+            case 48:
+                this.key = Arrays.copyOfRange(keyIv, 0, 32);
+                this.iv = Arrays.copyOfRange(keyIv, 32, 48);
+                for (int i = 0; i < keyIv.length; i++) {
+                    keyIv[i] = 0x00;
+                }
+                break;
+            default:
+                this.key = Crypter.createKey(keyIv, "pepper".getBytes());
+                this.iv = new byte[]{(byte) 0xb5, 0x4f, (byte) 0xcf, (byte) 0xb0,
+                        (byte) 0x88, 0x09, 0x55, (byte) 0xe5, (byte) 0xbf, 0x79, (byte) 0xaf, 0x37,
+                        0x71, 0x1c, 0x28, (byte) 0xb6};
+                break;
         }
-        key = Arrays.copyOfRange(PBKDF2.hmac("SHA512", password, salt, 4096), 0, 32);
+    }
+
+    public static byte[] createKey(byte[] password, byte[] salt) {
+        return PBKDF2.hmac("SHA256", password, salt, 1024);
+    }
+
+    public static byte[] createIvKey(byte[] password, byte[] salt) {
+        return PBKDF2.hmac("SHA384", password, salt, 32768);
     }
 
     public byte[] encrypt(byte[] data) {
+        return this.encrypt(data, "PKCS7Padding");
+    }
+
+    public byte[] encrypt(byte[] data, String padding) {
         SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
         try {
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
+            Cipher cipher = Cipher.getInstance("AES/CBC/" + padding);
             cipher.init(Cipher.ENCRYPT_MODE, skeySpec, new IvParameterSpec(iv));
             return cipher.doFinal(data);
         } catch (NoSuchAlgorithmException e) {
             Log.d("Encryption error", "AES/CBC is not implemented.");
             e.printStackTrace();
         } catch (NoSuchPaddingException e) {
-            Log.d("Encryption error", "PKCS7Padding is not implemented.");
+            Log.d("Encryption error", padding + " is not implemented.");
             e.printStackTrace();
         } catch (InvalidAlgorithmParameterException e) {
             Log.d("Encryption error", "Invalid IV.");
@@ -65,17 +86,21 @@ public class Crypter {
         return new byte[] {};
     }
 
-    public byte[] decrypt(byte[] encryptedData) {
+    public byte[] decrypt(byte[] data) {
+        return this.decrypt(data, "PKCS7Padding");
+    }
+
+    public byte[] decrypt(byte[] encryptedData, String padding) {
         SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
         try {
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
+            Cipher cipher = Cipher.getInstance("AES/CBC/" + padding);
             cipher.init(Cipher.DECRYPT_MODE, skeySpec, new IvParameterSpec(iv));
             return cipher.doFinal(encryptedData);
         } catch (NoSuchAlgorithmException e) {
             Log.d("Encryption error", "AES/CBC is not implemented.");
             e.printStackTrace();
         } catch (NoSuchPaddingException e) {
-            Log.d("Encryption error", "PKCS7Padding is not implemented.");
+            Log.d("Encryption error", padding + " is not implemented.");
             e.printStackTrace();
         } catch (InvalidAlgorithmParameterException e) {
             Log.d("Encryption error", "Invalid IV.");

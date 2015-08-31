@@ -26,22 +26,22 @@ public class CrypterTest extends TestCase {
             password = "secret".getBytes();
             message = messageString.getBytes();
         }
-        Crypter crypter = new Crypter(password);
+        Crypter crypter = new Crypter(Crypter.createKey(password, new byte[]{}));
         byte[] ciphertext = crypter.encrypt(message);
         assertEquals(
-                "FRQFCWa38eSIrPnhELojAPrOb8oKzs2yoAbNqVONBEuac3OhUKY12mP+TNyZs1MRUbY9hnqvIG18\n" +
-                "7MqTAVTzI0fCJhmR4stc/k4YpS+HptmzcTgEfXeli56davPUkmJ59yz2vvF3t/pCUOk0qWNQ2vv9\n" +
-                "dU2sJhvOdQ7RVKzbw2DJAFtEM2BxJq8Oqa4mB4sBC/GpIP3xtNxANJPyN8xTSL2F4Ktt5hIcX3AV\n" +
-                "UrnGYSjGeDHGua8iKNFohYtaPj3vvzaSVpGyzAfmlVEdN5/8zQ==\n",
+                "62fqFDS+SftUttn7LVPG+Jpd1TeW6+Z77iwQlgZItkp0Z8BBlhsiR/FB9WD7nL2gXK8tjAr/rgLe\n" +
+                "HYrz5M4BztfWwZuYL7QZVD5PaEkLMBctNpUzvagAlopCCqmFQaFnd2S1nExtG6d5Isuj6wsQNBCh\n" +
+                "ZlF4Yr2cx/tOQ50D9LenWa7k77UKIUKwMiactwCHt+BV/gQTd2bmlzBegioD1WKi0hqX8rAUnEm5\n" +
+                "9cRVbUUn8Bkm4SiOz/AQyyfAlXx24GoTZZj42olJX8LqnXqe+g==\n",
                 Base64.encodeToString(ciphertext, Base64.DEFAULT));
     }
 
     public void testDecrypt() {
         String cyphertext =
-                "FRQFCWa38eSIrPnhELojAPrOb8oKzs2yoAbNqVONBEuac3OhUKY12mP+TNyZs1MRUbY9hnqvIG18\n" +
-                "7MqTAVTzI0fCJhmR4stc/k4YpS+HptmzcTgEfXeli56davPUkmJ59yz2vvF3t/pCUOk0qWNQ2vv9\n" +
-                "dU2sJhvOdQ7RVKzbw2DJAFtEM2BxJq8Oqa4mB4sBC/GpIP3xtNxANJPyN8xTSL2F4Ktt5hIcX3AV\n" +
-                "UrnGYSjGeDHGua8iKNFohYtaPj3vvzaSVpGyzAfmlVEdN5/8zQ==\n";
+                "62fqFDS+SftUttn7LVPG+Jpd1TeW6+Z77iwQlgZItkp0Z8BBlhsiR/FB9WD7nL2gXK8tjAr/rgLe\n" +
+                "HYrz5M4BztfWwZuYL7QZVD5PaEkLMBctNpUzvagAlopCCqmFQaFnd2S1nExtG6d5Isuj6wsQNBCh\n" +
+                "ZlF4Yr2cx/tOQ50D9LenWa7k77UKIUKwMiactwCHt+BV/gQTd2bmlzBegioD1WKi0hqX8rAUnEm5\n" +
+                "9cRVbUUn8Bkm4SiOz/AQyyfAlXx24GoTZZj42olJX8LqnXqe+g==\n";
         byte[] password;
         try {
             password = "secret".getBytes("UTF-8");
@@ -49,7 +49,7 @@ public class CrypterTest extends TestCase {
             Log.d("Key generation error", "UTF-8 is not supported.");
             password = "secret".getBytes();
         }
-        Crypter crypter = new Crypter(password);
+        Crypter crypter = new Crypter(Crypter.createKey(password, new byte[]{}));
         String decrypted = "";
         try {
             decrypted = new String(crypter.decrypt(
