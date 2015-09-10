@@ -9,13 +9,15 @@ public class PasswordGeneratorTest extends TestCase {
 
     public void testHashOnceAndGetPassword () {
         byte[] domain = UTF8.encode("unit.test");
-        byte[] password = UTF8.encode("secret");
-        PasswordGenerator pg = new PasswordGenerator(domain, password);
+        byte[] username = UTF8.encode("hugo");
+        byte[] kgk = UTF8.encode("secret");
+        byte[] salt = UTF8.encode("pepper");
+        PasswordGenerator pg = new PasswordGenerator(domain, username, kgk, salt);
         try {
             pg.hash(2);
             PasswordSetting setting = new PasswordSetting("unit.test");
             setting.setLength(10);
-            assertEquals("]097§9{nTf", pg.getPassword(setting));
+            assertEquals("b}f_Qoszh+", pg.getPassword(setting));
         } catch (NotHashedException e) {
             e.printStackTrace();
         }
@@ -23,35 +25,43 @@ public class PasswordGeneratorTest extends TestCase {
 
     public void testHashTwiceAndGetPassword () {
         byte[] domain = UTF8.encode("unit.test");
-        byte[] password = UTF8.encode("secret");
-        PasswordGenerator pg = new PasswordGenerator(domain, password);
+        byte[] username = UTF8.encode("hugo");
+        byte[] kgk = UTF8.encode("secret");
+        byte[] salt = UTF8.encode("pepper");
+        PasswordGenerator pg = new PasswordGenerator(domain, username, kgk, salt);
         try {
             pg.hash(2);
             pg.hash(5);
             PasswordSetting setting = new PasswordSetting("unit.test");
             setting.setLength(10);
-            assertEquals("5D[QVYVwim", pg.getPassword(setting));
+            assertEquals("3YJAn$M*y8", pg.getPassword(setting));
         } catch (NotHashedException e) {
             e.printStackTrace();
         }
     }
 
     public void testHashOnceAndGetPasswordEmptyInputs () {
-        PasswordGenerator pg = new PasswordGenerator(new byte[] {}, new byte[] {});
+        PasswordGenerator pg = new PasswordGenerator(
+                new byte[] {},
+                new byte[] {},
+                new byte[] {},
+                new byte[] {});
         try {
             pg.hash(2);
             PasswordSetting setting = new PasswordSetting("unit.test");
             setting.setLength(10);
-            assertEquals("/ZsQWL>MJ$", pg.getPassword(setting));
+            assertEquals("Y*mRn.N8t7", pg.getPassword(setting));
         } catch (NotHashedException e) {
             e.printStackTrace();
         }
     }
 
     public void testHashOnceAndGetPasswordLengthZero () {
-        byte[] domain = UTF8.encode("test.de");
-        byte[] password = UTF8.encode("secret");
-        PasswordGenerator pg = new PasswordGenerator(domain, password);
+        byte[] domain = UTF8.encode("unit.test");
+        byte[] username = UTF8.encode("hugo");
+        byte[] kgk = UTF8.encode("secret");
+        byte[] salt = UTF8.encode("pepper");
+        PasswordGenerator pg = new PasswordGenerator(domain, username, kgk, salt);
         try {
             pg.hash(2);
             PasswordSetting setting = new PasswordSetting("unit.test");
@@ -63,22 +73,31 @@ public class PasswordGeneratorTest extends TestCase {
     }
 
     public void testHashOnceAndGetPasswordLengthMax () {
-        PasswordGenerator pg = new PasswordGenerator(new byte[] {}, new byte[] {});
+        PasswordGenerator pg = new PasswordGenerator(
+                new byte[] {},
+                new byte[] {},
+                new byte[] {},
+                new byte[] {});
         try {
             pg.hash(2);
             PasswordSetting setting = new PasswordSetting("unit.test");
             setting.setLength(1000);
-            assertEquals(80, pg.getPassword(setting).length());
-            assertEquals("/ZsQWL>MJ$f3h§;fBMQ_5u:;1DP4*EFZ[VkLUY2phD%\"i\"oJ\"GiD-4" +
-                            "N./f%\"d##+JXPjb-:.bU*BZse/",
-                    pg.getPassword(setting));
+            assertEquals(81, pg.getPassword(setting).length());
+            assertEquals(
+                "Y*mRn.N8t784pP$e!RG-*v{Q%pdUp4#\">q6b{eH.jjc7;\"%8x3" +
+                "{xh4V(G{#TpfGL&v03GsQQ:FnR]*GXc",
+                pg.getPassword(setting));
         } catch (NotHashedException e) {
             e.printStackTrace();
         }
     }
 
     public void testHashOnceAndGetPasswordEmptyInputsZeroHashes () {
-        PasswordGenerator pg = new PasswordGenerator(new byte[] {}, new byte[] {});
+        PasswordGenerator pg = new PasswordGenerator(
+                new byte[] {},
+                new byte[] {},
+                new byte[] {},
+                new byte[] {});
         boolean thrown = false;
         try {
             pg.hash(0);
@@ -90,8 +109,10 @@ public class PasswordGeneratorTest extends TestCase {
 
     public void testNoHashRaisesError () {
         byte[] domain = UTF8.encode("unit.test");
-        byte[] password = UTF8.encode("secret");
-        PasswordGenerator pg = new PasswordGenerator(domain, password);
+        byte[] username = UTF8.encode("hugo");
+        byte[] kgk = UTF8.encode("secret");
+        byte[] salt = UTF8.encode("pepper");
+        PasswordGenerator pg = new PasswordGenerator(domain, username, kgk, salt);
         boolean thrown = false;
         try {
             PasswordSetting setting = new PasswordSetting("unit.test");
@@ -105,8 +126,10 @@ public class PasswordGeneratorTest extends TestCase {
 
     public void testHashWithNegativeIterationCountRaisesError () {
         byte[] domain = UTF8.encode("unit.test");
-        byte[] password = UTF8.encode("secret");
-        PasswordGenerator pg = new PasswordGenerator(domain, password);
+        byte[] username = UTF8.encode("hugo");
+        byte[] kgk = UTF8.encode("secret");
+        byte[] salt = UTF8.encode("pepper");
+        PasswordGenerator pg = new PasswordGenerator(domain, username, kgk, salt);
         boolean thrown = false;
         try {
             pg.hash(-3);
@@ -118,8 +141,10 @@ public class PasswordGeneratorTest extends TestCase {
 
     public void testHashTwiceWithPositiveAndNegativeIterationCountRaisesError () {
         byte[] domain = UTF8.encode("unit.test");
-        byte[] password = UTF8.encode("secret");
-        PasswordGenerator pg = new PasswordGenerator(domain, password);
+        byte[] username = UTF8.encode("hugo");
+        byte[] kgk = UTF8.encode("secret");
+        byte[] salt = UTF8.encode("pepper");
+        PasswordGenerator pg = new PasswordGenerator(domain, username, kgk, salt);
         boolean thrown = false;
         try {
             pg.hash(2);
