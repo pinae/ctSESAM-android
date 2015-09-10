@@ -136,9 +136,7 @@ public class PasswordSettingsManager {
             iv2 = newIv;
             System.arraycopy(salt2, 0, kgkData, 0, salt2.length);
             System.arraycopy(iv2, 0, kgkData, salt2.length, iv2.length);
-            for (int i = 0; i < kgk.length; i++) {
-                kgkData[salt2.length + iv2.length + i] = kgk[i];
-            }
+            System.arraycopy(kgk, 0, kgkData, salt2.length + iv2.length, kgk.length);
             byte[] newKgkSalt = Crypter.createSalt();
             Crypter kgkCrypter = new Crypter(Crypter.createIvKey(password, newKgkSalt));
             SharedPreferences.Editor savedDomainsEditor = this.savedDomains.edit();
@@ -297,9 +295,7 @@ public class PasswordSettingsManager {
     }
 
     public void setSetting(PasswordSetting changed) {
-        Iterator<PasswordSetting> settingsIterator = this.settings.iterator();
-        while (settingsIterator.hasNext()) {
-            PasswordSetting setting = settingsIterator.next();
+        for (PasswordSetting setting : this.settings) {
             if (setting.getDomain().contentEquals(changed.getDomain())) {
                 this.settings.remove(setting);
                 break;
@@ -364,15 +360,9 @@ public class PasswordSettingsManager {
             byte[] kgk = Arrays.copyOfRange(kgkData, 48, 112);
             byte[] salt2 = Crypter.createSalt();
             byte[] iv2 = Crypter.createIv();
-            for (int i = 0; i < salt2.length; i++) {
-                kgkData[i] = salt2[i];
-            }
-            for (int i = 0; i < iv2.length; i++) {
-                kgkData[salt2.length + i] = iv2[i];
-            }
-            for (int i = 0; i < kgk.length; i++) {
-                kgkData[salt2.length + iv2.length + i] = kgk[i];
-            }
+            System.arraycopy(salt2, 0, kgkData, 0, salt2.length);
+            System.arraycopy(iv2, 0, kgkData, salt2.length, iv2.length);
+            System.arraycopy(kgk, 0, kgkData, salt2.length + iv2.length, kgk.length);
             byte[] newSalt = Crypter.createSalt();
             kgkCrypter = new Crypter(Crypter.createIvKey(password, newSalt));
             byte[] kgkBlock = kgkCrypter.encrypt(kgkData, "NoPadding");
