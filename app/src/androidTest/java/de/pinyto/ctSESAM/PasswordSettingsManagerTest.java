@@ -106,12 +106,8 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
             byte[] kgk = Arrays.copyOfRange(kgkData, 48, 112);
             byte[] settingsKey = Crypter.createKey(kgk, salt2);
             byte[] settingsKeyIv = new byte[48];
-            for (int i = 0; i < settingsKey.length; i++) {
-                settingsKeyIv[i] = settingsKey[i];
-            }
-            for (int i = 0; i < iv2.length; i++) {
-                settingsKeyIv[settingsKey.length + i] = iv2[i];
-            }
+            System.arraycopy(settingsKey, 0, settingsKeyIv, 0, settingsKey.length);
+            System.arraycopy(iv2, 0, settingsKeyIv, settingsKey.length, iv2.length);
             Crypter settingsCrypter = new Crypter(settingsKeyIv);
             byte[] decrypted = settingsCrypter.decrypt(encryptedSettings);
             try {
@@ -166,12 +162,8 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
             byte[] kgk = Arrays.copyOfRange(kgkData, 48, 112);
             byte[] settingsKey = Crypter.createKey(kgk, salt2);
             byte[] settingsKeyIv = new byte[48];
-            for (int i = 0; i < settingsKey.length; i++) {
-                settingsKeyIv[i] = settingsKey[i];
-            }
-            for (int i = 0; i < iv2.length; i++) {
-                settingsKeyIv[settingsKey.length + i] = iv2[i];
-            }
+            System.arraycopy(settingsKey, 0, settingsKeyIv, 0, settingsKey.length);
+            System.arraycopy(iv2, 0, settingsKeyIv, settingsKey.length, iv2.length);
             Crypter settingsCrypter = new Crypter(settingsKeyIv);
             byte[] decrypted = settingsCrypter.decrypt(encryptedSettings);
             JSONObject data = new JSONObject(Packer.decompress(decrypted));
@@ -195,9 +187,7 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
             byte[] encryptedData = settingsCrypter.encrypt(Packer.compress(data.toString()));
             byte[] remoteBlob = new byte[1 + salt.length + kgkBlock.length + encryptedData.length];
             remoteBlob[0] = 0x01;
-            for (int i = 0; i < salt.length; i++) {
-                remoteBlob[1 + i] = salt[i];
-            }
+            System.arraycopy(salt, 0, remoteBlob, 1, salt.length);
             for (int i = 0; i < kgkBlock.length; i++) {
                 remoteBlob[1 + salt.length + i] = kgkBlock[i];
             }
