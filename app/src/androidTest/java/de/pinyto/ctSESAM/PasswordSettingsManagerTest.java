@@ -2,7 +2,6 @@ package de.pinyto.ctSESAM;
 
 import android.test.ActivityInstrumentationTestCase2;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 

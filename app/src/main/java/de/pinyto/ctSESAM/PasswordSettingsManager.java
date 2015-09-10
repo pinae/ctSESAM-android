@@ -355,70 +355,53 @@ public class PasswordSettingsManager {
     }
 
     public byte[] getExportData(byte[] password) {
-        Crypter kgkCrypter = this.getKgkCrypter(password);
-        try {
-            byte[] kgkData = kgkCrypter.decrypt(Base64.decode(
-                    this.savedDomains.getString("KGK", ""),
-                    Base64.DEFAULT), "NoPadding");
-            if (kgkData.length != 112) {
-                this.createNewKgk(password);
-                kgkData = kgkCrypter.decrypt(Base64.decode(
-                        this.savedDomains.getString("KGK", ""),
-                        Base64.DEFAULT), "NoPadding");
-            }
-            byte[] kgk = Arrays.copyOfRange(kgkData, 48, 112);
-            byte[] salt2 = Crypter.createSalt();
-            byte[] iv2 = Crypter.createIv();
-            System.arraycopy(salt2, 0, kgkData, 0, salt2.length);
-            System.arraycopy(iv2, 0, kgkData, salt2.length, iv2.length);
-            System.arraycopy(kgk, 0, kgkData, salt2.length + iv2.length, kgk.length);
-            byte[] newSalt = Crypter.createSalt();
-            kgkCrypter = new Crypter(Crypter.createIvKey(password, newSalt));
-            byte[] kgkBlock = kgkCrypter.encrypt(kgkData, "NoPadding");
-            for (int i = 0; i < kgkData.length; i++) {
-                kgkData[i] = 0x00;
-            }
-            byte[] settingsKey = Crypter.createKey(kgk, salt2);
-            for (int i = 0; i < salt2.length; i++) {
-                salt2[i] = 0x00;
-            }
-            for (int i = 0; i < kgk.length; i++) {
-                kgk[i] = 0x00;
-            }
-            byte[] settingsKeyIv = new byte[48];
-            for (int i = 0; i < settingsKey.length; i++) {
-                settingsKeyIv[i] = settingsKey[i];
-                settingsKey[i] = 0x00;
-            }
-            for (int i = settingsKey.length; i < settingsKey.length + iv2.length; i++) {
-                settingsKeyIv[i] = iv2[i - settingsKey.length];
-                iv2[i - settingsKey.length] = 0x00;
-            }
-            Crypter settingsCrypter = new Crypter(settingsKeyIv);
-            byte[] encryptedSettings = settingsCrypter.encrypt(
-                    Packer.compress(
-                            this.getSettingsAsJSON().toString()
-                    )
-            );
-            byte[] exportData = new byte[1 + newSalt.length + kgkBlock.length + encryptedSettings.length];
-            exportData[0] = 0x01;
-            for (int i = 0; i < newSalt.length; i++) {
-                exportData[1 + i] = newSalt[i];
-                newSalt[i] = 0x00;
-            }
-            for (int i = 0; i < kgkBlock.length; i++) {
-                exportData[1 + newSalt.length + i] = kgkBlock[i];
-                kgkBlock[i] = 0x00;
-            }
-            for (int i = 0; i < encryptedSettings.length; i++) {
-                exportData[1 + newSalt.length + kgkBlock.length + i] = encryptedSettings[i];
-                encryptedSettings[i] = 0x00;
-            }
-            return exportData;
-        } catch (NoSuchPaddingException paddingError) {
-            paddingError.printStackTrace();
-            return new byte[]{};
+        byte[] kgk = this.getKgk(password);
+        byte[] salt2 = Crypter.createSalt();
+        byte[] iv2 = Crypter.createIv();
+        byte[] kgkData = new byte[112];
+        System.arraycopy(salt2, 0, kgkData, 0, salt2.length);
+        System.arraycopy(iv2, 0, kgkData, salt2.length, iv2.length);
+        System.arraycopy(kgk, 0, kgkData, salt2.length + iv2.length, kgk.length);
+        byte[] newSalt = Crypter.createSalt();
+        Crypter kgkCrypter = new Crypter(Crypter.createIvKey(password, newSalt));
+        byte[] kgkBlock = kgkCrypter.encrypt(kgkData, "NoPadding");
+        byte[] settingsKey = Crypter.createKey(kgk, salt2);
+        for (int i = 0; i < salt2.length; i++) {
+            salt2[i] = 0x00;
         }
+        for (int i = 0; i < kgk.length; i++) {
+            kgk[i] = 0x00;
+        }
+        byte[] settingsKeyIv = new byte[48];
+        for (int i = 0; i < settingsKey.length; i++) {
+            settingsKeyIv[i] = settingsKey[i];
+            settingsKey[i] = 0x00;
+        }
+        for (int i = settingsKey.length; i < settingsKey.length + iv2.length; i++) {
+            settingsKeyIv[i] = iv2[i - settingsKey.length];
+            iv2[i - settingsKey.length] = 0x00;
+        }
+        Crypter settingsCrypter = new Crypter(settingsKeyIv);
+        byte[] encryptedSettings = settingsCrypter.encrypt(
+                Packer.compress(
+                        this.getSettingsAsJSON().toString()
+                )
+        );
+        byte[] exportData = new byte[1 + newSalt.length + kgkBlock.length + encryptedSettings.length];
+        exportData[0] = 0x01;
+        for (int i = 0; i < newSalt.length; i++) {
+            exportData[1 + i] = newSalt[i];
+            newSalt[i] = 0x00;
+        }
+        for (int i = 0; i < kgkBlock.length; i++) {
+            exportData[1 + newSalt.length + i] = kgkBlock[i];
+            kgkBlock[i] = 0x00;
+        }
+        for (int i = 0; i < encryptedSettings.length; i++) {
+            exportData[1 + newSalt.length + kgkBlock.length + i] = encryptedSettings[i];
+            encryptedSettings[i] = 0x00;
+        }
+        return exportData;
     }
 
     public boolean updateFromExportData(byte[] password, byte[] blob) {
