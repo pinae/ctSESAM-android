@@ -134,12 +134,8 @@ public class PasswordSettingsManager {
                 iv2[i] = 0x00;
             }
             iv2 = newIv;
-            for (int i = 0; i < salt2.length; i++) {
-                kgkData[i] = salt2[i];
-            }
-            for (int i = 0; i < iv2.length; i++) {
-                kgkData[salt2.length + i] = iv2[i];
-            }
+            System.arraycopy(salt2, 0, kgkData, 0, salt2.length);
+            System.arraycopy(iv2, 0, kgkData, salt2.length, iv2.length);
             for (int i = 0; i < kgk.length; i++) {
                 kgkData[salt2.length + iv2.length + i] = kgk[i];
             }
