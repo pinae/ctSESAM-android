@@ -6,6 +6,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
@@ -51,7 +52,22 @@ public class Crypter {
     }
 
     public static byte[] createIvKey(byte[] password, byte[] salt) {
-        return PBKDF2.hmac("SHA384", password, salt, 32768);
+        //return PBKDF2.hmac("SHA384", password, salt, 32768);
+        return PBKDF2.hmac("SHA384", password, salt, 3);
+    }
+
+    public static byte[] createSalt() {
+        SecureRandom sr = new SecureRandom();
+        byte[] salt = new byte[32];
+        sr.nextBytes(salt);
+        return salt;
+    }
+
+    public static byte[] createIv() {
+        SecureRandom sr = new SecureRandom();
+        byte[] salt = new byte[16];
+        sr.nextBytes(salt);
+        return salt;
     }
 
     public byte[] encrypt(byte[] data) {
@@ -62,7 +78,7 @@ public class Crypter {
         SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/" + padding);
-            cipher.init(Cipher.ENCRYPT_MODE, skeySpec, new IvParameterSpec(iv));
+            cipher.init(Cipher.ENCRYPT_MODE, skeySpec, new IvParameterSpec(this.iv));
             return cipher.doFinal(data);
         } catch (NoSuchAlgorithmException e) {
             Log.d("Encryption error", "AES/CBC is not implemented.");
@@ -87,10 +103,16 @@ public class Crypter {
     }
 
     public byte[] decrypt(byte[] data) {
-        return this.decrypt(data, "PKCS7Padding");
+        try {
+            return this.decrypt(data, "PKCS7Padding");
+        } catch (NoSuchPaddingException paddingError) {
+            Log.d("Encryption error", "PKCS7Padding is not implemented.");
+            paddingError.printStackTrace();
+            return new byte[] {};
+        }
     }
 
-    public byte[] decrypt(byte[] encryptedData, String padding) {
+    public byte[] decrypt(byte[] encryptedData, String padding) throws NoSuchPaddingException {
         SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/" + padding);
@@ -98,9 +120,6 @@ public class Crypter {
             return cipher.doFinal(encryptedData);
         } catch (NoSuchAlgorithmException e) {
             Log.d("Encryption error", "AES/CBC is not implemented.");
-            e.printStackTrace();
-        } catch (NoSuchPaddingException e) {
-            Log.d("Encryption error", padding + " is not implemented.");
             e.printStackTrace();
         } catch (InvalidAlgorithmParameterException e) {
             Log.d("Encryption error", "Invalid IV.");

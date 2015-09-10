@@ -21,6 +21,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -142,6 +143,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadAutoCompleteFromSettings() {
+        for (String domain : settingsManager.getDomainList()) {
+            Log.d("Domain list", domain);
+        }
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_dropdown_item_1line, settingsManager.getDomainList());
         AutoCompleteTextView autoCompleteTextViewDomain =
@@ -166,6 +170,7 @@ public class MainActivity extends AppCompatActivity {
     private String generatePassword(int iterations) {
         AutoCompleteTextView autoCompleteTextViewDomain =
                 (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
+        String domainStr = autoCompleteTextViewDomain.getText().toString();
         byte[] domain = UTF8.encode(autoCompleteTextViewDomain.getText());
         EditText editTextMasterPassword =
                 (EditText) findViewById(R.id.editTextMasterPassword);
@@ -174,24 +179,15 @@ public class MainActivity extends AppCompatActivity {
         PasswordGenerator generator = new PasswordGenerator(domain, password);
         try {
             generator.hash(iterations);
-            PasswordSetting setting = settingsManager.getSetting(
-                    autoCompleteTextViewDomain.getText().toString());
-            CheckBox checkBoxSpecialCharacters =
-                    (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
-            setting.setUseExtra(checkBoxSpecialCharacters.isChecked());
-            CheckBox checkBoxLetters =
-                    (CheckBox) findViewById(R.id.checkBoxLetters);
-            setting.setUseLetters(checkBoxLetters.isChecked());
-            CheckBox checkBoxDigits =
-                    (CheckBox) findViewById(R.id.checkBoxDigits);
-            setting.setUseDigits(checkBoxDigits.isChecked());
+            PasswordSetting setting = settingsManager.getSetting(domainStr);
             SeekBar seekBarLength =
                     (SeekBar) findViewById(R.id.seekBarLength);
             setting.setLength(seekBarLength.getProgress() + 4);
             setting.setIterations(iterations);
             setting.setModificationDateToNow();
             generatedPassword = generator.getPassword(setting);
-            settingsManager.saveSetting(setting);
+            settingsManager.setSetting(setting);
+            settingsManager.storeLocalSettings(password);
         } catch (NotHashedException e) {
             e.printStackTrace();
             generatedPassword = "Not hashed.";
@@ -257,14 +253,89 @@ public class MainActivity extends AppCompatActivity {
         settingsManager = new PasswordSettingsManager(getBaseContext());
         setContentView(R.layout.activity_main);
         setIterationCountVisibility(View.INVISIBLE);
-        loadAutoCompleteFromSettings();
         setDomainFieldFromClipboard();
-        loadSettings();
         setButtonEnabledByDomainLength();
         EditText editTextMasterPassword = (EditText) findViewById(R.id.editTextMasterPassword);
         editTextMasterPassword.setText("", TextView.BufferType.EDITABLE);
         setToNotGenerated();
         clearMasterPassword();
+
+        editTextMasterPassword.addTextChangedListener(new TextWatcher() {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            public void afterTextChanged(Editable editable) {
+                setToNotGenerated();
+            }
+        });
+
+        AutoCompleteTextView autoCompleteTextViewDomain =
+                (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
+        autoCompleteTextViewDomain.addTextChangedListener(new TextWatcher() {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            public void afterTextChanged(Editable editable) {
+                setButtonEnabledByDomainLength();
+                setToNotGenerated();
+                for (String domain : settingsManager.getDomainList()) {
+                    if (domain.contentEquals(editable)) {
+                        loadSettings();
+                        break;
+                    }
+                }
+            }
+        });
+        autoCompleteTextViewDomain.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean hasFocus) {
+                if (!settingsManager.isLocalSettingsLoaded()) {
+                    EditText editTextMasterPassword =
+                            (EditText) findViewById(R.id.editTextMasterPassword);
+                    byte[] password = UTF8.encode(editTextMasterPassword.getText());
+                    settingsManager.loadLocalSettings(password);
+                    for (int i = 0; i < password.length; i++) {
+                        password[i] = 0x00;
+                    }
+                }
+                loadAutoCompleteFromSettings();
+                if (!hasFocus) {
+                    loadSettings();
+                }
+            }
+        });
+        autoCompleteTextViewDomain.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                loadSettings();
+            }
+        });
+
+        CheckBox.OnCheckedChangeListener settingCheckboxChange =
+                new CheckBox.OnCheckedChangeListener()
+                {
+                    @Override
+                    public void onCheckedChanged(
+                            CompoundButton compoundButton,
+                            boolean isChecked) {
+                        setToNotGenerated();
+                    }
+                };
+        CheckBox checkBoxSpecialCharacters =
+                (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
+        checkBoxSpecialCharacters.setOnCheckedChangeListener(settingCheckboxChange);
+        CheckBox checkBoxLetters =
+                (CheckBox) findViewById(R.id.checkBoxLetters);
+        checkBoxLetters.setOnCheckedChangeListener(settingCheckboxChange);
+        CheckBox checkBoxDigits =
+                (CheckBox) findViewById(R.id.checkBoxDigits);
+        checkBoxDigits.setOnCheckedChangeListener(settingCheckboxChange);
 
         SeekBar seekBarLength = (SeekBar) findViewById(R.id.seekBarLength);
         seekBarLength.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -309,54 +380,6 @@ public class MainActivity extends AppCompatActivity {
                 loadAutoCompleteFromSettings();
             }
         });
-
-        AutoCompleteTextView autoCompleteTextViewDomain =
-                (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
-        autoCompleteTextViewDomain.addTextChangedListener(new TextWatcher() {
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            public void afterTextChanged(Editable editable) {
-                loadSettings();
-                setButtonEnabledByDomainLength();
-                setToNotGenerated();
-            }
-        });
-
-        editTextMasterPassword.addTextChangedListener(new TextWatcher() {
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            public void afterTextChanged(Editable editable) {
-                setToNotGenerated();
-            }
-        });
-
-        CheckBox.OnCheckedChangeListener settingCheckboxChange =
-                new CheckBox.OnCheckedChangeListener()
-                {
-                    @Override
-                    public void onCheckedChanged(
-                            CompoundButton compoundButton,
-                            boolean isChecked) {
-                        setToNotGenerated();
-                    }
-                };
-        CheckBox checkBoxSpecialCharacters =
-                (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
-        checkBoxSpecialCharacters.setOnCheckedChangeListener(settingCheckboxChange);
-        CheckBox checkBoxLetters =
-                (CheckBox) findViewById(R.id.checkBoxLetters);
-        checkBoxLetters.setOnCheckedChangeListener(settingCheckboxChange);
-        CheckBox checkBoxDigits =
-                (CheckBox) findViewById(R.id.checkBoxDigits);
-        checkBoxDigits.setOnCheckedChangeListener(settingCheckboxChange);
     }
 
     private boolean isAppInstalled(String packageName) {

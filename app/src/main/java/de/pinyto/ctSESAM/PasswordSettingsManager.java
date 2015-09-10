@@ -10,14 +10,18 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Set;
+
+import javax.crypto.NoSuchPaddingException;
 
 /**
  * Use this class to manage password settings. It will store them internally and it will also
@@ -26,316 +30,526 @@ import java.util.Set;
 public class PasswordSettingsManager {
     private SharedPreferences savedDomains;
     private Context contentContext;
+    private Set<PasswordSetting> settings;
+    private boolean localSettingsLoaded;
 
     PasswordSettingsManager(Context contentContext) {
         this.contentContext = contentContext;
-        savedDomains = contentContext.getSharedPreferences("savedDomains", Context.MODE_PRIVATE);
+        this.savedDomains = contentContext.getSharedPreferences(
+                "savedDomains", Context.MODE_PRIVATE);
+        this.settings = new HashSet<>();
+        this.localSettingsLoaded = false;
+    }
+
+    public void loadSettings(byte[] password) {
+        this.loadLocalSettings(password);
+        this.loadRemoteSettings(password);
+        // Zero the password after use.
+        for (int i = 0; i < password.length; i++) {
+            password[i] = 0x00;
+        }
+    }
+
+    private byte[] getKgkCrypterSalt() {
+        byte[] salt = Base64.decode(
+                this.savedDomains.getString("salt", ""),
+                Base64.DEFAULT);
+        if (salt.length != 32) {
+            salt = Crypter.createSalt();
+            SharedPreferences.Editor savedDomainsEditor = this.savedDomains.edit();
+            savedDomainsEditor.putString("salt", Base64.encodeToString(
+                    salt,
+                    Base64.DEFAULT));
+            savedDomainsEditor.apply();
+        }
+        return salt;
+    }
+
+    private Crypter getKgkCrypter(byte[] password) {
+        return new Crypter(Crypter.createIvKey(
+            password,
+            this.getKgkCrypterSalt()));
+    }
+
+    private String createNewKgk(byte[] password) {
+        Crypter kgkCrypter = this.getKgkCrypter(password);
+        byte[] salt = Crypter.createSalt();
+        byte[] iv = Crypter.createIv();
+        SecureRandom sr = new SecureRandom();
+        byte[] kgk = new byte[64];
+        sr.nextBytes(kgk);
+        byte[] kgkBlock = new byte[112];
+        for (int i = 0; i < salt.length; i++) {
+            kgkBlock[i] = salt[i];
+            salt[i] = 0x00;
+        }
+        for (int i = 0; i < iv.length; i++) {
+            kgkBlock[salt.length + i] = iv[i];
+            iv[i] = 0x00;
+        }
+        for (int i = 0; i < kgk.length; i++) {
+            kgkBlock[salt.length + iv.length + i] = kgk[i];
+            kgk[i] = 0x00;
+        }
+        String kgkBlockBase64 = Base64.encodeToString(
+                kgkCrypter.encrypt(kgkBlock, "NoPadding"),
+                Base64.DEFAULT);
+        SharedPreferences.Editor savedDomainsEditor = this.savedDomains.edit();
+        savedDomainsEditor.putString("KGK", kgkBlockBase64);
+        savedDomainsEditor.apply();
+        return kgkBlockBase64;
+    }
+
+    private byte[] getKgkBlock(byte[] password) {
+        String kgkBase64 = this.savedDomains.getString("KGK", "");
+        if (kgkBase64.length() < 152) {
+            kgkBase64 = this.createNewKgk(password);
+        }
+        Crypter kgkCrypter = this.getKgkCrypter(password);
+        try {
+            return kgkCrypter.decrypt(Base64.decode(
+                    kgkBase64,
+                    Base64.DEFAULT), "NoPadding");
+        } catch (NoSuchPaddingException paddingError) {
+            paddingError.printStackTrace();
+            return new byte[]{};
+        }
+    }
+
+    private Crypter getSettingsCrypter(byte[] password) {
+        return this.getSettingsCrypter(password, new byte[]{}, new byte[]{});
+    }
+
+    private Crypter getSettingsCrypter(byte[] password, byte[] newSalt, byte[] newIv) {
+        byte[] kgkData = getKgkBlock(password);
+        byte[] salt2 = Arrays.copyOfRange(kgkData, 0, 32);
+        byte[] iv2 = Arrays.copyOfRange(kgkData, 32, 48);
+        byte[] kgk = Arrays.copyOfRange(kgkData, 48, 112);
+        if (newSalt.length == 32 && newIv.length == 16) {
+            for (int i = 0; i < salt2.length; i++) {
+                salt2[i] = 0x00;
+            }
+            salt2 = newSalt;
+            for (int i = 0; i < iv2.length; i++) {
+                iv2[i] = 0x00;
+            }
+            iv2 = newIv;
+            for (int i = 0; i < salt2.length; i++) {
+                kgkData[i] = salt2[i];
+            }
+            for (int i = 0; i < iv2.length; i++) {
+                kgkData[salt2.length + i] = iv2[i];
+            }
+            for (int i = 0; i < kgk.length; i++) {
+                kgkData[salt2.length + iv2.length + i] = kgk[i];
+            }
+            byte[] newKgkSalt = Crypter.createSalt();
+            Crypter kgkCrypter = new Crypter(Crypter.createIvKey(password, newKgkSalt));
+            SharedPreferences.Editor savedDomainsEditor = this.savedDomains.edit();
+            savedDomainsEditor.putString("salt",
+                    Base64.encodeToString(
+                            newKgkSalt,
+                            Base64.DEFAULT));
+            savedDomainsEditor.putString("KGK",
+                    Base64.encodeToString(
+                            kgkCrypter.encrypt(kgkData, "NoPadding"),
+                            Base64.DEFAULT));
+            savedDomainsEditor.apply();
+        }
+        for (int i = 0; i < kgkData.length; i++) {
+            kgkData[i] = 0x00;
+        }
+        byte[] settingsKey = Crypter.createKey(kgk, salt2);
+        for (int i = 0; i < salt2.length; i++) {
+            salt2[i] = 0x00;
+        }
+        for (int i = 0; i < kgk.length; i++) {
+            kgk[i] = 0x00;
+        }
+        byte[] settingsKeyIv = new byte[48];
+        for (int i = 0; i < settingsKey.length; i++) {
+            settingsKeyIv[i] = settingsKey[i];
+            settingsKey[i] = 0x00;
+        }
+        for (int i = settingsKey.length; i < settingsKey.length + iv2.length; i++) {
+            settingsKeyIv[i] = iv2[i - settingsKey.length];
+            iv2[i - settingsKey.length] = 0x00;
+        }
+        return new Crypter(settingsKeyIv);
+    }
+
+    public void loadLocalSettings(byte[] password) {
+        Crypter settingsCrypter = this.getSettingsCrypter(password);
+        byte[] encrypted = Base64.decode(
+                this.savedDomains.getString("encryptedSettings", ""),
+                Base64.DEFAULT);
+        if (encrypted.length < 40) {
+            return;
+        }
+        byte[] decrypted = settingsCrypter.decrypt(encrypted);
+        if (decrypted.length < 40) {
+            Toast.makeText(contentContext,
+                    R.string.local_wrong_password, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String decompressedSettings = Packer.decompress(decrypted);
+        try {
+            JSONObject decryptedObject = new JSONObject(decompressedSettings);
+            JSONObject decryptedSettings = decryptedObject.getJSONObject("settings");
+            JSONArray syncedSettings = decryptedObject.getJSONArray("synced");
+            Iterator<String> keys = decryptedSettings.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                JSONObject settingObject = decryptedSettings.getJSONObject(key);
+                boolean found = false;
+                for (PasswordSetting setting : this.settings) {
+                    if (setting.getDomain().contentEquals(key)) {
+                        found = true;
+                        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss",
+                                Locale.ENGLISH);
+                        Date modifiedRemote = df.parse(settingObject.getString("mDate"));
+                        if (modifiedRemote.after(setting.getMDate())) {
+                            setting.loadFromJSON(settingObject);
+                            boolean foundInSynced = false;
+                            for (int i = 0; i < syncedSettings.length(); i++) {
+                                if (syncedSettings.getString(i).contentEquals(key)) {
+                                    foundInSynced = true;
+                                }
+                            }
+                            setting.setSynced(foundInSynced);
+                        }
+                    }
+                }
+                if (!found) {
+                    PasswordSetting newSetting = new PasswordSetting(key);
+                    newSetting.loadFromJSON(settingObject);
+                    boolean foundInSynced = false;
+                    for (int i = 0; i < syncedSettings.length(); i++) {
+                        if (syncedSettings.getString(i).contentEquals(key)) {
+                            foundInSynced = true;
+                        }
+                    }
+                    newSetting.setSynced(foundInSynced);
+                    this.settings.add(newSetting);
+                }
+            }
+            this.localSettingsLoaded = true;
+        } catch (JSONException jsonError) {
+            Log.d("Settings loading error", "The loaded settings are not in JSON format.");
+            jsonError.printStackTrace();
+        } catch (ParseException timeFormatError) {
+            Log.d("Settings loading error",
+                    "The loaded settings contain time information in a wrong format.");
+            timeFormatError.printStackTrace();
+        }
+    }
+
+    public boolean isLocalSettingsLoaded() {
+        return this.localSettingsLoaded;
+    }
+
+    public void loadRemoteSettings(byte[] password) {
+
+    }
+
+    public void storeSettings(byte[] password) {
+        this.storeLocalSettings(password);
+        this.updateSyncServerIfNecessary(password);
+        // Zero the password after use.
+        for (int i = 0; i < password.length; i++) {
+            password[i] = 0x00;
+        }
+    }
+
+    public void storeLocalSettings(byte[] password) {
+        byte[] newSalt = Crypter.createSalt();
+        byte[] newIv = Crypter.createIv();
+        Crypter settingsCrypter = this.getSettingsCrypter(password, newSalt, newIv);
+        JSONObject storeStructure = new JSONObject();
+        try {
+            storeStructure.put("settings", this.getSettingsAsJSON());
+            storeStructure.put("synced", this.getSyncedSettings());
+        } catch (JSONException jsonError) {
+            Log.d("Settings saving error", "Could not construct JSON structure for storage.");
+            jsonError.printStackTrace();
+        }
+        SharedPreferences.Editor savedDomainsEditor = savedDomains.edit();
+        if (settingsCrypter != null) {
+            byte[] encryptedSettings = settingsCrypter.encrypt(
+                    Packer.compress(storeStructure.toString()));
+            savedDomainsEditor.putString("encryptedSettings",
+                    Base64.encodeToString(
+                            encryptedSettings,
+                            Base64.DEFAULT));
+            savedDomainsEditor.apply();
+        }
+    }
+
+    public void updateSyncServerIfNecessary(byte[] password) {
+
     }
 
     public PasswordSetting getSetting(String domain) {
-        Set<String> domainSet = savedDomains.getStringSet(
-                "domainSet",
-                new HashSet<String>()
-        );
-        PasswordSetting setting = new PasswordSetting(domain);
-        if (domainSet != null) {
-            if (domainSet.contains(domain)) {
-                setting.setUseLowerCase(savedDomains.getBoolean(domain + "_useLowerCase", true));
-                setting.setUseUpperCase(savedDomains.getBoolean(domain + "_useUpperCase", true));
-                setting.setUseDigits(savedDomains.getBoolean(domain + "_digits", true));
-                setting.setUseExtra(savedDomains.getBoolean(domain + "_special_characters", true));
-                setting.setLength(savedDomains.getInt(domain + "_length", 10));
-                setting.setIterations(savedDomains.getInt(domain + "_iterations", 4096));
-                String customCharacterSet = savedDomains.getString(
-                        domain + "_customCharacterSet", "");
-                if (customCharacterSet != null && customCharacterSet.length() > 0) {
-                    setting.setCustomCharacterSet(customCharacterSet);
-                }
-                String username = savedDomains.getString(domain + "_username", "");
-                if (username != null && username.length() > 0) {
-                    setting.setUsername(username);
-                }
-                String legacyPassword = savedDomains.getString(domain + "_legacyPassword", "");
-                if (legacyPassword != null && legacyPassword.length() > 0) {
-                    setting.setLegacyPassword(legacyPassword);
-                }
-                setting.setAvoidAmbiguousCharacters(savedDomains.getBoolean(
-                        domain + "_avoidAmbiguousCharacters", true));
-                String salt = savedDomains.getString(domain + "_salt", "");
-                if (salt != null && salt.length() > 0) {
-                    setting.setSalt(Base64.decode(salt, Base64.DEFAULT));
-                }
-                String notes = savedDomains.getString(domain + "_notes", "");
-                if (notes != null && notes.length() > 0) {
-                    setting.setNotes(notes);
-                }
-                String dateString = savedDomains.getString(domain + "_cDate", "");
-                if (dateString != null && dateString.length() > 0) {
-                    setting.setCreationDate(dateString);
-                }
-                dateString = savedDomains.getString(domain + "_mDate", "");
-                if (dateString != null && dateString.length() > 0) {
-                    setting.setModificationDate(dateString);
-                }
-                setting.setSynced(savedDomains.getBoolean(domain + "_synced", false));
+        for (PasswordSetting setting : this.settings) {
+            if (setting.getDomain().contentEquals(domain)) {
+                return setting;
             }
         }
-        return setting;
+        PasswordSetting newSetting = new PasswordSetting(domain);
+        this.settings.add(newSetting);
+        return newSetting;
     }
 
-    public void saveSetting(PasswordSetting newSetting) {
-        Set<String> domainSet = savedDomains.getStringSet(
-                "domainSet",
-                new HashSet<String>()
-        );
-        if ((domainSet != null) && (!domainSet.contains(newSetting.getDomain()))) {
-            domainSet.add(newSetting.getDomain());
+    public void setSetting(PasswordSetting changed) {
+        Iterator<PasswordSetting> settingsIterator = this.settings.iterator();
+        while (settingsIterator.hasNext()) {
+            PasswordSetting setting = settingsIterator.next();
+            if (setting.getDomain().contentEquals(changed.getDomain())) {
+                this.settings.remove(setting);
+                break;
+            }
         }
-        SharedPreferences.Editor savedDomainsEditor = savedDomains.edit();
-        savedDomainsEditor.putStringSet("domainSet", domainSet);
-        savedDomainsEditor.putBoolean(
-                newSetting.getDomain() + "_useLowerCase",
-                newSetting.useLowerCase()
-        );
-        savedDomainsEditor.putBoolean(
-                newSetting.getDomain() + "_useUpperCase",
-                newSetting.useUpperCase()
-        );
-        savedDomainsEditor.putBoolean(
-                newSetting.getDomain() + "_digits",
-                newSetting.useDigits()
-        );
-        savedDomainsEditor.putBoolean(
-                newSetting.getDomain() + "_special_characters",
-                newSetting.useExtra()
-        );
-        savedDomainsEditor.putInt(
-                newSetting.getDomain() + "_length",
-                newSetting.getLength()
-        );
-        savedDomainsEditor.putInt(
-                newSetting.getDomain() + "_iterations",
-                newSetting.getIterations()
-        );
-        savedDomainsEditor.putBoolean(
-                newSetting.getDomain() + "_useCustomCharacterSet",
-                newSetting.useCustomCharacterSet()
-        );
-        if (newSetting.useCustomCharacterSet()) {
-            savedDomainsEditor.putString(
-                    newSetting.getDomain() + "_customCharacterSet",
-                    newSetting.getCustomCharacterSet()
-            );
-        }
-        savedDomainsEditor.putString(
-                newSetting.getDomain() + "_username",
-                newSetting.getUsername()
-        );
-        savedDomainsEditor.putString(
-                newSetting.getDomain() + "_legacyPassword",
-                newSetting.getLegacyPassword()
-        );
-        savedDomainsEditor.putBoolean(
-                newSetting.getDomain() + "_avoidAmbiguousCharacters",
-                newSetting.avoidAmbiguousCharacters()
-        );
-        if (newSetting.getSalt().length > 0 &&
-                newSetting.getSalt() != newSetting.getDefaultSalt()) {
-            savedDomainsEditor.putString(
-                    newSetting.getDomain() + "_salt",
-                    Base64.encodeToString(newSetting.getSalt(), Base64.DEFAULT)
-            );
-        }
-        savedDomainsEditor.putString(
-                newSetting.getDomain() + "_notes",
-                newSetting.getNotes()
-        );
-        savedDomainsEditor.putString(
-                newSetting.getDomain() + "_cDate",
-                newSetting.getCreationDate()
-        );
-        savedDomainsEditor.putString(
-                newSetting.getDomain() + "_mDate",
-                newSetting.getModificationDate()
-        );
-        savedDomainsEditor.putBoolean(
-                newSetting.getDomain() + "_synced",
-                newSetting.isSynced()
-        );
-        savedDomainsEditor.apply();
+        this.settings.add(changed);
     }
 
     public void deleteSetting(String domain) {
-        Set<String> domainSet = savedDomains.getStringSet(
-                "domainSet",
-                new HashSet<String>()
-        );
-        if ((domainSet != null) && (domainSet.contains(domain))) {
-            domainSet.remove(domain);
+        for (PasswordSetting setting : this.settings) {
+            if (setting.getDomain().contentEquals(domain)) {
+                this.settings.remove(setting);
+            }
         }
-        SharedPreferences.Editor savedDomainsEditor = savedDomains.edit();
-        savedDomainsEditor.putStringSet("domainSet", domainSet);
-        if (savedDomains.contains(domain + "_useLowerCase")) {
-            savedDomainsEditor.remove(domain + "_useLowerCase");
-        }
-        if (savedDomains.contains(domain + "_useUpperCase")) {
-            savedDomainsEditor.remove(domain + "_useUpperCase");
-        }
-        if (savedDomains.contains(domain + "_digits")) {
-            savedDomainsEditor.remove(domain + "_digits");
-        }
-        if (savedDomains.contains(domain + "_special_characters")) {
-            savedDomainsEditor.remove(domain + "_special_characters");
-        }
-        if (savedDomains.contains(domain + "_length")) {
-            savedDomainsEditor.remove(domain + "_length");
-        }
-        if (savedDomains.contains(domain + "_iterations")) {
-            savedDomainsEditor.remove(domain + "_iterations");
-        }
-        if (savedDomains.contains(domain + "_useCustomCharacterSet")) {
-            savedDomainsEditor.remove(domain + "_useCustomCharacterSet");
-        }
-        if (savedDomains.contains(domain + "_customCharacterSet")) {
-            savedDomainsEditor.remove(domain + "_customCharacterSet");
-        }
-        if (savedDomains.contains(domain + "_username")) {
-            savedDomainsEditor.remove(domain + "_username");
-        }
-        if (savedDomains.contains(domain + "_legacyPassword")) {
-            savedDomainsEditor.remove(domain + "_legacyPassword");
-        }
-        if (savedDomains.contains(domain + "_avoidAmbiguousCharacters")) {
-            savedDomainsEditor.remove(domain + "_avoidAmbiguousCharacters");
-        }
-        if (savedDomains.contains(domain + "_salt")) {
-            savedDomainsEditor.remove(domain + "_salt");
-        }
-        if (savedDomains.contains(domain + "_notes")) {
-            savedDomainsEditor.remove(domain + "_notes");
-        }
-        if (savedDomains.contains(domain + "_cDate")) {
-            savedDomainsEditor.remove(domain + "_cDate");
-        }
-        if (savedDomains.contains(domain + "_mDate")) {
-            savedDomainsEditor.remove(domain + "_mDate");
-        }
-        if (savedDomains.contains(domain + "_synced")) {
-            savedDomainsEditor.remove(domain + "_synced");
-        }
-        savedDomainsEditor.apply();
     }
 
     public String[] getDomainList() {
-        Set<String> domainSet = savedDomains.getStringSet("domainSet", new HashSet<String>());
-        String[] domainList;
-        if (domainSet != null) {
-            domainList = new String[domainSet.size()];
-            Iterator it = domainSet.iterator();
-            int i = 0;
-            while (it.hasNext()) {
-                domainList[i] = (String) it.next();
-                i++;
-            }
-        } else {
-            domainList = new String[] {};
+        String[] domainList = new String[this.settings.size()];
+        int i = 0;
+        for (PasswordSetting setting : this.settings) {
+            domainList[i] = setting.getDomain();
+            i++;
         }
         return domainList;
     }
 
-    private JSONArray getSettingsAsJSON() {
-        JSONArray settings = new JSONArray();
-        Set<String> domainSet = savedDomains.getStringSet(
-                "domainSet",
-                new HashSet<String>()
-        );
-        if (domainSet != null) {
-            for (String domain : domainSet) {
-                PasswordSetting domainSetting = getSetting(domain);
-                settings.put(domainSetting.toJSON());
+    private JSONObject getSettingsAsJSON() {
+        JSONObject settings = new JSONObject();
+        try {
+            for (PasswordSetting setting : this.settings) {
+                settings.put(setting.getDomain(), setting.toJSON());
             }
+        } catch (JSONException jsonError) {
+            Log.d("Settings packing error", "Could not create json.");
+            jsonError.printStackTrace();
         }
         return settings;
     }
 
+    private JSONArray getSyncedSettings() {
+        JSONArray syncedSettings = new JSONArray();
+        for (PasswordSetting setting : this.settings) {
+            if (setting.isSynced()) {
+                syncedSettings.put(setting.getDomain());
+            }
+        }
+        return syncedSettings;
+    }
+
     public byte[] getExportData(byte[] password) {
-        byte[] compressedData = Packer.compress(this.getSettingsAsJSON().toString());
-        Crypter crypter = new Crypter(password);
-        return crypter.encrypt(compressedData);
+        Crypter kgkCrypter = this.getKgkCrypter(password);
+        try {
+            byte[] kgkData = kgkCrypter.decrypt(Base64.decode(
+                    this.savedDomains.getString("KGK", ""),
+                    Base64.DEFAULT), "NoPadding");
+            if (kgkData.length != 112) {
+                this.createNewKgk(password);
+                kgkData = kgkCrypter.decrypt(Base64.decode(
+                        this.savedDomains.getString("KGK", ""),
+                        Base64.DEFAULT), "NoPadding");
+            }
+            byte[] kgk = Arrays.copyOfRange(kgkData, 48, 112);
+            byte[] salt2 = Crypter.createSalt();
+            byte[] iv2 = Crypter.createIv();
+            for (int i = 0; i < salt2.length; i++) {
+                kgkData[i] = salt2[i];
+            }
+            for (int i = 0; i < iv2.length; i++) {
+                kgkData[salt2.length + i] = iv2[i];
+            }
+            for (int i = 0; i < kgk.length; i++) {
+                kgkData[salt2.length + iv2.length + i] = kgk[i];
+            }
+            byte[] newSalt = Crypter.createSalt();
+            kgkCrypter = new Crypter(Crypter.createIvKey(password, newSalt));
+            byte[] kgkBlock = kgkCrypter.encrypt(kgkData, "NoPadding");
+            for (int i = 0; i < kgkData.length; i++) {
+                kgkData[i] = 0x00;
+            }
+            byte[] settingsKey = Crypter.createKey(kgk, salt2);
+            for (int i = 0; i < salt2.length; i++) {
+                salt2[i] = 0x00;
+            }
+            for (int i = 0; i < kgk.length; i++) {
+                kgk[i] = 0x00;
+            }
+            byte[] settingsKeyIv = new byte[48];
+            for (int i = 0; i < settingsKey.length; i++) {
+                settingsKeyIv[i] = settingsKey[i];
+                settingsKey[i] = 0x00;
+            }
+            for (int i = settingsKey.length; i < settingsKey.length + iv2.length; i++) {
+                settingsKeyIv[i] = iv2[i - settingsKey.length];
+                iv2[i - settingsKey.length] = 0x00;
+            }
+            Crypter settingsCrypter = new Crypter(settingsKeyIv);
+            byte[] encryptedSettings = settingsCrypter.encrypt(
+                    Packer.compress(
+                            this.getSettingsAsJSON().toString()
+                    )
+            );
+            byte[] exportData = new byte[1 + newSalt.length + kgkBlock.length + encryptedSettings.length];
+            exportData[0] = 0x01;
+            for (int i = 0; i < newSalt.length; i++) {
+                exportData[1 + i] = newSalt[i];
+                newSalt[i] = 0x00;
+            }
+            for (int i = 0; i < kgkBlock.length; i++) {
+                exportData[1 + newSalt.length + i] = kgkBlock[i];
+                kgkBlock[i] = 0x00;
+            }
+            for (int i = 0; i < encryptedSettings.length; i++) {
+                exportData[1 + newSalt.length + kgkBlock.length + i] = encryptedSettings[i];
+                encryptedSettings[i] = 0x00;
+            }
+            return exportData;
+        } catch (NoSuchPaddingException paddingError) {
+            paddingError.printStackTrace();
+            return new byte[]{};
+        }
     }
 
     public boolean updateFromExportData(byte[] password, byte[] blob) {
-        Crypter crypter = new Crypter(password);
-        byte[] decryptedBlob = crypter.decrypt(blob);
-        if (decryptedBlob.length <= 0) {
-            Toast.makeText(contentContext, R.string.wrong_password,
-                    Toast.LENGTH_SHORT).show();
-            return false;
+        if (!(blob[0] == 0x01)) {
+            Log.d("Version error", "Wrong data format. Could not import anything.");
+            return true;
         }
-        String jsonString = Packer.decompress(decryptedBlob);
+        byte[] salt = Arrays.copyOfRange(blob, 1, 33);
+        byte[] kgkBlock =  Arrays.copyOfRange(blob, 33, 145);
+        byte[] encryptedSettings = Arrays.copyOfRange(blob, 145, blob.length);
+        for (int i = 0; i < blob.length; i++) {
+            blob[i] = 0x00;
+        }
+        byte[] kgkKeyIv = Crypter.createIvKey(password, salt);
+        Crypter kgkCrypter = new Crypter(kgkKeyIv);
         try {
-            JSONArray loadedSettings = new JSONArray(jsonString);
-            boolean updateRemote = false;
-            for (int i = 0; i < loadedSettings.length(); i++) {
-                JSONObject loadedSetting = (JSONObject) loadedSettings.get(i);
-                boolean found = false;
+            byte[] kgkData = kgkCrypter.decrypt(kgkBlock, "NoPadding");
+            for (int i = 0; i < kgkKeyIv.length; i++) {
+                kgkKeyIv[i] = 0x00;
+            }
+            for (int i = 0; i < kgkBlock.length; i++) {
+                kgkBlock[i] = 0x00;
+            }
+            for (int i = 0; i < salt.length; i++) {
+                salt[i] = 0x00;
+            }
+            byte[] salt2 = Arrays.copyOfRange(kgkData, 0, 32);
+            byte[] iv2 = Arrays.copyOfRange(kgkData, 32, 48);
+            byte[] kgk = Arrays.copyOfRange(kgkData, 48, 112);
+            for (int i = 0; i < kgkData.length; i++) {
+                kgkData[i] = 0x00;
+            }
+            byte[] settingsKey = Crypter.createKey(kgk, salt2);
+            for (int i = 0; i < salt2.length; i++) {
+                salt2[i] = 0x00;
+            }
+            for (int i = 0; i < kgk.length; i++) {
+                kgk[i] = 0x00;
+            }
+            byte[] settingsKeyIv = new byte[48];
+            for (int i = 0; i < settingsKey.length; i++) {
+                settingsKeyIv[i] = settingsKey[i];
+                settingsKey[i] = 0x00;
+            }
+            for (int i = settingsKey.length; i < settingsKey.length + iv2.length; i++) {
+                settingsKeyIv[i] = iv2[i - settingsKey.length];
+                iv2[i - settingsKey.length] = 0x00;
+            }
+            Crypter settingsCrypter = new Crypter(settingsKeyIv);
+            byte[] decryptedSettings = settingsCrypter.decrypt(encryptedSettings);
+            if (decryptedSettings.length <= 0) {
+                Toast.makeText(contentContext, R.string.sync_wrong_password,
+                        Toast.LENGTH_SHORT).show();
+                return false;
+            }
+            for (int i = 0; i < settingsKeyIv.length; i++) {
+                settingsKeyIv[i] = 0x00;
+            }
+            String jsonString = Packer.decompress(decryptedSettings);
+            try {
+                JSONObject loadedSettings = new JSONObject(jsonString);
+                boolean updateRemote = false;
+                Iterator<String> loadedSettingsIterator = loadedSettings.keys();
+                while (loadedSettingsIterator.hasNext()) {
+                    JSONObject loadedSetting = loadedSettings.getJSONObject(
+                            loadedSettingsIterator.next());
+                    boolean found = false;
+                    for (String domain : this.getDomainList()) {
+                        PasswordSetting setting = this.getSetting(domain);
+                        if (setting.getDomain().equals(loadedSetting.getString("domain"))) {
+                            found = true;
+                            DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss",
+                                    Locale.ENGLISH);
+                            Date modifiedRemote = df.parse(loadedSetting.getString("mDate"));
+                            if (modifiedRemote.after(setting.getMDate())) {
+                                setting.loadFromJSON(loadedSetting);
+                                this.setSetting(setting);
+                            } else {
+                                updateRemote = true;
+                            }
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        PasswordSetting newSetting = new PasswordSetting(
+                                loadedSetting.getString("domain"));
+                        newSetting.loadFromJSON(loadedSetting);
+                        this.setSetting(newSetting);
+                    }
+                }
                 for (String domain : this.getDomainList()) {
                     PasswordSetting setting = this.getSetting(domain);
-                    if (setting.getDomain().equals(loadedSetting.getString("domain"))) {
-                        found = true;
-                        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss",
-                                Locale.ENGLISH);
-                        Date modifiedRemote = df.parse(loadedSetting.getString("mDate"));
-                        if (modifiedRemote.after(setting.getMDate())) {
-                            setting.loadFromJSON(loadedSetting);
-                            this.saveSetting(setting);
-                        } else {
-                            updateRemote = true;
+                    boolean found = false;
+                    Iterator<String> loadedSettingsIterator2 = loadedSettings.keys();
+                    while (loadedSettingsIterator2.hasNext()) {
+                        JSONObject loadedSetting = loadedSettings.getJSONObject(
+                                loadedSettingsIterator2.next());
+                        if (setting.getDomain().equals(loadedSetting.getString("domain"))) {
+                            found = true;
+                            break;
                         }
-                        break;
+                    }
+                    if (!found && setting.isSynced()) {
+                        updateRemote = true;
                     }
                 }
-                if (!found) {
-                    PasswordSetting newSetting = new PasswordSetting(
-                            loadedSetting.getString("domain"));
-                    newSetting.loadFromJSON(loadedSetting);
-                    this.saveSetting(newSetting);
-                }
+                this.storeLocalSettings(password);
+                return updateRemote;
+            } catch (JSONException e) {
+                Log.d("Update settings error", "Unable to read JSON data.");
+                e.printStackTrace();
+                return false;
+            } catch (ParseException e) {
+                Log.d("Update settings error", "Unable to parse the date.");
+                e.printStackTrace();
+                return false;
             }
-            for (String domain : this.getDomainList()) {
-                PasswordSetting setting = this.getSetting(domain);
-                boolean found = false;
-                for (int j = 0; j < loadedSettings.length(); j++) {
-                    JSONObject loadedSetting = loadedSettings.getJSONObject(j);
-                    if (setting.getDomain().equals(loadedSetting.getString("domain"))) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found && setting.isSynced()) {
-                    updateRemote = true;
-                }
-            }
-            return updateRemote;
-        } catch (JSONException e) {
-            Log.d("Update settings error", "Unable to read JSON data.");
-            e.printStackTrace();
-            return false;
-        } catch (ParseException e) {
-            Log.d("Update settings error", "Unable to parse the date.");
-            e.printStackTrace();
+        } catch (NoSuchPaddingException paddingError) {
+            paddingError.printStackTrace();
             return false;
         }
     }
 
     public void setAllSettingsToSynced() {
-        Set<String> domainSet = savedDomains.getStringSet("domainSet", new HashSet<String>());
-        if (domainSet != null) {
-            SharedPreferences.Editor savedDomainsEditor = savedDomains.edit();
-            for (String domain : domainSet) {
-                savedDomainsEditor.putBoolean(domain + "_synced", true);
-            }
-            savedDomainsEditor.apply();
+        for (PasswordSetting setting : this.settings) {
+            setting.setSynced(true);
         }
     }
 }
