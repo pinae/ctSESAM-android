@@ -18,4 +18,5 @@
     <string name="sync_successful">Einstellungen synchronisiert</string>
     <string name="local_wrong_password">Konnte keine Einstellungen laden. Falsches Passwort?</string>
     <string name="sync_wrong_password">Synchronisation fehlgeschlagen. Falsches Passwort?</string>
+    <string name="username">Benutzername:</string>
 </resources>

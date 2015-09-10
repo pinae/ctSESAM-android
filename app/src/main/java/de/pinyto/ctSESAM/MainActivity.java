@@ -167,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private String generatePassword(int iterations) {
+    private String generatePassword(int iterations, byte[] salt) {
         AutoCompleteTextView autoCompleteTextViewDomain =
                 (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
         String domainStr = autoCompleteTextViewDomain.getText().toString();
@@ -175,8 +175,16 @@ public class MainActivity extends AppCompatActivity {
         EditText editTextMasterPassword =
                 (EditText) findViewById(R.id.editTextMasterPassword);
         byte[] password = UTF8.encode(editTextMasterPassword.getText());
+        byte[] kgk = settingsManager.getKgk(password);
+        EditText editTextUsername =
+                (EditText) findViewById(R.id.editTextUsername);
+        byte[] username = UTF8.encode(editTextUsername.getText());
         String generatedPassword;
-        PasswordGenerator generator = new PasswordGenerator(domain, password);
+        PasswordGenerator generator = new PasswordGenerator(
+                domain,
+                username,
+                kgk,
+                salt);
         try {
             generator.hash(iterations);
             PasswordSetting setting = settingsManager.getSetting(domainStr);
@@ -194,6 +202,9 @@ public class MainActivity extends AppCompatActivity {
         }
         for (int i = 0; i < password.length; i++) {
             password[i] = 0x00;
+        }
+        for (int i = 0; i < kgk.length; i++) {
+            kgk[i] = 0x00;
         }
         return generatedPassword;
     }
@@ -367,7 +378,9 @@ public class MainActivity extends AppCompatActivity {
                 }
                 // Generate password
                 TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
-                textViewPassword.setText(generatePassword(iterations));
+                textViewPassword.setText(generatePassword(
+                        iterations,
+                        settingsManager.getSetting(domain).getSalt()));
                 isGenerated = true;
                 invalidateOptionsMenu();
                 Button generateButton = (Button) findViewById(R.id.generatorButton);

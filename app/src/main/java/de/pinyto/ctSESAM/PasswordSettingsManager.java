@@ -116,6 +116,15 @@ public class PasswordSettingsManager {
         }
     }
 
+    public byte[] getKgk(byte[] password) {
+        byte[] kgkData = getKgkBlock(password);
+        byte[] kgk = Arrays.copyOfRange(kgkData, 48, 112);
+        for (int i = 0; i < kgkData.length; i++) {
+            kgkData[i] = 0x00;
+        }
+        return kgk;
+    }
+
     private Crypter getSettingsCrypter(byte[] password) {
         return this.getSettingsCrypter(password, new byte[]{}, new byte[]{});
     }

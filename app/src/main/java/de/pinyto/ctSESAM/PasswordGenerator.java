@@ -17,23 +17,22 @@ public class PasswordGenerator {
     private byte[] salt;
     private int iterations;
 
-    public PasswordGenerator(byte[] domain, byte[] masterPassword) {
-        hashValue = new byte[domain.length + masterPassword.length];
+    public PasswordGenerator(byte[] domain, byte[] username, byte[] kgk, byte[] salt) {
+        hashValue = new byte[domain.length + username.length + kgk.length];
         int i = 0;
         while (i < domain.length) {
             hashValue[i] = domain[i];
             i++;
         }
-        while (i < domain.length + masterPassword.length) {
-            hashValue[i] = masterPassword[i - domain.length];
+        while (i < domain.length + username.length) {
+            hashValue[i] = username[i - domain.length];
             i++;
         }
-        try {
-            this.salt = "pepper".getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            System.out.println("UTF-8 is not supported. Using default encoding instead.");
-            this.salt = "pepper".getBytes();
+        while (i < domain.length + username.length + kgk.length) {
+            hashValue[i] = kgk[i - domain.length - username.length];
+            i++;
         }
+        this.salt = salt;
         this.iterations = 0;
     }
 
