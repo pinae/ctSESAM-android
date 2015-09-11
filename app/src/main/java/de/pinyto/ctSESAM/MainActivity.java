@@ -38,7 +38,7 @@ import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity {
 
-    static final String syncAppName = "de.pinyto.passwordsettingssync";
+    static final String syncAppName = "de.pinyto.ctSESAMsync";
     static final String syncServiceName = "SyncService";
     Messenger mService = null;
     boolean mBound;
