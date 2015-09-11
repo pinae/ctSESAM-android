@@ -52,8 +52,7 @@ public class Crypter {
     }
 
     public static byte[] createIvKey(byte[] password, byte[] salt) {
-        //return PBKDF2.hmac("SHA384", password, salt, 32768);
-        return PBKDF2.hmac("SHA384", password, salt, 3);
+        return PBKDF2.hmac("SHA384", password, salt, 32768);
     }
 
     public static byte[] createSalt() {
