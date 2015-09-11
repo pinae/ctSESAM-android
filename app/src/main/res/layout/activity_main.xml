@@ -8,179 +8,192 @@
     android:paddingBottom="@dimen/activity_vertical_margin"
     tools:context=".MainActivity">
 
-    <TextView
-        android:text="@string/masterpassword"
-        android:layout_width="wrap_content"
+    <ScrollView
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/textViewMasterpasswordHeading" />
+        android:id="@+id/scrollView">
 
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="textPassword"
-        android:id="@+id/editTextMasterPassword"
-        android:layout_below="@+id/textViewMasterpasswordHeading"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-    <TextView
-        android:text="@string/domain"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/editTextMasterPassword"
-        android:id="@+id/textViewDomainHeading" />
+            <TextView
+                android:text="@string/masterpassword"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/textViewMasterpasswordHeading" />
 
-    <AutoCompleteTextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/textViewDomainHeading"
-        android:id="@+id/autoCompleteTextViewDomain"
-        android:inputType="textUri"
-        android:imeOptions="actionNext"
-        android:completionThreshold="@integer/completionThreshold" />
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"
+                android:id="@+id/editTextMasterPassword"
+                android:layout_below="@+id/textViewMasterpasswordHeading"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true" />
 
-    <TextView
-        android:text="@string/username"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/autoCompleteTextViewDomain"
-        android:id="@+id/textViewUsernameHeading" />
+            <TextView
+                android:text="@string/domain"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/editTextMasterPassword"
+                android:id="@+id/textViewDomainHeading" />
 
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="text"
-        android:id="@+id/editTextUsername"
-        android:layout_below="@+id/textViewUsernameHeading"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+            <AutoCompleteTextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/textViewDomainHeading"
+                android:id="@+id/autoCompleteTextViewDomain"
+                android:inputType="textUri"
+                android:imeOptions="actionNext"
+                android:completionThreshold="@integer/completionThreshold" />
 
-    <CheckBox
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/special_characters"
-        android:id="@+id/checkBoxSpecialCharacter"
-        android:layout_below="@+id/editTextUsername"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:checked="true" />
+            <TextView
+                android:text="@string/username"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/autoCompleteTextViewDomain"
+                android:id="@+id/textViewUsernameHeading" />
 
-    <CheckBox
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/letters"
-        android:id="@+id/checkBoxLetters"
-        android:layout_below="@+id/checkBoxSpecialCharacter"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:checked="true" />
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:id="@+id/editTextUsername"
+                android:layout_below="@+id/textViewUsernameHeading"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true" />
 
-    <CheckBox
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/digits"
-        android:id="@+id/checkBoxDigits"
-        android:layout_below="@+id/checkBoxLetters"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:checked="true" />
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/special_characters"
+                android:id="@+id/checkBoxSpecialCharacter"
+                android:layout_below="@+id/editTextUsername"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:checked="true" />
 
-    <TextView
-        android:text="@string/length"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/checkBoxDigits"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:id="@+id/textViewLengthHeading" />
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/letters"
+                android:id="@+id/checkBoxLetters"
+                android:layout_below="@+id/checkBoxSpecialCharacter"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:checked="true" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="@string/length_init"
-        android:id="@+id/textViewLengthDisplay"
-        android:layout_below="@+id/checkBoxDigits"
-        android:layout_toEndOf="@+id/textViewLengthHeading"
-        android:layout_toRightOf="@+id/textViewLengthHeading"
-        android:layout_marginStart="4dp"
-        android:layout_marginLeft="4dp" />
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/digits"
+                android:id="@+id/checkBoxDigits"
+                android:layout_below="@+id/checkBoxLetters"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:checked="true" />
 
-    <SeekBar
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/seekBarLength"
-        android:layout_below="@+id/textViewLengthHeading"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:max="16"
-        android:progress="6" />
+            <TextView
+                android:text="@string/length"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/checkBoxDigits"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:id="@+id/textViewLengthHeading" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/generator_button"
-        android:id="@+id/generatorButton"
-        android:layout_below="@+id/seekBarLength"
-        android:layout_centerVertical="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:enabled="false"
-        android:visibility="visible" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:text="@string/length_init"
+                android:id="@+id/textViewLengthDisplay"
+                android:layout_below="@+id/checkBoxDigits"
+                android:layout_toEndOf="@+id/textViewLengthHeading"
+                android:layout_toRightOf="@+id/textViewLengthHeading"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp" />
 
-    <TextView
-        android:text="@string/password"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/generatorButton"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:id="@+id/textViewMPasswordHeading" />
+            <SeekBar
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/seekBarLength"
+                android:layout_below="@+id/textViewLengthHeading"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:max="16"
+                android:progress="6" />
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="@string/init_password"
-        android:id="@+id/textViewPassword"
-        android:layout_below="@+id/textViewMPasswordHeading"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:gravity="center"
-        android:textAlignment="center" />
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/generator_button"
+                android:id="@+id/generatorButton"
+                android:layout_below="@+id/seekBarLength"
+                android:layout_centerVertical="true"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:enabled="false"
+                android:visibility="visible" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="@string/iteration_count_beginning"
-        android:id="@+id/iterationCountBeginning"
-        android:layout_below="@+id/textViewPassword"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+            <TextView
+                android:text="@string/password"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/generatorButton"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:id="@+id/textViewMPasswordHeading" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="@string/iteration_count_initial"
-        android:id="@+id/iterationCount"
-        android:layout_below="@+id/textViewPassword"
-        android:layout_toEndOf="@+id/iterationCountBeginning"
-        android:layout_toRightOf="@+id/iterationCountBeginning"
-        android:layout_marginStart="4dp"
-        android:layout_marginLeft="4dp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="@string/init_password"
+                android:id="@+id/textViewPassword"
+                android:layout_below="@+id/textViewMPasswordHeading"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:gravity="center"
+                android:textAlignment="center" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="@string/iteration_count_end"
-        android:id="@+id/iterationCountEnd"
-        android:layout_below="@+id/textViewPassword"
-        android:layout_toEndOf="@+id/iterationCount"
-        android:layout_toRightOf="@+id/iterationCount"
-        android:layout_marginStart="4dp"
-        android:layout_marginLeft="4dp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:text="@string/iteration_count_beginning"
+                android:id="@+id/iterationCountBeginning"
+                android:layout_below="@+id/textViewPassword"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:text="@string/iteration_count_initial"
+                android:id="@+id/iterationCount"
+                android:layout_below="@+id/textViewPassword"
+                android:layout_toEndOf="@+id/iterationCountBeginning"
+                android:layout_toRightOf="@+id/iterationCountBeginning"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:text="@string/iteration_count_end"
+                android:id="@+id/iterationCountEnd"
+                android:layout_below="@+id/textViewPassword"
+                android:layout_toEndOf="@+id/iterationCount"
+                android:layout_toRightOf="@+id/iterationCount"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp" />
+
+        </RelativeLayout>
+
+    </ScrollView>
 
 </RelativeLayout>
