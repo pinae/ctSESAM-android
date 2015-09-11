@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     static final int SEND_UPDATE_RESPONSE = 2;
 
     private PasswordSettingsManager settingsManager;
+    private KgkManager kgkManager;
     private boolean isGenerated = false;
 
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -77,14 +78,13 @@ public class MainActivity extends AppCompatActivity {
                                 R.id.editTextMasterPassword);
                         if (syncDataObject.has("result")) {
                             byte[] password = UTF8.encode(editTextMasterPassword.getText());
+                            byte[] blob = Base64.decode(syncDataObject.getString("result"),
+                                    Base64.DEFAULT);
+                            kgkManager.updateFromBlob(password, blob);
                             boolean changed = settingsManager.updateFromExportData(
-                                    password, Base64.decode(syncDataObject.getString("result"),
-                                            Base64.DEFAULT));
+                                    kgkManager, blob);
                             if (changed) {
-                                byte[] encryptedBlob = settingsManager.getExportData(password);
-                                for (int i = 0; i < password.length; i++) {
-                                    password[i] = 0x00;
-                                }
+                                byte[] encryptedBlob = settingsManager.getExportData(kgkManager);
                                 if (mBound) {
                                     Message updateMsg = Message.obtain(null, SEND_UPDATE, 0, 0);
                                     updateMsg.replyTo = new Messenger(new ResponseHandler());
@@ -101,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
                                     }
                                 }
                             }
+                            Clearer.zero(password);
                         }
                     } catch (JSONException e) {
                         Log.d("Sync error", "The response is not valid JSON.");
@@ -175,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
         EditText editTextMasterPassword =
                 (EditText) findViewById(R.id.editTextMasterPassword);
         byte[] password = UTF8.encode(editTextMasterPassword.getText());
-        byte[] kgk = settingsManager.getKgk(password);
+        byte[] kgk = kgkManager.getKgk();
         EditText editTextUsername =
                 (EditText) findViewById(R.id.editTextUsername);
         byte[] username = UTF8.encode(editTextUsername.getText());
@@ -195,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
             setting.setModificationDateToNow();
             generatedPassword = generator.getPassword(setting);
             settingsManager.setSetting(setting);
-            settingsManager.storeLocalSettings(password);
+            settingsManager.storeLocalSettings(kgkManager);
         } catch (NotHashedException e) {
             e.printStackTrace();
             generatedPassword = "Not hashed.";
@@ -261,6 +262,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        kgkManager = new KgkManager(getBaseContext());
         settingsManager = new PasswordSettingsManager(getBaseContext());
         setContentView(R.layout.activity_main);
         setIterationCountVisibility(View.INVISIBLE);
@@ -306,11 +308,20 @@ public class MainActivity extends AppCompatActivity {
         autoCompleteTextViewDomain.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
-                if (!settingsManager.isLocalSettingsLoaded()) {
+                if (!kgkManager.hasKgk()) {
                     EditText editTextMasterPassword =
                             (EditText) findViewById(R.id.editTextMasterPassword);
                     byte[] password = UTF8.encode(editTextMasterPassword.getText());
-                    settingsManager.loadLocalSettings(password);
+                    byte[] encryptedKgkBlock = kgkManager.gelLocalKgkBlock();
+                    if (encryptedKgkBlock.length == 112) {
+                        kgkManager.decryptKgk(
+                                password,
+                                kgkManager.getKgkCrypterSalt(),
+                                encryptedKgkBlock);
+                    } else {
+                        kgkManager.createAndSaveNewKgkBlock(password);
+                    }
+                    settingsManager.loadLocalSettings(kgkManager);
                     for (int i = 0; i < password.length; i++) {
                         password[i] = 0x00;
                     }
