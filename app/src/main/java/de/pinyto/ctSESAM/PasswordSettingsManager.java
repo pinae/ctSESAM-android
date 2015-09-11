@@ -44,10 +44,7 @@ public class PasswordSettingsManager {
     public void loadSettings(byte[] password) {
         this.loadLocalSettings(password);
         this.loadRemoteSettings(password);
-        // Zero the password after use.
-        for (int i = 0; i < password.length; i++) {
-            password[i] = 0x00;
-        }
+        Clearer.zero(password);
     }
 
     private byte[] getKgkCrypterSalt() {
@@ -119,9 +116,7 @@ public class PasswordSettingsManager {
     public byte[] getKgk(byte[] password) {
         byte[] kgkData = getKgkBlock(password);
         byte[] kgk = Arrays.copyOfRange(kgkData, 48, 112);
-        for (int i = 0; i < kgkData.length; i++) {
-            kgkData[i] = 0x00;
-        }
+        Clearer.zero(kgkData);
         return kgk;
     }
 
@@ -135,13 +130,9 @@ public class PasswordSettingsManager {
         byte[] iv2 = Arrays.copyOfRange(kgkData, 32, 48);
         byte[] kgk = Arrays.copyOfRange(kgkData, 48, 112);
         if (newSalt.length == 32 && newIv.length == 16) {
-            for (int i = 0; i < salt2.length; i++) {
-                salt2[i] = 0x00;
-            }
+            Clearer.zero(salt2);
             salt2 = newSalt;
-            for (int i = 0; i < iv2.length; i++) {
-                iv2[i] = 0x00;
-            }
+            Clearer.zero(iv2);
             iv2 = newIv;
             System.arraycopy(salt2, 0, kgkData, 0, salt2.length);
             System.arraycopy(iv2, 0, kgkData, salt2.length, iv2.length);
@@ -159,16 +150,10 @@ public class PasswordSettingsManager {
                             Base64.DEFAULT));
             savedDomainsEditor.apply();
         }
-        for (int i = 0; i < kgkData.length; i++) {
-            kgkData[i] = 0x00;
-        }
+        Clearer.zero(kgkData);
         byte[] settingsKey = Crypter.createKey(kgk, salt2);
-        for (int i = 0; i < salt2.length; i++) {
-            salt2[i] = 0x00;
-        }
-        for (int i = 0; i < kgk.length; i++) {
-            kgk[i] = 0x00;
-        }
+        Clearer.zero(salt2);
+        Clearer.zero(kgk);
         byte[] settingsKeyIv = new byte[48];
         for (int i = 0; i < settingsKey.length; i++) {
             settingsKeyIv[i] = settingsKey[i];
@@ -258,10 +243,7 @@ public class PasswordSettingsManager {
     public void storeSettings(byte[] password) {
         this.storeLocalSettings(password);
         this.updateSyncServerIfNecessary(password);
-        // Zero the password after use.
-        for (int i = 0; i < password.length; i++) {
-            password[i] = 0x00;
-        }
+        Clearer.zero(password);
     }
 
     public void storeLocalSettings(byte[] password) {
@@ -366,12 +348,8 @@ public class PasswordSettingsManager {
         Crypter kgkCrypter = new Crypter(Crypter.createIvKey(password, newSalt));
         byte[] kgkBlock = kgkCrypter.encrypt(kgkData, "NoPadding");
         byte[] settingsKey = Crypter.createKey(kgk, salt2);
-        for (int i = 0; i < salt2.length; i++) {
-            salt2[i] = 0x00;
-        }
-        for (int i = 0; i < kgk.length; i++) {
-            kgk[i] = 0x00;
-        }
+        Clearer.zero(salt2);
+        Clearer.zero(kgk);
         byte[] settingsKeyIv = new byte[48];
         for (int i = 0; i < settingsKey.length; i++) {
             settingsKeyIv[i] = settingsKey[i];
@@ -412,43 +390,29 @@ public class PasswordSettingsManager {
         byte[] salt = Arrays.copyOfRange(blob, 1, 33);
         byte[] kgkBlock =  Arrays.copyOfRange(blob, 33, 145);
         byte[] encryptedSettings = Arrays.copyOfRange(blob, 145, blob.length);
-        for (int i = 0; i < blob.length; i++) {
-            blob[i] = 0x00;
-        }
+        Clearer.zero(blob);
         byte[] kgkKeyIv = Crypter.createIvKey(password, salt);
         Crypter kgkCrypter = new Crypter(kgkKeyIv);
         try {
             byte[] kgkData = kgkCrypter.decrypt(kgkBlock, "NoPadding");
-            for (int i = 0; i < kgkKeyIv.length; i++) {
-                kgkKeyIv[i] = 0x00;
-            }
-            for (int i = 0; i < kgkBlock.length; i++) {
-                kgkBlock[i] = 0x00;
-            }
-            for (int i = 0; i < salt.length; i++) {
-                salt[i] = 0x00;
-            }
+            Clearer.zero(kgkKeyIv);
+            Clearer.zero(kgkBlock);
+            Clearer.zero(salt);
             byte[] salt2 = Arrays.copyOfRange(kgkData, 0, 32);
             byte[] iv2 = Arrays.copyOfRange(kgkData, 32, 48);
             byte[] kgk = Arrays.copyOfRange(kgkData, 48, 112);
-            for (int i = 0; i < kgkData.length; i++) {
-                kgkData[i] = 0x00;
-            }
+            Clearer.zero(kgkData);
             byte[] settingsKey = Crypter.createKey(kgk, salt2);
-            for (int i = 0; i < salt2.length; i++) {
-                salt2[i] = 0x00;
-            }
-            for (int i = 0; i < kgk.length; i++) {
-                kgk[i] = 0x00;
-            }
+            Clearer.zero(salt2);
+            Clearer.zero(kgk);
             byte[] settingsKeyIv = new byte[48];
             for (int i = 0; i < settingsKey.length; i++) {
                 settingsKeyIv[i] = settingsKey[i];
                 settingsKey[i] = 0x00;
             }
-            for (int i = settingsKey.length; i < settingsKey.length + iv2.length; i++) {
-                settingsKeyIv[i] = iv2[i - settingsKey.length];
-                iv2[i - settingsKey.length] = 0x00;
+            for (int i = 0; i < iv2.length; i++) {
+                settingsKeyIv[settingsKey.length + i] = iv2[i];
+                iv2[i] = 0x00;
             }
             Crypter settingsCrypter = new Crypter(settingsKeyIv);
             byte[] decryptedSettings = settingsCrypter.decrypt(encryptedSettings);
@@ -457,9 +421,7 @@ public class PasswordSettingsManager {
                         Toast.LENGTH_SHORT).show();
                 return false;
             }
-            for (int i = 0; i < settingsKeyIv.length; i++) {
-                settingsKeyIv[i] = 0x00;
-            }
+            Clearer.zero(settingsKeyIv);
             String jsonString = Packer.decompress(decryptedSettings);
             try {
                 JSONObject loadedSettings = new JSONObject(jsonString);
