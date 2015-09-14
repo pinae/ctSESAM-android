@@ -122,7 +122,7 @@
                 android:layout_below="@+id/textViewLengthHeading"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
-                android:max="16"
+                android:max="21"
                 android:progress="6" />
 
             <Button
