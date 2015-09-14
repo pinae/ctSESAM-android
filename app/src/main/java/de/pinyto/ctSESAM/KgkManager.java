@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.util.Base64;
 import android.util.Log;
 
-import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
@@ -15,7 +14,6 @@ import javax.crypto.NoSuchPaddingException;
  * Stores and manages the key-generation-key.
  */
 public class KgkManager {
-    private Context contentContext;
     private SharedPreferences savedDomains;
     byte[] kgk;
     byte[] iv2;
@@ -23,7 +21,6 @@ public class KgkManager {
     Crypter kgkCrypter;
 
     KgkManager(Context contentContext) {
-        this.contentContext = contentContext;
         this.savedDomains = contentContext.getSharedPreferences(
                 "savedDomains", Context.MODE_PRIVATE);
     }
