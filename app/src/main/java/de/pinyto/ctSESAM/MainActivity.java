@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
                             kgkManager.updateFromBlob(password, blob);
                             boolean changed = settingsManager.updateFromExportData(
                                     kgkManager, blob);
-                            if (changed) {
+                            if (changed && false) {
                                 byte[] encryptedBlob = settingsManager.getExportData(kgkManager);
                                 if (mBound) {
                                     Message updateMsg = Message.obtain(null, SEND_UPDATE, 0, 0);
@@ -234,6 +234,8 @@ public class MainActivity extends AppCompatActivity {
         AutoCompleteTextView autoCompleteTextViewDomain =
                 (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
         String domain = autoCompleteTextViewDomain.getText().toString();
+        EditText editTextUsername =
+                (EditText) findViewById(R.id.editTextUsername);
         CheckBox checkBoxSpecialCharacters =
                 (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
         CheckBox checkBoxLetters =
@@ -245,6 +247,7 @@ public class MainActivity extends AppCompatActivity {
         TextView lengthLabel =
                 (TextView) findViewById(R.id.textViewLengthDisplay);
         PasswordSetting passwordSetting = settingsManager.getSetting(domain);
+        editTextUsername.setText(passwordSetting.getUsername());
         checkBoxLetters.setChecked(passwordSetting.useLetters());
         checkBoxDigits.setChecked(passwordSetting.useDigits());
         checkBoxSpecialCharacters.setChecked(passwordSetting.useExtra());

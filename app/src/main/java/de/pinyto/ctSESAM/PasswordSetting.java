@@ -45,6 +45,8 @@ public class PasswordSetting {
     private Date cDate;
     private Date mDate;
     private String notes;
+    private String url;
+    private String reserved;
     private boolean synced = false;
 
     PasswordSetting(String domain) {
@@ -137,6 +139,14 @@ public class PasswordSetting {
 
     public void setAvoidAmbiguousCharacters(boolean avoidAmbiguous) {
         this.avoidAmbiguous = avoidAmbiguous;
+    }
+
+    public String getCharacterSetAsString() {
+        if (this.customCharacterSet != null) {
+            return this.customCharacterSet;
+        } else {
+            return this.getDefaultCharacterSet();
+        }
     }
 
     public String getCustomCharacterSet() {
@@ -283,6 +293,30 @@ public class PasswordSetting {
         this.notes = notes;
     }
 
+    public String getUrl() {
+        if (this.url != null) {
+            return this.url;
+        } else {
+            return "";
+        }
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getReserved() {
+        if (this.reserved != null) {
+            return this.reserved;
+        } else {
+            return "";
+        }
+    }
+
+    public void setReserved(String reserved) {
+        this.reserved = reserved;
+    }
+
     public boolean isSynced() {
         return this.synced;
     }
@@ -294,24 +328,27 @@ public class PasswordSetting {
     public JSONObject toJSON() {
         JSONObject domainObject = new JSONObject();
         try {
-            domainObject.put("domain", this.domain);
-            domainObject.put("useLowerCase", this.useLowerCase);
-            domainObject.put("useUpperCase", this.useUpperCase);
-            domainObject.put("useDigits", this.useDigits);
-            domainObject.put("useExtra", this.useExtra);
-            domainObject.put("iterations", this.iterations);
-            domainObject.put("length", this.length);
+            domainObject.put("domain", this.getDomain());
+            if (this.url != null && this.url.length() > 0) {
+                domainObject.put("url", this.getUrl());
+            }
+            if (this.username != null && this.username.length() > 0) {
+                domainObject.put("username", this.getUsername());
+            }
+            if (this.legacyPassword != null && this.legacyPassword.length() > 0) {
+                domainObject.put("legacyPassword", this.getLegacyPassword());
+            }
+            if (this.notes != null && this.notes.length() > 0) {
+                domainObject.put("notes", this.getNotes());
+            }
+            domainObject.put("iterations", this.getIterations());
+            domainObject.put("salt", Base64.encodeToString(this.getSalt(), Base64.DEFAULT));
+            domainObject.put("length", this.getLength());
             domainObject.put("cDate", this.getCreationDate());
             domainObject.put("mDate", this.getModificationDate());
-            if (this.salt != null) {
-                domainObject.put("salt", Base64.encodeToString(this.salt, Base64.DEFAULT));
-            }
-            if (this.useCustomCharacterSet()) {
-                domainObject.put("useCustom", this.useCustomCharacterSet());
-                domainObject.put("customCharacterSet", this.getCustomCharacterSet());
-            }
-            if (this.notes != null) {
-                domainObject.put("notes", this.getNotes());
+            domainObject.put("usedCharacters", this.getCharacterSetAsString());
+            if (this.reserved != null && this.reserved.length() > 0) {
+                domainObject.put("reserved", this.getReserved());
             }
         } catch (JSONException e) {
             System.out.println("Settings packing error: Unable to pack the JSON data.");
@@ -323,14 +360,26 @@ public class PasswordSetting {
         if (loadedSetting.has("domain")) {
             this.setDomain(loadedSetting.getString("domain"));
         }
+        if (loadedSetting.has("url")) {
+            this.setUrl(loadedSetting.getString("url"));
+        }
         if (loadedSetting.has("username")) {
             this.setUsername(loadedSetting.getString("username"));
         }
         if (loadedSetting.has("legacyPassword")) {
             this.setLegacyPassword(loadedSetting.getString("legacyPassword"));
         }
+        if (loadedSetting.has("notes")) {
+            this.setNotes(loadedSetting.getString("notes"));
+        }
+        if (loadedSetting.has("iterations")) {
+            this.setIterations(loadedSetting.getInt("iterations"));
+        }
         if (loadedSetting.has("salt")) {
             this.setSalt(Base64.decode(loadedSetting.getString("salt"), Base64.DEFAULT));
+        }
+        if (loadedSetting.has("length")) {
+            this.setLength(loadedSetting.getInt("length"));
         }
         if (loadedSetting.has("cDate")) {
             this.setCreationDate(loadedSetting.getString("cDate"));
@@ -338,35 +387,11 @@ public class PasswordSetting {
         if (loadedSetting.has("mDate")) {
             this.setModificationDate(loadedSetting.getString("mDate"));
         }
-        if (loadedSetting.has("iterations")) {
-            this.setIterations(loadedSetting.getInt("iterations"));
+        if (loadedSetting.has("usedCharacters")) {
+            this.setCustomCharacterSet(loadedSetting.getString("usedCharacters"));
         }
-        if (loadedSetting.has("length")) {
-            this.setLength(loadedSetting.getInt("length"));
-        }
-        if (loadedSetting.has("useUpperCase")) {
-            this.setUseUpperCase(loadedSetting.getBoolean("useUpperCase"));
-        }
-        if (loadedSetting.has("useLowerCase")) {
-            this.setUseLowerCase(loadedSetting.getBoolean("useLowerCase"));
-        }
-        if (loadedSetting.has("useDigits")) {
-            this.setUseDigits(loadedSetting.getBoolean("useDigits"));
-        }
-        if (loadedSetting.has("useExtra")) {
-            this.setUseExtra(loadedSetting.getBoolean("useExtra"));
-        }
-        if (loadedSetting.has("avoidAmbiguous")) {
-            this.setAvoidAmbiguousCharacters(loadedSetting.getBoolean("avoidAmbiguous"));
-        }
-        if (loadedSetting.has("useCustom") &&
-                loadedSetting.getBoolean("useCustom") &&
-                loadedSetting.has("customCharacterSet") &&
-                (loadedSetting.getString("customCharacterSet").length() > 0)) {
-            this.setCustomCharacterSet(loadedSetting.getString("customCharacterSet"));
-        }
-        if (loadedSetting.has("notes")) {
-            this.setNotes(loadedSetting.getString("notes"));
+        if (loadedSetting.has("reserved")) {
+            this.setReserved(loadedSetting.getString("reserved"));
         }
     }
 }
