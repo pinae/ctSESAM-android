@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
                             kgkManager.updateFromBlob(password, blob);
                             boolean changed = settingsManager.updateFromExportData(
                                     kgkManager, blob);
-                            if (changed && false) {
+                            if (changed) {
                                 byte[] encryptedBlob = settingsManager.getExportData(kgkManager);
                                 if (mBound) {
                                     Message updateMsg = Message.obtain(null, SEND_UPDATE, 0, 0);
@@ -188,24 +188,21 @@ public class MainActivity extends AppCompatActivity {
                 salt);
         try {
             generator.hash(iterations);
-            PasswordSetting setting = settingsManager.getSetting(domainStr);
+            PasswordSetting setting = this.settingsManager.getSetting(domainStr);
             SeekBar seekBarLength =
                     (SeekBar) findViewById(R.id.seekBarLength);
             setting.setLength(seekBarLength.getProgress() + 4);
             setting.setIterations(iterations);
             setting.setModificationDateToNow();
             generatedPassword = generator.getPassword(setting);
-            settingsManager.setSetting(setting);
-            settingsManager.storeLocalSettings(kgkManager);
+            this.settingsManager.setSetting(setting);
+            this.settingsManager.storeLocalSettings(this.kgkManager);
         } catch (NotHashedException e) {
             e.printStackTrace();
             generatedPassword = "Not hashed.";
         }
         for (int i = 0; i < password.length; i++) {
             password[i] = 0x00;
-        }
-        for (int i = 0; i < kgk.length; i++) {
-            kgk[i] = 0x00;
         }
         return generatedPassword;
     }

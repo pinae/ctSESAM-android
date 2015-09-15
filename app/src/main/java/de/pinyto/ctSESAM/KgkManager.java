@@ -46,6 +46,7 @@ public class KgkManager {
 
     private Crypter getKgkCrypter(byte[] password, byte[] salt) {
         this.kgkCrypter = new Crypter(Crypter.createIvKey(password, salt));
+        this.storeSalt(salt);
         return this.kgkCrypter;
     }
 
@@ -115,13 +116,17 @@ public class KgkManager {
     }
 
     public byte[] getFreshEncryptedKgk() {
-        byte[] kgkBlock = new byte[112];
         this.freshIv2();
         this.freshSalt2();
+        return this.getEncryptedKgk();
+    }
+
+    public byte[] getEncryptedKgk() {
+        byte[] kgkBlock = new byte[112];
         System.arraycopy(this.salt2, 0, kgkBlock, 0, this.salt2.length);
         System.arraycopy(this.iv2, 0, kgkBlock, salt2.length, this.iv2.length);
         System.arraycopy(this.kgk, 0, kgkBlock, salt2.length + iv2.length, this.kgk.length);
-        byte[] encryptedKgk = this.kgkCrypter.encrypt(kgkBlock);
+        byte[] encryptedKgk = this.kgkCrypter.encrypt(kgkBlock, "NoPadding");
         Clearer.zero(kgkBlock);
         return encryptedKgk;
     }
@@ -143,12 +148,21 @@ public class KgkManager {
     }
 
     public void updateFromBlob(byte[] password, byte[] blob) {
-        if (!(blob[0] == 0x01)) {
+        if (!(blob[0] == 0x01) || blob.length < 145) {
             Log.d("Version error", "Wrong data format. Could not import anything.");
             return;
         }
         byte[] salt = Arrays.copyOfRange(blob, 1, 33);
         byte[] kgkBlock =  Arrays.copyOfRange(blob, 33, 145);
         this.decryptKgk(password, salt, kgkBlock);
+    }
+
+    public void storeLocalKgkBlock() {
+        SharedPreferences.Editor savedDomainsEditor = this.savedDomains.edit();
+        byte[] encryptedKgkBlock = this.getEncryptedKgk();
+        savedDomainsEditor.putString("KGK", Base64.encodeToString(
+                encryptedKgkBlock,
+                Base64.DEFAULT));
+        savedDomainsEditor.apply();
     }
 }

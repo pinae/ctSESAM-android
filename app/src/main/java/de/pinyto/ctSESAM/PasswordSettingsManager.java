@@ -45,10 +45,7 @@ public class PasswordSettingsManager {
             settingsKeyIv[i] = settingsKey[i];
             settingsKey[i] = 0x00;
         }
-        for (int i = 0; i < iv2.length; i++) {
-            settingsKeyIv[settingsKey.length + i] = iv2[i];
-            iv2[i] = 0x00;
-        }
+        System.arraycopy(iv2, 0, settingsKeyIv, settingsKey.length, iv2.length);
         return new Crypter(settingsKeyIv);
     }
 
@@ -67,6 +64,11 @@ public class PasswordSettingsManager {
             return;
         }
         String decompressedSettings = Packer.decompress(decrypted);
+        if (decompressedSettings.length() <= 0) {
+            Toast.makeText(contentContext,
+                    R.string.local_wrong_password, Toast.LENGTH_SHORT).show();
+            return;
+        }
         try {
             JSONObject decryptedObject = new JSONObject(decompressedSettings);
             JSONObject decryptedSettings = decryptedObject.getJSONObject("settings");
@@ -138,6 +140,7 @@ public class PasswordSettingsManager {
                             encryptedSettings,
                             Base64.DEFAULT));
             savedDomainsEditor.apply();
+            kgkManager.storeLocalKgkBlock();
         }
     }
 
@@ -204,8 +207,7 @@ public class PasswordSettingsManager {
     }
 
     public byte[] getExportData(KgkManager kgkManager) {
-        kgkManager.freshIv2();
-        kgkManager.freshSalt2();
+        byte[] kgkBlock = kgkManager.getFreshEncryptedKgk();
         Crypter settingsCrypter = this.getSettingsCrypter(kgkManager);
         byte[] encryptedSettings = settingsCrypter.encrypt(
                 Packer.compress(
@@ -213,7 +215,6 @@ public class PasswordSettingsManager {
                 )
         );
         byte[] salt = kgkManager.getKgkCrypterSalt();
-        byte[] kgkBlock = kgkManager.getFreshEncryptedKgk();
         byte[] exportData = new byte[1 + salt.length + kgkBlock.length + encryptedSettings.length];
         exportData[0] = 0x01;
         System.arraycopy(salt, 0, exportData, 1, salt.length);
