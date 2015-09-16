@@ -16,6 +16,7 @@ import javax.crypto.NoSuchPaddingException;
 public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase2<MainActivity> {
 
     private PasswordSettingsManager settingsManager;
+    private KgkManager kgkManager;
 
     public PasswordSettingsManagerTest() {
         super(MainActivity.class);
@@ -25,6 +26,7 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
     protected void setUp() throws Exception {
         super.setUp();
         settingsManager = new PasswordSettingsManager(getActivity().getBaseContext());
+        kgkManager = new KgkManager(getActivity().getBaseContext());
     }
 
     public void testSetSetting() {
@@ -52,33 +54,36 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
 
     public void testSaveUnsupportedSettings() {
         PasswordSetting setting = new PasswordSetting("unit.test");
-        setting.setUseLowerCase(true);
-        setting.setUseUpperCase(false);
-        setting.setUseExtra(true);
-        setting.setUseDigits(false);
-        setting.setCustomCharacterSet("ABCKWXkwx345/$#");
+        setting.setCharacterSet("ABCKWXkwx345/$#");
         setting.setLegacyPassword("Insecure");
         setting.setUsername("hugo");
-        setting.setAvoidAmbiguousCharacters(true);
         setting.setSalt("hmpf".getBytes());
         setting.setNotes("12 is more than 5.");
         settingsManager.setSetting(setting);
         PasswordSetting checkSetting = settingsManager.getSetting("unit.test");
-        assertTrue(checkSetting.useLowerCase());
-        assertFalse(checkSetting.useUpperCase());
-        assertTrue(checkSetting.useExtra());
-        assertFalse(checkSetting.useDigits());
-        assertTrue(checkSetting.useCustomCharacterSet());
-        assertEquals("ABCKWXkwx345/$#", checkSetting.getCustomCharacterSet());
+        assertEquals("ABCKWXkwx345/$#", checkSetting.getCharacterSetAsString());
         assertEquals("Insecure", checkSetting.getLegacyPassword());
         assertEquals("hugo", checkSetting.getUsername());
-        assertTrue(checkSetting.avoidAmbiguousCharacters());
         assertEquals("hmpf".getBytes().length, checkSetting.getSalt().length);
         for (int i = 0; i < checkSetting.getSalt().length; i++) {
             assertEquals("hmpf".getBytes()[i], checkSetting.getSalt()[i]);
         }
         assertEquals("12 is more than 5.", checkSetting.getNotes());
         settingsManager.deleteSetting(checkSetting.getDomain());
+    }
+
+    private Crypter getSettingsCrypter(KgkManager kgkManager) {
+        byte[] salt2 = kgkManager.getSalt2();
+        byte[] iv2 = kgkManager.getIv2();
+        byte[] kgk = kgkManager.getKgk();
+        byte[] settingsKey = Crypter.createKey(kgk, salt2);
+        byte[] settingsKeyIv = new byte[48];
+        for (int i = 0; i < settingsKey.length; i++) {
+            settingsKeyIv[i] = settingsKey[i];
+            settingsKey[i] = 0x00;
+        }
+        System.arraycopy(iv2, 0, settingsKeyIv, settingsKey.length, iv2.length);
+        return new Crypter(settingsKeyIv);
     }
 
     public void testGetBlob() {
@@ -89,50 +94,33 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
         setting.setLength(4);
         settingsManager.setSetting(setting);
         byte[] password = "some secret".getBytes();
-        byte[] blob = settingsManager.getExportData(password);
+        kgkManager.decryptKgk(password,
+                kgkManager.getKgkCrypterSalt(), kgkManager.gelLocalKgkBlock());
+        byte[] blob = settingsManager.getExportData(kgkManager);
         assertEquals(0x01, blob[0]);
-        byte[] salt = Arrays.copyOfRange(blob, 1, 33);
-        byte[] kgkBlock =  Arrays.copyOfRange(blob, 33, 145);
         byte[] encryptedSettings = Arrays.copyOfRange(blob, 145, blob.length);
         for (int i = 0; i < blob.length; i++) {
             blob[i] = 0x00;
         }
-        byte[] kgkKeyIv = Crypter.createIvKey(password, salt);
-        Crypter kgkCrypter = new Crypter(kgkKeyIv);
+        Crypter settingsCrypter = this.getSettingsCrypter(kgkManager);
+        byte[] decrypted = settingsCrypter.decrypt(encryptedSettings);
         try {
-            byte[] kgkData = kgkCrypter.decrypt(kgkBlock, "NoPadding");
-            byte[] salt2 = Arrays.copyOfRange(kgkData, 0, 32);
-            byte[] iv2 = Arrays.copyOfRange(kgkData, 32, 48);
-            byte[] kgk = Arrays.copyOfRange(kgkData, 48, 112);
-            byte[] settingsKey = Crypter.createKey(kgk, salt2);
-            byte[] settingsKeyIv = new byte[48];
-            System.arraycopy(settingsKey, 0, settingsKeyIv, 0, settingsKey.length);
-            System.arraycopy(iv2, 0, settingsKeyIv, settingsKey.length, iv2.length);
-            Crypter settingsCrypter = new Crypter(settingsKeyIv);
-            byte[] decrypted = settingsCrypter.decrypt(encryptedSettings);
-            try {
-                JSONObject data = new JSONObject(Packer.decompress(decrypted));
-                boolean found = false;
-                Iterator keysIterator = data.keys();
-                while (keysIterator.hasNext()) {
-                    JSONObject dataset = data.getJSONObject((String) keysIterator.next());
-                    if (dataset.getString("domain").equals("unit.test")) {
-                        found = true;
-                        assertTrue(dataset.getBoolean("useDigits"));
-                        assertFalse(dataset.getBoolean("useUpperCase"));
-                        assertFalse(dataset.getBoolean("useLowerCase"));
-                        assertFalse(dataset.getBoolean("useExtra"));
-                        assertEquals(4, dataset.getInt("length"));
-                        assertEquals(4096, dataset.getInt("iterations"));
-                    }
+            JSONObject data = new JSONObject(Packer.decompress(decrypted));
+            boolean found = false;
+            Iterator<String> keysIterator = data.keys();
+            while (keysIterator.hasNext()) {
+                JSONObject dataset = data.getJSONObject(keysIterator.next());
+                if (dataset.getString("domain").equals("unit.test")) {
+                    found = true;
+                    assertEquals("0123456789", dataset.getString("usedCharacters"));
+                    assertEquals(4, dataset.getInt("length"));
+                    assertEquals(4096, dataset.getInt("iterations"));
                 }
-                assertTrue(found);
-            } catch (JSONException e) {
-                e.printStackTrace();
-                assertTrue(false);
             }
-        } catch (NoSuchPaddingException paddingError) {
-            paddingError.printStackTrace();
+            assertTrue(found);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            assertTrue(false);
         }
     }
 
@@ -147,34 +135,21 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
         settingsManager.setSetting(setting);
         byte[] password = "some secret".getBytes();
         try {
-            byte[] blob = settingsManager.getExportData(password);
-            byte[] salt = Arrays.copyOfRange(blob, 1, 33);
-            byte[] kgkBlock =  Arrays.copyOfRange(blob, 33, 145);
+            kgkManager.decryptKgk(password,
+                    kgkManager.getKgkCrypterSalt(), kgkManager.gelLocalKgkBlock());
+            byte[] blob = settingsManager.getExportData(kgkManager);
             byte[] encryptedSettings = Arrays.copyOfRange(blob, 145, blob.length);
             for (int i = 0; i < blob.length; i++) {
                 blob[i] = 0x00;
             }
-            byte[] kgkKeyIv = Crypter.createIvKey(password, salt);
-            Crypter kgkCrypter = new Crypter(kgkKeyIv);
-            byte[] kgkData = kgkCrypter.decrypt(kgkBlock, "NoPadding");
-            byte[] salt2 = Arrays.copyOfRange(kgkData, 0, 32);
-            byte[] iv2 = Arrays.copyOfRange(kgkData, 32, 48);
-            byte[] kgk = Arrays.copyOfRange(kgkData, 48, 112);
-            byte[] settingsKey = Crypter.createKey(kgk, salt2);
-            byte[] settingsKeyIv = new byte[48];
-            System.arraycopy(settingsKey, 0, settingsKeyIv, 0, settingsKey.length);
-            System.arraycopy(iv2, 0, settingsKeyIv, settingsKey.length, iv2.length);
-            Crypter settingsCrypter = new Crypter(settingsKeyIv);
+            Crypter settingsCrypter = this.getSettingsCrypter(kgkManager);
             byte[] decrypted = settingsCrypter.decrypt(encryptedSettings);
             JSONObject data = new JSONObject(Packer.decompress(decrypted));
             JSONObject remoteDataset = new JSONObject();
             remoteDataset.put("domain", "unit.test");
             remoteDataset.put("length", 12);
             remoteDataset.put("iterations", 4097);
-            remoteDataset.put("useDigits", false);
-            remoteDataset.put("useUpperCase", true);
-            remoteDataset.put("useLowerCase", true);
-            remoteDataset.put("useExtra", true);
+            remoteDataset.put("usedCharacters", "0123456789");
             remoteDataset.put("mDate", "2012-04-13T11:45:10");
             Iterator<String> keysIterator = data.keys();
             while (keysIterator.hasNext()) {
@@ -185,6 +160,8 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
                 }
             }
             byte[] encryptedData = settingsCrypter.encrypt(Packer.compress(data.toString()));
+            byte[] salt = kgkManager.getKgkCrypterSalt();
+            byte[] kgkBlock = kgkManager.getEncryptedKgk();
             byte[] remoteBlob = new byte[1 + salt.length + kgkBlock.length + encryptedData.length];
             remoteBlob[0] = 0x01;
             System.arraycopy(salt, 0, remoteBlob, 1, salt.length);
@@ -194,16 +171,16 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
             for (int i = 0; i < encryptedData.length; i++) {
                 remoteBlob[1 + salt.length + kgkBlock.length + i] = encryptedData[i];
             }
-            settingsManager.updateFromExportData(password, remoteBlob);
+            settingsManager.updateFromExportData(kgkManager, remoteBlob);
             PasswordSetting updated = settingsManager.getSetting("unit.test");
             assertEquals("2012-04-13T11:45:10", updated.getModificationDate());
             assertEquals("2001-01-01T02:14:12", updated.getCreationDate());
             assertEquals(4097, updated.getIterations());
             assertEquals(12, updated.getLength());
-            assertFalse(updated.useDigits());
-            assertTrue(updated.useLetters());
-            assertTrue(updated.useExtra());
-        } catch (JSONException | NoSuchPaddingException e) {
+            assertTrue(updated.useDigits());
+            assertFalse(updated.useLetters());
+            assertFalse(updated.useExtra());
+        } catch (JSONException e) {
             e.printStackTrace();
             assertTrue(false);
         }
@@ -247,9 +224,12 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
         setting.setModificationDate("2001-01-01T02:14:13");
         settingsManager.setSetting(setting);
         byte[] password = "some secret".getBytes();
-        settingsManager.storeLocalSettings(password);
-        PasswordSettingsManager settingsManager2 = new PasswordSettingsManager(getActivity().getBaseContext());
-        settingsManager2.loadLocalSettings(password);
+        kgkManager.decryptKgk(password,
+                kgkManager.getKgkCrypterSalt(), kgkManager.gelLocalKgkBlock());
+        settingsManager.storeLocalSettings(kgkManager);
+        PasswordSettingsManager settingsManager2 = new PasswordSettingsManager(
+                getActivity().getBaseContext());
+        settingsManager2.loadLocalSettings(kgkManager);
         PasswordSetting setting2 = settingsManager2.getSetting("unit.test");
         assertEquals(setting.getLength(), setting2.getLength());
         assertEquals("2001-01-01T02:14:12", setting2.getCreationDate());

@@ -21,20 +21,13 @@ public class PasswordSetting {
     private String domain;
     private String username;
     private String legacyPassword;
-    private boolean useLowerCase = true;
-    private boolean useUpperCase = true;
-    private boolean useDigits = true;
-    private boolean useExtra = true;
-    private boolean useCustom = false;
-    private boolean avoidAmbiguous = true;
     private final String defaultCharacterSetLowerCase = "abcdefghijklmnopqrstuvwxyz";
     private final String defaultCharacterSetUpperCase = "ABCDEFGHJKLMNPQRTUVWXYZ";
     private final String defaultCharacterSetDigits = "0123456789";
     private final String defaultCharacterSetExtra = "#!\"§$%&/()[]{}=-_+*<>;:.";
-    private String customCharacterSet;
+    private String characterSet;
     private int iterations = 4096;
     private int length = 10;
-    private final byte[] defaultSalt = new byte[] { 0x70, 0x65, 0x70, 0x70, 0x65, 0x72 };
     private byte[] salt;
     private Date cDate;
     private Date mDate;
@@ -45,9 +38,10 @@ public class PasswordSetting {
 
     PasswordSetting(String domain) {
         this.domain = domain;
-        this.salt = defaultSalt;
+        this.salt = new byte[]{0x70, 0x65, 0x70, 0x70, 0x65, 0x72};
         this.cDate = Calendar.getInstance().getTime();
         this.mDate = this.cDate;
+        this.characterSet = this.getDefaultCharacterSet();
     }
 
     public String getDomain() {
@@ -83,109 +77,211 @@ public class PasswordSetting {
     }
 
     public boolean useLetters() {
-        return this.useLowerCase && this.useUpperCase;
+        return this.useLowerCase() && this.useUpperCase();
+    }
+
+    private void removeFromCharacterSet(String remstr) {
+        String newSet = "";
+        for (int i = 0; i < this.characterSet.length(); i++) {
+            boolean addThisChar = true;
+            for (int j = 0; j < remstr.length(); j++) {
+                if (this.characterSet.charAt(i) == remstr.charAt(j)) {
+                    addThisChar = false;
+                }
+            }
+            if (addThisChar) {
+                newSet += this.characterSet.charAt(i);
+            }
+        }
+        this.characterSet = newSet;
     }
 
     public void setUseLetters(boolean useLetters) {
-        this.useLowerCase = useLetters;
-        this.useUpperCase = useLetters;
+        this.removeFromCharacterSet(this.defaultCharacterSetLowerCase +
+                this.defaultCharacterSetUpperCase);
+        if (useLetters) {
+            this.characterSet = this.defaultCharacterSetLowerCase +
+                    this.defaultCharacterSetUpperCase + this.characterSet;
+        }
     }
 
     public boolean useLowerCase() {
-        return this.useLowerCase;
-    }
-
-    public void setUseUpperCase(boolean useUpperCase) {
-        this.useUpperCase = useUpperCase;
-    }
-
-    public boolean useUpperCase() {
-        return this.useUpperCase;
+        return this.characterSet == null ||
+                this.characterSet.length() >= this.defaultCharacterSetLowerCase.length() &&
+                        this.characterSet.substring(0,
+                                this.defaultCharacterSetLowerCase.length()).equals(
+                                this.defaultCharacterSetLowerCase);
     }
 
     public void setUseLowerCase(boolean useLowerCase) {
-        this.useLowerCase = useLowerCase;
+        this.removeFromCharacterSet(this.defaultCharacterSetLowerCase);
+        if (useLowerCase) {
+            this.characterSet = this.defaultCharacterSetLowerCase + this.characterSet;
+        }
+    }
+
+    public boolean useUpperCase() {
+        if (this.useLowerCase()) {
+            return this.characterSet.length() >= this.defaultCharacterSetLowerCase.length() +
+                    this.defaultCharacterSetUpperCase.length() &&
+                    this.characterSet.substring(this.defaultCharacterSetLowerCase.length(),
+                            this.defaultCharacterSetLowerCase.length() +
+                                    this.defaultCharacterSetUpperCase.length()).equals(
+                            this.defaultCharacterSetUpperCase);
+        } else {
+            return this.characterSet.length() >= this.defaultCharacterSetUpperCase.length() &&
+                this.characterSet.substring(0,
+                        this.defaultCharacterSetUpperCase.length()).equals(
+                        this.defaultCharacterSetUpperCase);
+        }
+    }
+
+    public void setUseUpperCase(boolean useUpperCase) {
+        this.removeFromCharacterSet(this.defaultCharacterSetUpperCase);
+        if (useUpperCase) {
+            if (this.useLowerCase()) {
+                this.characterSet = this.characterSet.substring(0,
+                        this.defaultCharacterSetLowerCase.length()) +
+                        this.defaultCharacterSetUpperCase +
+                        this.characterSet.substring( this.defaultCharacterSetLowerCase.length());
+            } else {
+                this.characterSet = this.defaultCharacterSetUpperCase + this.characterSet;
+            }
+        }
     }
 
     public boolean useDigits() {
-        return this.useDigits;
+        if (this.useLetters()) {
+            return this.characterSet.length() >= this.defaultCharacterSetLowerCase.length() +
+                    this.defaultCharacterSetUpperCase.length() +
+                    this.defaultCharacterSetDigits.length() &&
+                    this.characterSet.substring(this.defaultCharacterSetLowerCase.length() +
+                                    this.defaultCharacterSetUpperCase.length(),
+                            this.defaultCharacterSetLowerCase.length() +
+                                    this.defaultCharacterSetUpperCase.length() +
+                                    this.defaultCharacterSetDigits.length()).equals(
+                            this.defaultCharacterSetDigits);
+        } else {
+            return this.characterSet.length() >= this.defaultCharacterSetDigits.length() &&
+                    this.characterSet.substring(0,
+                            this.defaultCharacterSetDigits.length()).equals(
+                            this.defaultCharacterSetDigits);
+        }
     }
 
     public void setUseDigits(boolean useDigits) {
-        this.useDigits = useDigits;
+        this.removeFromCharacterSet(this.defaultCharacterSetDigits);
+        if (useDigits) {
+            if (this.useLetters()) {
+                this.characterSet = this.characterSet.substring(0,
+                        this.defaultCharacterSetLowerCase.length() +
+                                this.defaultCharacterSetUpperCase.length()) +
+                        this.defaultCharacterSetDigits +
+                        this.characterSet.substring( this.defaultCharacterSetLowerCase.length() +
+                                this.defaultCharacterSetUpperCase.length());
+            } else {
+                this.characterSet = this.defaultCharacterSetDigits + this.characterSet;
+            }
+        }
     }
 
     public boolean useExtra() {
-        return this.useExtra;
+        if (this.useLetters() && this.useDigits()) {
+            return this.characterSet.length() >= this.defaultCharacterSetLowerCase.length() +
+                    this.defaultCharacterSetUpperCase.length() +
+                    this.defaultCharacterSetDigits.length() +
+                    this.defaultCharacterSetExtra.length() &&
+                    this.characterSet.substring(this.defaultCharacterSetLowerCase.length() +
+                                    this.defaultCharacterSetUpperCase.length() +
+                                    this.defaultCharacterSetDigits.length(),
+                            this.defaultCharacterSetLowerCase.length() +
+                                    this.defaultCharacterSetUpperCase.length() +
+                                    this.defaultCharacterSetDigits.length() +
+                                    this.defaultCharacterSetExtra.length()).equals(
+                            this.defaultCharacterSetExtra);
+        } else if (this.useLetters()) {
+            return this.characterSet.length() >= this.defaultCharacterSetLowerCase.length() +
+                    this.defaultCharacterSetUpperCase.length() +
+                    this.defaultCharacterSetExtra.length() &&
+                    this.characterSet.substring(this.defaultCharacterSetLowerCase.length() +
+                                    this.defaultCharacterSetUpperCase.length(),
+                            this.defaultCharacterSetLowerCase.length() +
+                                    this.defaultCharacterSetUpperCase.length() +
+                                    this.defaultCharacterSetExtra.length()).equals(
+                            this.defaultCharacterSetExtra);
+        } else if (this.useDigits()) {
+            return this.characterSet.length() >= this.defaultCharacterSetDigits.length() +
+                    this.defaultCharacterSetExtra.length() &&
+                    this.characterSet.substring(this.defaultCharacterSetDigits.length(),
+                            this.defaultCharacterSetDigits.length() +
+                                    this.defaultCharacterSetExtra.length()).equals(
+                            this.defaultCharacterSetExtra);
+        } else {
+            return this.characterSet.length() >= this.defaultCharacterSetExtra.length() &&
+                    this.characterSet.substring(0,
+                            this.defaultCharacterSetExtra.length()).equals(
+                            this.defaultCharacterSetExtra);
+        }
     }
 
     public void setUseExtra(boolean useExtra) {
-        this.useExtra = useExtra;
-    }
-
-    public boolean useCustomCharacterSet() {
-        return this.useCustom;
-    }
-
-    public boolean avoidAmbiguousCharacters() {
-        return this.avoidAmbiguous;
-    }
-
-    public void setAvoidAmbiguousCharacters(boolean avoidAmbiguous) {
-        this.avoidAmbiguous = avoidAmbiguous;
+        this.removeFromCharacterSet(this.defaultCharacterSetExtra);
+        if (useExtra) {
+            if (this.useLetters() && useDigits()) {
+                this.characterSet = this.characterSet.substring(0,
+                        this.defaultCharacterSetLowerCase.length() +
+                                this.defaultCharacterSetUpperCase.length() +
+                                this.defaultCharacterSetDigits.length()) +
+                        this.defaultCharacterSetExtra +
+                        this.characterSet.substring(this.defaultCharacterSetLowerCase.length() +
+                                this.defaultCharacterSetUpperCase.length() +
+                                this.defaultCharacterSetDigits.length());
+            } else if (this.useLetters()) {
+                this.characterSet = this.characterSet.substring(0,
+                        this.defaultCharacterSetLowerCase.length() +
+                                this.defaultCharacterSetUpperCase.length()) +
+                        this.defaultCharacterSetExtra +
+                        this.characterSet.substring(this.defaultCharacterSetLowerCase.length() +
+                                this.defaultCharacterSetUpperCase.length());
+            } else if (this.useDigits()) {
+                this.characterSet = this.characterSet.substring(0,
+                        this.defaultCharacterSetDigits.length()) +
+                        this.defaultCharacterSetExtra +
+                        this.characterSet.substring(this.defaultCharacterSetDigits.length());
+            } else {
+                this.characterSet = this.defaultCharacterSetExtra + this.characterSet;
+            }
+        }
     }
 
     public String getCharacterSetAsString() {
-        if (this.customCharacterSet != null) {
-            return this.customCharacterSet;
+        if (this.characterSet != null) {
+            return this.characterSet;
         } else {
             return this.getDefaultCharacterSet();
         }
     }
 
-    public String getCustomCharacterSet() {
-        if (this.customCharacterSet != null) {
-            return this.customCharacterSet;
-        } else {
-            return "";
-        }
-    }
-
     public String getDefaultCharacterSet() {
         String set = "";
-        if (useLowerCase) {
-            set = set + this.defaultCharacterSetLowerCase;
-        }
-        if (useUpperCase) {
-            set = set + this.defaultCharacterSetUpperCase;
-        }
-        if (useDigits) {
-            set = set + this.defaultCharacterSetDigits;
-        }
-        if (useExtra) {
-            set = set + this.defaultCharacterSetExtra;
-        }
+        set = set + this.defaultCharacterSetLowerCase;
+        set = set + this.defaultCharacterSetUpperCase;
+        set = set + this.defaultCharacterSetDigits;
+        set = set + this.defaultCharacterSetExtra;
         return set;
     }
 
-    public void setCustomCharacterSet(String characterSet) {
-        if (characterSet.equals(this.getDefaultCharacterSet())) {
-            this.customCharacterSet = null;
-            this.useCustom = false;
+    public void setCharacterSet(String characterSet) {
+        if (characterSet == null || characterSet.length() <= 0) {
+            this.characterSet = this.getDefaultCharacterSet();
         } else {
-            this.useCustom = true;
-            this.customCharacterSet = characterSet;
+            this.characterSet = characterSet;
         }
     }
 
     public List<String> getCharacterSet() {
         List<String> characterSet = new ArrayList<>();
-        String characters;
-        if (this.useCustomCharacterSet()) {
-            characters = this.getCustomCharacterSet();
-        } else {
-            characters = this.getDefaultCharacterSet();
-        }
+        String characters = this.getCharacterSetAsString();
         for (int i = 0; i < characters.length(); i++) {
             characterSet.add(Character.toString(characters.charAt(i)));
         }
@@ -194,10 +290,6 @@ public class PasswordSetting {
 
     public byte[] getSalt() {
         return this.salt;
-    }
-
-    public byte[] getDefaultSalt() {
-        return this.defaultSalt;
     }
 
     public void setSalt(byte[] salt) {
@@ -382,7 +474,7 @@ public class PasswordSetting {
             this.setModificationDate(loadedSetting.getString("mDate"));
         }
         if (loadedSetting.has("usedCharacters")) {
-            this.setCustomCharacterSet(loadedSetting.getString("usedCharacters"));
+            this.setCharacterSet(loadedSetting.getString("usedCharacters"));
         }
         if (loadedSetting.has("reserved")) {
             this.setReserved(loadedSetting.getString("reserved"));

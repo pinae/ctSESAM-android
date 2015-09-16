@@ -30,35 +30,33 @@ public class PasswordSettingTest extends TestCase {
 
     public void testCharacterSet() {
         PasswordSetting s = new PasswordSetting("unit.test");
-        assertFalse(s.useCustomCharacterSet());
-        assertEquals("", s.getCustomCharacterSet());
-        s.setCustomCharacterSet("&=Oo0wWsS$#uUvVzZ");
-        assertTrue(s.useCustomCharacterSet());
-        assertEquals("&=Oo0wWsS$#uUvVzZ", s.getCustomCharacterSet());
-        s.setCustomCharacterSet(
+        s.setCharacterSet("&=Oo0wWsS$#uUvVzZ");
+        assertEquals("&=Oo0wWsS$#uUvVzZ", s.getCharacterSetAsString());
+        s.setCharacterSet(
                 "abcdefghijklmnopqrstuvwxyz" +
                         "ABCDEFGHJKLMNPQRTUVWXYZ" +
                         "0123456789" +
                         "#!\"§$%&/()[]{}=-_+*<>;:.");
-        assertFalse(s.useCustomCharacterSet());
-        assertEquals("", s.getCustomCharacterSet());
+        assertTrue(s.useLetters());
+        assertTrue(s.useDigits());
+        assertTrue(s.useExtra());
     }
 
-    public void testGetDefaultCharacterSet() {
+    public void testGetCharacterSetAsString() {
         PasswordSetting s = new PasswordSetting("unit.test");
         s.setUseLetters(false);
-        assertEquals("0123456789#!\"§$%&/()[]{}=-_+*<>;:.", s.getDefaultCharacterSet());
+        assertEquals("0123456789#!\"§$%&/()[]{}=-_+*<>;:.", s.getCharacterSetAsString());
         s.setUseLetters(true);
         s.setUseDigits(false);
         s.setUseExtra(false);
         assertEquals("abcdefghijklmnopqrstuvwxyzABCDEFGHJKLMNPQRTUVWXYZ",
-                s.getDefaultCharacterSet());
+                s.getCharacterSetAsString());
     }
 
     public void testGetCharacterSet() {
         PasswordSetting s = new PasswordSetting("unit.test");
         assertEquals("c", s.getCharacterSet().get(2));
-        s.setCustomCharacterSet("axFLp0");
+        s.setCharacterSet("axFLp0");
         assertEquals(6, s.getCharacterSet().size());
         assertEquals("F", s.getCharacterSet().get(2));
         assertEquals("0", s.getCharacterSet().get(5));
@@ -117,7 +115,7 @@ public class PasswordSettingTest extends TestCase {
         s.setSalt("something".getBytes());
         s.setIterations(213);
         s.setLength(14);
-        s.setCustomCharacterSet("XVLCWKHGFQUIAEOSNRTDYÜÖÄPZBMJ");
+        s.setCharacterSet("XVLCWKHGFQUIAEOSNRTDYÜÖÄPZBMJ");
         s.setNotes("Some note.");
         try {
             assertTrue(s.toJSON().has("domain"));
@@ -134,11 +132,9 @@ public class PasswordSettingTest extends TestCase {
             assertEquals(213, s.toJSON().getInt("iterations"));
             assertTrue(s.toJSON().has("length"));
             assertEquals(14, s.toJSON().getInt("length"));
-            assertTrue(s.toJSON().has("useCustom"));
-            assertTrue(s.toJSON().getBoolean("useCustom"));
-            assertTrue(s.toJSON().has("customCharacterSet"));
+            assertTrue(s.toJSON().has("usedCharacters"));
             assertEquals("XVLCWKHGFQUIAEOSNRTDYÜÖÄPZBMJ",
-                    s.toJSON().getString("customCharacterSet"));
+                    s.toJSON().getString("usedCharacters"));
             assertTrue(s.toJSON().has("notes"));
             assertEquals("Some note.", s.toJSON().getString("notes"));
         } catch (JSONException e) {
@@ -149,12 +145,9 @@ public class PasswordSettingTest extends TestCase {
     public void testLoadFromJSON() {
         String json = "{\"domain\": \"unit.test\", \"username\": \"testilinius\", " +
                 "\"notes\": \"interesting note\", \"legacyPassword\": \"rtSr?bS,mi\", " +
-                "\"useLowerCase\": true, \"useUpperCase\": false, \"useDigits\": true, " +
-                "\"useExtra\": false, \"useCustom\": true, \"avoidAmbiguous\": true, " +
-                "\"customCharacterSet\": \"AEIOUaeiou\", \"iterations\": 5341, " +
-                "\"length\": 16, \"salt\": \"ZmFzY2luYXRpbmc=\", \"forceLowerCase\": false, " +
-                "\"forceUpperCase\": true, \"forceDigits\": true, \"forceExtra\": true, " +
-                "\"forceRegexValidation\": false, \"validatorRegEx\": \"[A-Za-z0-9]+\", " +
+                "\"iterations\": 5341, " +
+                "\"length\": 16, \"salt\": \"ZmFzY2luYXRpbmc=\", " +
+                "\"usedCharacters\": \"abcdefghijklmnopqrstuvwxyz\", " +
                 "\"cDate\": \"2001-01-01T02:14:12\", \"mDate\": \"2005-01-01T01:14:12\"}";
         try {
             JSONObject data = new JSONObject(json);
@@ -166,11 +159,9 @@ public class PasswordSettingTest extends TestCase {
             assertEquals("rtSr?bS,mi", s.getLegacyPassword());
             assertTrue(s.useLowerCase());
             assertFalse(s.useUpperCase());
-            assertTrue(s.useDigits());
+            assertFalse(s.useDigits());
             assertFalse(s.useExtra());
-            assertTrue(s.useCustomCharacterSet());
-            assertTrue(s.avoidAmbiguousCharacters());
-            assertEquals("AEIOUaeiou", s.getCustomCharacterSet());
+            assertEquals("abcdefghijklmnopqrstuvwxyz", s.getCharacterSetAsString());
             assertEquals(5341, s.getIterations());
             assertEquals(16, s.getLength());
             byte[] expectedSalt;
