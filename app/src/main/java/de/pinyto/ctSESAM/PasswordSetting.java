@@ -36,12 +36,6 @@ public class PasswordSetting {
     private int length = 10;
     private final byte[] defaultSalt = new byte[] { 0x70, 0x65, 0x70, 0x70, 0x65, 0x72 };
     private byte[] salt;
-    private boolean forceLowerCase = false;
-    private boolean forceUpperCase = false;
-    private boolean forceDigits = false;
-    private boolean forceExtra = false;
-    private boolean forceRegexValidation = false;
-    private String validatorRegEx;
     private Date cDate;
     private Date mDate;
     private String notes;

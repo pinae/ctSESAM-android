@@ -180,27 +180,40 @@ public class MainActivity extends AppCompatActivity {
         EditText editTextUsername =
                 (EditText) findViewById(R.id.editTextUsername);
         byte[] username = UTF8.encode(editTextUsername.getText());
+        CheckBox checkBoxSpecialCharactersForce =
+                (CheckBox) findViewById(R.id.checkBoxSpecialCharacterForce);
+        CheckBox checkBoxLettersForce =
+                (CheckBox) findViewById(R.id.checkBoxLettersForce);
+        CheckBox checkBoxDigitsForce =
+                (CheckBox) findViewById(R.id.checkBoxDigitsForce);
+        SeekBar seekBarLength =
+                (SeekBar) findViewById(R.id.seekBarLength);
+        int length = seekBarLength.getProgress() + 4;
         String generatedPassword;
-        PasswordGenerator generator = new PasswordGenerator(
-                domain,
-                username,
-                kgk,
-                salt);
-        try {
-            generator.hash(iterations);
-            PasswordSetting setting = this.settingsManager.getSetting(domainStr);
-            SeekBar seekBarLength =
-                    (SeekBar) findViewById(R.id.seekBarLength);
-            setting.setLength(seekBarLength.getProgress() + 4);
-            setting.setIterations(iterations);
-            setting.setModificationDateToNow();
-            generatedPassword = generator.getPassword(setting);
-            this.settingsManager.setSetting(setting);
-            this.settingsManager.storeLocalSettings(this.kgkManager);
-        } catch (NotHashedException e) {
-            e.printStackTrace();
-            generatedPassword = "Not hashed.";
-        }
+        do {
+            PasswordGenerator generator = new PasswordGenerator(
+                    domain,
+                    username,
+                    kgk,
+                    salt);
+            try {
+                generator.hash(iterations);
+                PasswordSetting setting = this.settingsManager.getSetting(domainStr);
+                setting.setLength(length);
+                setting.setIterations(iterations);
+                setting.setModificationDateToNow();
+                generatedPassword = generator.getPassword(setting);
+                this.settingsManager.setSetting(setting);
+                this.settingsManager.storeLocalSettings(this.kgkManager);
+            } catch (NotHashedException e) {
+                e.printStackTrace();
+                generatedPassword = "Not hashed.";
+            }
+            iterations++;
+        } while (!PasswordAnalyzer.contains(generatedPassword,
+                checkBoxLettersForce.isChecked(),
+                checkBoxDigitsForce.isChecked(),
+                checkBoxSpecialCharactersForce.isChecked()));
         for (int i = 0; i < password.length; i++) {
             password[i] = 0x00;
         }

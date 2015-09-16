@@ -64,12 +64,33 @@
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true" />
 
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageViewContains"
+                android:layout_below="@+id/editTextUsername"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:src="@drawable/ic_contains"
+                android:layout_marginBottom="-15dp" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageViewForceContains"
+                android:layout_above="@+id/checkBoxSpecialCharacter"
+                android:layout_toRightOf="@+id/checkBoxSpecialCharacter"
+                android:layout_toEndOf="@+id/checkBoxSpecialCharacter"
+                android:src="@drawable/ic_force_contains"
+                android:layout_marginBottom="-15dp"
+                android:layout_marginLeft="5dp" />
+
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/special_characters"
+                android:text=""
                 android:id="@+id/checkBoxSpecialCharacter"
-                android:layout_below="@+id/editTextUsername"
+                android:layout_below="@+id/imageViewContains"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:checked="true" />
@@ -77,7 +98,17 @@
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/letters"
+                android:text="@string/special_characters"
+                android:id="@+id/checkBoxSpecialCharacterForce"
+                android:checked="false"
+                android:layout_below="@+id/imageViewContains"
+                android:layout_toRightOf="@+id/checkBoxSpecialCharacter"
+                android:layout_toEndOf="@+id/checkBoxSpecialCharacter" />
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
                 android:id="@+id/checkBoxLetters"
                 android:layout_below="@+id/checkBoxSpecialCharacter"
                 android:layout_alignParentLeft="true"
@@ -87,12 +118,32 @@
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/digits"
+                android:text="@string/letters"
+                android:id="@+id/checkBoxLettersForce"
+                android:layout_below="@+id/checkBoxSpecialCharacter"
+                android:layout_toRightOf="@id/checkBoxLetters"
+                android:layout_toEndOf="@id/checkBoxLetters"
+                android:checked="false" />
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
                 android:id="@+id/checkBoxDigits"
                 android:layout_below="@+id/checkBoxLetters"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:checked="true" />
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/digits"
+                android:id="@+id/checkBoxDigitsForce"
+                android:layout_below="@+id/checkBoxLetters"
+                android:layout_toRightOf="@id/checkBoxDigits"
+                android:layout_toEndOf="@id/checkBoxDigits"
+                android:checked="false" />
 
             <TextView
                 android:text="@string/length"
