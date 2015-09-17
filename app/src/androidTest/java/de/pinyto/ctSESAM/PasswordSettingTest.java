@@ -34,9 +34,9 @@ public class PasswordSettingTest extends TestCase {
         assertEquals("&=Oo0wWsS$#uUvVzZ", s.getCharacterSetAsString());
         s.setCharacterSet(
                 "abcdefghijklmnopqrstuvwxyz" +
-                        "ABCDEFGHJKLMNPQRTUVWXYZ" +
+                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
                         "0123456789" +
-                        "#!\"§$%&/()[]{}=-_+*<>;:.");
+                        "#!\"~|@^°$%&/()[]{}=-_+*<>;:.");
         assertTrue(s.useLetters());
         assertTrue(s.useDigits());
         assertTrue(s.useExtra());
@@ -45,11 +45,11 @@ public class PasswordSettingTest extends TestCase {
     public void testGetCharacterSetAsString() {
         PasswordSetting s = new PasswordSetting("unit.test");
         s.setUseLetters(false);
-        assertEquals("0123456789#!\"§$%&/()[]{}=-_+*<>;:.", s.getCharacterSetAsString());
+        assertEquals("0123456789#!\"~|@^°$%&/()[]{}=-_+*<>;:.", s.getCharacterSetAsString());
         s.setUseLetters(true);
         s.setUseDigits(false);
         s.setUseExtra(false);
-        assertEquals("abcdefghijklmnopqrstuvwxyzABCDEFGHJKLMNPQRTUVWXYZ",
+        assertEquals("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
                 s.getCharacterSetAsString());
     }
 
@@ -63,22 +63,10 @@ public class PasswordSettingTest extends TestCase {
     }
 
     public void testSalt() {
-        byte[] expected;
-        try {
-            expected = "pepper".getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            assertTrue(false);
-            expected = "pepper".getBytes();
-        }
         PasswordSetting s = new PasswordSetting("unit.test");
-        byte[] actual = s.getSalt();
-        assertEquals(expected.length, actual.length);
-        for (int i = 0; i < expected.length; i++) {
-            assertEquals(expected[i], actual[i]);
-        }
-        expected = "somethingelse".getBytes();
+        byte[] expected = "somethingelse".getBytes();
         s.setSalt(expected);
-        actual = s.getSalt();
+        byte[] actual = s.getSalt();
         assertEquals(expected.length, actual.length);
         for (int i = 0; i < expected.length; i++) {
             assertEquals(expected[i], actual[i]);
@@ -180,6 +168,13 @@ public class PasswordSettingTest extends TestCase {
         } catch (JSONException e) {
             assertTrue(false);
         }
+    }
+
+    public void testSetCharacterSetExtra() {
+        PasswordSetting s = new PasswordSetting("unit.test");
+        s.setCharacterSet("…ſ²³›ABC‹¢¥¥„“`´•");
+        s.setUseExtra(false);
+        assertEquals("ABC", s.getCharacterSetAsString());
     }
 
 }

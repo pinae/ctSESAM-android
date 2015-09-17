@@ -17,7 +17,7 @@ public class PasswordGeneratorTest extends TestCase {
             pg.hash(2);
             PasswordSetting setting = new PasswordSetting("unit.test");
             setting.setLength(10);
-            assertEquals("b}f_Qoszh+", pg.getPassword(setting));
+            assertEquals("kajf=-=(.5", pg.getPassword(setting));
         } catch (NotHashedException e) {
             e.printStackTrace();
         }
@@ -34,7 +34,7 @@ public class PasswordGeneratorTest extends TestCase {
             pg.hash(5);
             PasswordSetting setting = new PasswordSetting("unit.test");
             setting.setLength(10);
-            assertEquals("3YJAn$M*y8", pg.getPassword(setting));
+            assertEquals("U3_p9x/ugu", pg.getPassword(setting));
         } catch (NotHashedException e) {
             e.printStackTrace();
         }
@@ -50,7 +50,7 @@ public class PasswordGeneratorTest extends TestCase {
             pg.hash(2);
             PasswordSetting setting = new PasswordSetting("unit.test");
             setting.setLength(10);
-            assertEquals("Y*mRn.N8t7", pg.getPassword(setting));
+            assertEquals("f7C=$851%^", pg.getPassword(setting));
         } catch (NotHashedException e) {
             e.printStackTrace();
         }
@@ -82,10 +82,9 @@ public class PasswordGeneratorTest extends TestCase {
             pg.hash(2);
             PasswordSetting setting = new PasswordSetting("unit.test");
             setting.setLength(1000);
-            assertEquals(81, pg.getPassword(setting).length());
+            assertEquals(79, pg.getPassword(setting).length());
             assertEquals(
-                "Y*mRn.N8t784pP$e!RG-*v{Q%pdUp4#\">q6b{eH.jjc7;\"%8x3" +
-                "{xh4V(G{#TpfGL&v03GsQQ:FnR]*GXc",
+                "f7C=$851%^ud;=!AIrn2kOv_nl°^P=Y%js_|_tq|=WC_;@!\"\"g@y>[W$7*te)P*see*e^gVbyBl4M{F",
                 pg.getPassword(setting));
         } catch (NotHashedException e) {
             e.printStackTrace();

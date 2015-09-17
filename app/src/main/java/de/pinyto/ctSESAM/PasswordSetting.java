@@ -22,9 +22,9 @@ public class PasswordSetting {
     private String username;
     private String legacyPassword;
     private final String defaultCharacterSetLowerCase = "abcdefghijklmnopqrstuvwxyz";
-    private final String defaultCharacterSetUpperCase = "ABCDEFGHJKLMNPQRTUVWXYZ";
+    private final String defaultCharacterSetUpperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private final String defaultCharacterSetDigits = "0123456789";
-    private final String defaultCharacterSetExtra = "#!\"§$%&/()[]{}=-_+*<>;:.";
+    private final String defaultCharacterSetExtra = "#!\"~|@^°$%&/()[]{}=-_+*<>;:.";
     private String characterSet;
     private int iterations = 4096;
     private int length = 10;
@@ -38,7 +38,7 @@ public class PasswordSetting {
 
     PasswordSetting(String domain) {
         this.domain = domain;
-        this.salt = new byte[]{0x70, 0x65, 0x70, 0x70, 0x65, 0x72};
+        this.salt = Crypter.createSalt();
         this.cDate = Calendar.getInstance().getTime();
         this.mDate = this.cDate;
         this.characterSet = this.getDefaultCharacterSet();
@@ -87,6 +87,22 @@ public class PasswordSetting {
             for (int j = 0; j < remstr.length(); j++) {
                 if (this.characterSet.charAt(i) == remstr.charAt(j)) {
                     addThisChar = false;
+                }
+            }
+            if (addThisChar) {
+                newSet += this.characterSet.charAt(i);
+            }
+        }
+        this.characterSet = newSet;
+    }
+
+    private void removeFromCharacterSetExcept(String exceptStr) {
+        String newSet = "";
+        for (int i = 0; i < this.characterSet.length(); i++) {
+            boolean addThisChar = false;
+            for (int j = 0; j < exceptStr.length(); j++) {
+                if (this.characterSet.charAt(i) == exceptStr.charAt(j)) {
+                    addThisChar = true;
                 }
             }
             if (addThisChar) {
@@ -225,7 +241,9 @@ public class PasswordSetting {
     }
 
     public void setUseExtra(boolean useExtra) {
-        this.removeFromCharacterSet(this.defaultCharacterSetExtra);
+        this.removeFromCharacterSetExcept(this.defaultCharacterSetLowerCase +
+                this.defaultCharacterSetUpperCase +
+                this.defaultCharacterSetDigits);
         if (useExtra) {
             if (this.useLetters() && useDigits()) {
                 this.characterSet = this.characterSet.substring(0,
