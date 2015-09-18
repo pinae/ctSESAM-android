@@ -70,13 +70,12 @@ public class KgkManager {
         return Base64.decode(kgkBase64, Base64.DEFAULT);
     }
 
-    public void decryptKgk(byte[] password, byte[] salt, byte[] encryptedKgk) {
-        this.getKgkCrypter(password, salt);
+    public void decryptKgk(Crypter kgkCrypter, byte[] encryptedKgk) {
         if (encryptedKgk.length != 112) {
             createNewKgk();
         } else {
             try {
-                byte[] kgkBlock = this.kgkCrypter.decrypt(encryptedKgk, "NoPadding");
+                byte[] kgkBlock = kgkCrypter.decrypt(encryptedKgk, "NoPadding");
                 Clearer.zero(this.salt2);
                 Clearer.zero(this.iv2);
                 Clearer.zero(this.kgk);
@@ -89,12 +88,17 @@ public class KgkManager {
         }
     }
 
+    public void decryptKgk(byte[] password, byte[] salt, byte[] encryptedKgk) {
+        this.getKgkCrypter(password, salt);
+        this.decryptKgk(this.kgkCrypter, encryptedKgk);
+    }
+
     public byte[] getKgk() {
         return this.kgk;
     }
 
     public boolean hasKgk() {
-        return this.kgk != null && this.kgk.length == 64;
+        return this.kgk != null && this.kgk.length == 64 && this.kgkCrypter != null;
     }
 
     public byte[] getSalt2() {
@@ -131,14 +135,14 @@ public class KgkManager {
         return encryptedKgk;
     }
 
-    public void createAndSaveNewKgkBlock(byte[] password) {
+    public void createAndSaveNewKgkBlock(Crypter kgkCrypter) {
         this.createNewKgk();
         byte[] salt = Crypter.createSalt();
         SharedPreferences.Editor savedDomainsEditor = this.savedDomains.edit();
         savedDomainsEditor.putString("salt", Base64.encodeToString(
                 salt,
                 Base64.DEFAULT));
-        this.getKgkCrypter(password, salt);
+        this.kgkCrypter = kgkCrypter;
         byte[] encryptedKgkBlock = this.getFreshEncryptedKgk();
         Clearer.zero(salt);
         savedDomainsEditor.putString("KGK", Base64.encodeToString(

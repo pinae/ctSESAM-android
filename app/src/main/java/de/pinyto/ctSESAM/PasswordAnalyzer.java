@@ -44,7 +44,7 @@ public class PasswordAnalyzer {
         if (password == null) {
             return false;
         }
-        String defaultCharacterSetUpperCase = "ABCDEFGHJKLMNPQRTUVWXYZ";
+        String defaultCharacterSetUpperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         for (int i = 0; i < password.length(); i++) {
             for (int j = 0; j < defaultCharacterSetUpperCase.length(); j++) {
                 if (password.charAt(i) == defaultCharacterSetUpperCase.charAt(j)) {
@@ -74,7 +74,7 @@ public class PasswordAnalyzer {
         if (password == null) {
             return false;
         }
-        String defaultCharacterSetExtra = "#!\"§$%&/()[]{}=-_+*<>;:.";
+        String defaultCharacterSetExtra = "#!\"~|@^°$%&/()[]{}=-_+*<>;:.";
         for (int i = 0; i < password.length(); i++) {
             for (int j = 0; j < defaultCharacterSetExtra.length(); j++) {
                 if (password.charAt(i) == defaultCharacterSetExtra.charAt(j)) {

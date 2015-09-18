@@ -22,4 +22,6 @@
     <string name="sync_error">Could not synchronize settings</string>
     <string name="local_wrong_password">Could not load settings. Wrong password?</string>
     <string name="sync_wrong_password">Could not synchronize. Wrong password?</string>
+    <string name="loading">… decrypting settings …</string>
+    <string name="creatingKgk">… creating a fresh key encryption key …</string>
 </resources>

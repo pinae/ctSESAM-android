@@ -19,4 +19,6 @@
     <string name="local_wrong_password">Konnte keine Einstellungen laden. Falsches Passwort?</string>
     <string name="sync_wrong_password">Synchronisation fehlgeschlagen. Falsches Passwort?</string>
     <string name="username">Benutzername:</string>
+    <string name="loading">… entschlüssele Einstellungen …</string>
+    <string name="creatingKgk">… erzeuge einen neuen Schlüsselverschlüsselungsschlüssel …</string>
 </resources>

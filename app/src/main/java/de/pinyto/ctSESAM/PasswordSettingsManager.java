@@ -49,7 +49,7 @@ public class PasswordSettingsManager {
         return new Crypter(settingsKeyIv);
     }
 
-    public void loadLocalSettings(KgkManager kgkManager) {
+    public void loadLocalSettings(KgkManager kgkManager) throws WrongPasswordException {
         Crypter settingsCrypter = this.getSettingsCrypter(kgkManager);
         byte[] encrypted = Base64.decode(
                 this.savedDomains.getString("encryptedSettings", ""),
@@ -59,15 +59,11 @@ public class PasswordSettingsManager {
         }
         byte[] decrypted = settingsCrypter.decrypt(encrypted);
         if (decrypted.length < 40) {
-            Toast.makeText(contentContext,
-                    R.string.local_wrong_password, Toast.LENGTH_SHORT).show();
-            return;
+            throw new WrongPasswordException("wrong length: too short");
         }
         String decompressedSettings = Packer.decompress(decrypted);
         if (decompressedSettings.length() <= 0) {
-            Toast.makeText(contentContext,
-                    R.string.local_wrong_password, Toast.LENGTH_SHORT).show();
-            return;
+            throw new WrongPasswordException("unable to decompress");
         }
         try {
             JSONObject decryptedObject = new JSONObject(decompressedSettings);
