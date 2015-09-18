@@ -19,6 +19,7 @@ public class KgkManager {
     byte[] iv2;
     byte[] salt2;
     Crypter kgkCrypter;
+    byte[] salt;
 
     KgkManager(Context contentContext) {
         this.savedDomains = contentContext.getSharedPreferences(
@@ -33,10 +34,12 @@ public class KgkManager {
             salt = Crypter.createSalt();
             this.storeSalt(salt);
         }
+        this.salt = salt;
         return salt;
     }
 
     private void storeSalt(byte[] salt) {
+        this.salt = salt;
         SharedPreferences.Editor savedDomainsEditor = this.savedDomains.edit();
         savedDomainsEditor.putString("salt", Base64.encodeToString(
                 salt,
@@ -71,6 +74,7 @@ public class KgkManager {
     }
 
     public void decryptKgk(Crypter kgkCrypter, byte[] encryptedKgk) {
+        this.kgkCrypter = kgkCrypter;
         if (encryptedKgk.length != 112) {
             createNewKgk();
         } else {
@@ -89,6 +93,7 @@ public class KgkManager {
     }
 
     public void decryptKgk(byte[] password, byte[] salt, byte[] encryptedKgk) {
+        this.salt = salt;
         this.getKgkCrypter(password, salt);
         this.decryptKgk(this.kgkCrypter, encryptedKgk);
     }
@@ -142,6 +147,7 @@ public class KgkManager {
         savedDomainsEditor.putString("salt", Base64.encodeToString(
                 salt,
                 Base64.DEFAULT));
+        this.salt = salt;
         this.kgkCrypter = kgkCrypter;
         byte[] encryptedKgkBlock = this.getFreshEncryptedKgk();
         Clearer.zero(salt);
@@ -168,5 +174,6 @@ public class KgkManager {
                 encryptedKgkBlock,
                 Base64.DEFAULT));
         savedDomainsEditor.apply();
+        this.storeSalt(this.salt);
     }
 }

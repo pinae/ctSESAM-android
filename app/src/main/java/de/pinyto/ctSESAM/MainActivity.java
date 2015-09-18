@@ -229,7 +229,7 @@ public class MainActivity extends AppCompatActivity {
             JSONObject result = new JSONObject();
             try {
                 result.put("generatedPassword", generatedPassword);
-                result.put("iterations", iterations);
+                result.put("iterations", iterations - 1);
             } catch (JSONException jsonError) {
                 jsonError.printStackTrace();
             }
@@ -369,6 +369,8 @@ public class MainActivity extends AppCompatActivity {
                                     (AutoCompleteTextView) findViewById(
                                             R.id.autoCompleteTextViewDomain);
                             autoCompleteTextViewDomain.setAdapter(adapter);
+                            Toast.makeText(getApplicationContext(),
+                                    R.string.sync_loaded, Toast.LENGTH_SHORT).show();
                             if (changed) {
                                 byte[] encryptedBlob = settingsManager.getExportData(kgkManager);
                                 if (mBound) {

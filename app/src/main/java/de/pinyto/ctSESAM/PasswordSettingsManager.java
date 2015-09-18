@@ -255,6 +255,7 @@ public class PasswordSettingsManager {
                         } else {
                             updateRemote = true;
                         }
+                        setting.setSynced(true);
                         break;
                     }
                 }
@@ -262,6 +263,7 @@ public class PasswordSettingsManager {
                     PasswordSetting newSetting = new PasswordSetting(
                             loadedSetting.getString("domain"));
                     newSetting.loadFromJSON(loadedSetting);
+                    newSetting.setSynced(true);
                     this.setSetting(newSetting);
                 }
             }

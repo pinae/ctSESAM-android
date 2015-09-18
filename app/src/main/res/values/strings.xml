@@ -18,6 +18,7 @@
     <string name="iteration_count_initial">4096</string>
     <string name="iteration_count_end">times.</string>
     <string name="special_characters">Special characters</string>
+    <string name="sync_loaded">Loaded settings</string>
     <string name="sync_successful">Successfully synchronized settings</string>
     <string name="sync_error">Could not synchronize settings</string>
     <string name="local_wrong_password">Could not load settings. Wrong password?</string>

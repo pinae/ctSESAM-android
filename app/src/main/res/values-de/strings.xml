@@ -21,4 +21,5 @@
     <string name="username">Benutzername:</string>
     <string name="loading">… entschlüssele Einstellungen …</string>
     <string name="creatingKgk">… erzeuge einen neuen Schlüsselverschlüsselungsschlüssel …</string>
+    <string name="sync_loaded">Einstellungen geladen</string>
 </resources>
