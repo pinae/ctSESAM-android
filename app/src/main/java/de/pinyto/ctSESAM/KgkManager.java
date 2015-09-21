@@ -176,4 +176,12 @@ public class KgkManager {
         savedDomainsEditor.apply();
         this.storeSalt(this.salt);
     }
+
+    public void reset() {
+        this.salt = null;
+        this.iv2 = null;
+        this.salt2 = null;
+        this.kgk = null;
+        this.kgkCrypter = null;
+    }
 }

@@ -125,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getBaseContext(),
                         R.string.local_wrong_password, Toast.LENGTH_SHORT).show();
                 autoCompleteTextViewDomain.dismissDropDown();
+                kgkManager.reset();
             }
             ArrayAdapter<String> adapter = new ArrayAdapter<>(getBaseContext(),
                     android.R.layout.simple_dropdown_item_1line, settingsManager.getDomainList());
