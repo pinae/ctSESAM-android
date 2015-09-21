@@ -708,31 +708,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        final CheckBox checkBoxSpecialCharacters =
-                (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
-        checkBoxSpecialCharacters.setOnCheckedChangeListener(
-                new CheckBox.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(
-                            CompoundButton compoundButton,
-                            boolean isChecked) {
-                        compoundButton.setBackgroundColor(Color.TRANSPARENT);
-                        applyCheckboxExtra = true;
-                        setToNotGenerated();
-                    }
-                });
-        final CheckBox checkBoxSpecialCharactersForce =
-                (CheckBox) findViewById(R.id.checkBoxSpecialCharacterForce);
-        checkBoxSpecialCharactersForce.setOnCheckedChangeListener(
-                new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                if (checked) {
-                    checkBoxSpecialCharacters.setChecked(true);
-                    setToNotGenerated();
-                }
-            }
-        });
         final CheckBox checkBoxLetters =
                 (CheckBox) findViewById(R.id.checkBoxLetters);
         checkBoxLetters.setOnCheckedChangeListener(
@@ -741,6 +716,11 @@ public class MainActivity extends AppCompatActivity {
                     public void onCheckedChanged(
                             CompoundButton compoundButton,
                             boolean isChecked) {
+                        if (!isChecked) {
+                            CheckBox checkBoxForce =
+                                (CheckBox) findViewById(R.id.checkBoxLettersForce);
+                            checkBoxForce.setChecked(false);
+                        }
                         compoundButton.setBackgroundColor(Color.TRANSPARENT);
                         applyCheckboxLetters = true;
                         setToNotGenerated();
@@ -766,6 +746,11 @@ public class MainActivity extends AppCompatActivity {
                     public void onCheckedChanged(
                             CompoundButton compoundButton,
                             boolean isChecked) {
+                        if (!isChecked) {
+                            CheckBox checkBoxForce =
+                                    (CheckBox) findViewById(R.id.checkBoxDigitsForce);
+                            checkBoxForce.setChecked(false);
+                        }
                         compoundButton.setBackgroundColor(Color.TRANSPARENT);
                         applyCheckboxDigits = true;
                         setToNotGenerated();
@@ -779,6 +764,36 @@ public class MainActivity extends AppCompatActivity {
                     public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                         if (checked) {
                             checkBoxDigits.setChecked(true);
+                            setToNotGenerated();
+                        }
+                    }
+                });
+        final CheckBox checkBoxSpecialCharacters =
+                (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
+        checkBoxSpecialCharacters.setOnCheckedChangeListener(
+                new CheckBox.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(
+                            CompoundButton compoundButton,
+                            boolean isChecked) {
+                        if (!isChecked) {
+                            CheckBox checkBoxForce =
+                                    (CheckBox) findViewById(R.id.checkBoxSpecialCharacterForce);
+                            checkBoxForce.setChecked(false);
+                        }
+                        compoundButton.setBackgroundColor(Color.TRANSPARENT);
+                        applyCheckboxExtra = true;
+                        setToNotGenerated();
+                    }
+                });
+        final CheckBox checkBoxSpecialCharactersForce =
+                (CheckBox) findViewById(R.id.checkBoxSpecialCharacterForce);
+        checkBoxSpecialCharactersForce.setOnCheckedChangeListener(
+                new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                        if (checked) {
+                            checkBoxSpecialCharacters.setChecked(true);
                             setToNotGenerated();
                         }
                     }
