@@ -22,4 +22,6 @@
     <string name="loading">… entschlüssele Einstellungen …</string>
     <string name="creatingKgk">… erzeuge einen neuen Schlüsselverschlüsselungsschlüssel …</string>
     <string name="sync_loaded">Einstellungen geladen</string>
+    <string name="contentDescriptionForce">Eines dieser Zeichen muss im Passwort vorkommen</string>
+    <string name="contentDescriptionInSet">Diese Zeichen können im Passwort vorkommen</string>
 </resources>

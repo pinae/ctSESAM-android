@@ -64,6 +64,10 @@ public class PasswordSetting {
         this.username = username;
     }
 
+    public boolean hasLegacyPassword() {
+        return this.legacyPassword != null && this.legacyPassword.length() > 0;
+    }
+
     public String getLegacyPassword() {
         if (this.legacyPassword != null) {
             return this.legacyPassword;

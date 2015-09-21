@@ -72,45 +72,27 @@
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:src="@drawable/ic_contains"
-                android:layout_marginBottom="-15dp" />
+                android:layout_marginBottom="-12dp"
+                android:contentDescription="@string/contentDescriptionInSet" />
 
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/imageViewForceContains"
-                android:layout_above="@+id/checkBoxSpecialCharacter"
+                android:layout_above="@+id/checkBoxLettersForce"
                 android:layout_toRightOf="@+id/checkBoxSpecialCharacter"
                 android:layout_toEndOf="@+id/checkBoxSpecialCharacter"
                 android:src="@drawable/ic_force_contains"
-                android:layout_marginBottom="-15dp"
-                android:layout_marginLeft="5dp" />
-
-            <CheckBox
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:id="@+id/checkBoxSpecialCharacter"
-                android:layout_below="@+id/imageViewContains"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:checked="true" />
-
-            <CheckBox
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/special_characters"
-                android:id="@+id/checkBoxSpecialCharacterForce"
-                android:checked="false"
-                android:layout_below="@+id/imageViewContains"
-                android:layout_toRightOf="@+id/checkBoxSpecialCharacter"
-                android:layout_toEndOf="@+id/checkBoxSpecialCharacter" />
+                android:layout_marginBottom="-12dp"
+                android:layout_marginLeft="5dp"
+                android:contentDescription="@string/contentDescriptionForce" />
 
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text=""
                 android:id="@+id/checkBoxLetters"
-                android:layout_below="@+id/checkBoxSpecialCharacter"
+                android:layout_below="@+id/imageViewContains"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:checked="true" />
@@ -120,7 +102,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/letters"
                 android:id="@+id/checkBoxLettersForce"
-                android:layout_below="@+id/checkBoxSpecialCharacter"
+                android:layout_below="@+id/imageViewContains"
                 android:layout_toRightOf="@id/checkBoxLetters"
                 android:layout_toEndOf="@id/checkBoxLetters"
                 android:checked="false" />
@@ -145,11 +127,31 @@
                 android:layout_toEndOf="@id/checkBoxDigits"
                 android:checked="false" />
 
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:id="@+id/checkBoxSpecialCharacter"
+                android:layout_below="@+id/checkBoxDigits"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:checked="true" />
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/special_characters"
+                android:id="@+id/checkBoxSpecialCharacterForce"
+                android:checked="false"
+                android:layout_below="@+id/checkBoxDigits"
+                android:layout_toRightOf="@+id/checkBoxSpecialCharacter"
+                android:layout_toEndOf="@+id/checkBoxSpecialCharacter" />
+
             <TextView
                 android:text="@string/length"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/checkBoxDigits"
+                android:layout_below="@+id/checkBoxSpecialCharacter"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:id="@+id/textViewLengthHeading" />
@@ -160,7 +162,7 @@
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:text="@string/length_init"
                 android:id="@+id/textViewLengthDisplay"
-                android:layout_below="@+id/checkBoxDigits"
+                android:layout_below="@+id/checkBoxSpecialCharacter"
                 android:layout_toEndOf="@+id/textViewLengthHeading"
                 android:layout_toRightOf="@+id/textViewLengthHeading"
                 android:layout_marginStart="4dp"
@@ -195,7 +197,7 @@
                 android:layout_below="@+id/generatorButton"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
-                android:id="@+id/textViewMPasswordHeading" />
+                android:id="@+id/textViewPasswordHeading" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -203,11 +205,34 @@
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:text="@string/init_password"
                 android:id="@+id/textViewPassword"
-                android:layout_below="@+id/textViewMPasswordHeading"
+                android:layout_below="@+id/textViewPasswordHeading"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:gravity="center"
                 android:textAlignment="center" />
+
+            <TextView
+                android:text="@string/password"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/editTextUsername"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:id="@+id/textViewLegacyPasswordHeading"
+                android:visibility="invisible" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="@string/init_password"
+                android:id="@+id/textViewLegacyPassword"
+                android:layout_below="@id/textViewLegacyPasswordHeading"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:gravity="center"
+                android:textAlignment="center"
+                android:visibility="invisible" />
 
             <TextView
                 android:layout_width="wrap_content"

@@ -25,4 +25,6 @@
     <string name="sync_wrong_password">Could not synchronize. Wrong password?</string>
     <string name="loading">… decrypting settings …</string>
     <string name="creatingKgk">… creating a fresh key encryption key …</string>
+    <string name="contentDescriptionInSet">These characters can be in the password.</string>
+    <string name="contentDescriptionForce">One of these characters must be in the password.</string>
 </resources>

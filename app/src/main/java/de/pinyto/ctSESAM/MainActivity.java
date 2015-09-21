@@ -31,6 +31,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -56,6 +57,8 @@ public class MainActivity extends AppCompatActivity {
     private PasswordSettingsManager settingsManager;
     private KgkManager kgkManager;
     private boolean isGenerated = false;
+    private boolean showSettings = false;
+    private boolean showLegacyPassword = false;
     private LoadLocalSettingsTask loadSettingsTask;
     private CreateNewKgkTask createNewKgkTask;
     private GeneratePasswordTask generatePasswordTask;
@@ -419,6 +422,70 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void updateView() {
+        ImageView containsIcon = (ImageView) findViewById(R.id.imageViewContains);
+        ImageView forceContainsIcon = (ImageView) findViewById(R.id.imageViewForceContains);
+        CheckBox checkBoxLettersForce =
+                (CheckBox) findViewById(R.id.checkBoxLettersForce);
+        CheckBox checkBoxLetters =
+                (CheckBox) findViewById(R.id.checkBoxLetters);
+        CheckBox checkBoxDigits =
+                (CheckBox) findViewById(R.id.checkBoxDigits);
+        CheckBox checkBoxDigitsForce =
+                (CheckBox) findViewById(R.id.checkBoxDigitsForce);
+        CheckBox checkBoxSpecialCharacters =
+                (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
+        CheckBox checkBoxSpecialCharactersForce =
+                (CheckBox) findViewById(R.id.checkBoxSpecialCharacterForce);
+        TextView lengthHeading = (TextView) findViewById(R.id.textViewLengthHeading);
+        TextView lengthLabel = (TextView) findViewById(R.id.textViewLengthDisplay);
+        SeekBar seekBarLength =
+                (SeekBar) findViewById(R.id.seekBarLength);
+        Button generateButton = (Button) findViewById(R.id.generatorButton);
+        TextView passwordHeading = (TextView) findViewById(R.id.textViewPasswordHeading);
+        TextView password = (TextView) findViewById(R.id.textViewPassword);
+        TextView legacyPasswordHeading = (TextView) findViewById(R.id.textViewLegacyPasswordHeading);
+        TextView legacyPassword = (TextView) findViewById(R.id.textViewLegacyPassword);
+        if (this.showSettings) {
+            containsIcon.setVisibility(View.VISIBLE);
+            forceContainsIcon.setVisibility(View.VISIBLE);
+            checkBoxLetters.setVisibility(View.VISIBLE);
+            checkBoxLettersForce.setVisibility(View.VISIBLE);
+            checkBoxDigits.setVisibility(View.VISIBLE);
+            checkBoxDigitsForce.setVisibility(View.VISIBLE);
+            checkBoxSpecialCharacters.setVisibility(View.VISIBLE);
+            checkBoxSpecialCharactersForce.setVisibility(View.VISIBLE);
+            lengthHeading.setVisibility(View.VISIBLE);
+            lengthLabel.setVisibility(View.VISIBLE);
+            seekBarLength.setVisibility(View.VISIBLE);
+            generateButton.setVisibility(View.VISIBLE);
+            passwordHeading.setVisibility(View.VISIBLE);
+            password.setVisibility(View.VISIBLE);
+        } else {
+            containsIcon.setVisibility(View.INVISIBLE);
+            forceContainsIcon.setVisibility(View.INVISIBLE);
+            checkBoxLetters.setVisibility(View.INVISIBLE);
+            checkBoxLettersForce.setVisibility(View.INVISIBLE);
+            checkBoxDigits.setVisibility(View.INVISIBLE);
+            checkBoxDigitsForce.setVisibility(View.INVISIBLE);
+            checkBoxSpecialCharacters.setVisibility(View.INVISIBLE);
+            checkBoxSpecialCharactersForce.setVisibility(View.INVISIBLE);
+            lengthHeading.setVisibility(View.INVISIBLE);
+            lengthLabel.setVisibility(View.INVISIBLE);
+            seekBarLength.setVisibility(View.INVISIBLE);
+            generateButton.setVisibility(View.INVISIBLE);
+            passwordHeading.setVisibility(View.INVISIBLE);
+            password.setVisibility(View.INVISIBLE);
+        }
+        if (this.showLegacyPassword) {
+            legacyPasswordHeading.setVisibility(View.VISIBLE);
+            legacyPassword.setVisibility(View.VISIBLE);
+        } else {
+            legacyPasswordHeading.setVisibility(View.INVISIBLE);
+            legacyPassword.setVisibility(View.INVISIBLE);
+        }
+    }
+
     private void setIterationCountVisibility(int visible) {
         TextView textViewIterationCountBeginning =
                 (TextView) findViewById(R.id.iterationCountBeginning);
@@ -531,7 +598,12 @@ public class MainActivity extends AppCompatActivity {
                 (SeekBar) findViewById(R.id.seekBarLength);
         TextView lengthLabel =
                 (TextView) findViewById(R.id.textViewLengthDisplay);
+        TextView legacyPassword =
+                (TextView) findViewById(R.id.textViewLegacyPassword);
         PasswordSetting passwordSetting = settingsManager.getSetting(domain);
+        this.showSettings = !passwordSetting.hasLegacyPassword() && domain.length() > 0;
+        this.showLegacyPassword = passwordSetting.hasLegacyPassword();
+        legacyPassword.setText(passwordSetting.getLegacyPassword());
         editTextUsername.setText(passwordSetting.getUsername());
         this.setCheckboxChecked(checkBoxLetters, passwordSetting.useLetters());
         this.setCheckboxChecked(checkBoxDigits, passwordSetting.useDigits());
@@ -563,6 +635,7 @@ public class MainActivity extends AppCompatActivity {
         editTextMasterPassword.setText("", TextView.BufferType.EDITABLE);
         setToNotGenerated();
         clearMasterPassword();
+        updateView();
 
         editTextMasterPassword.addTextChangedListener(new TextWatcher() {
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -588,12 +661,15 @@ public class MainActivity extends AppCompatActivity {
             public void afterTextChanged(Editable editable) {
                 setButtonEnabledByDomainLength();
                 setToNotGenerated();
+                showSettings = editable.length() > 0;
+                showLegacyPassword = false;
                 for (String domain : settingsManager.getDomainList()) {
                     if (domain.contentEquals(editable)) {
                         loadSettings();
                         break;
                     }
                 }
+                updateView();
             }
         });
         autoCompleteTextViewDomain.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -737,7 +813,6 @@ public class MainActivity extends AppCompatActivity {
                     iterations++;
                 }
                 // Generate password
-                TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
                 generatePassword(iterations);
             }
         });
