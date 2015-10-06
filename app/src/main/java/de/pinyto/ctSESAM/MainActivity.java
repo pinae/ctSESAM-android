@@ -9,9 +9,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
@@ -25,7 +23,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -34,13 +31,8 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -49,20 +41,11 @@ public class MainActivity extends AppCompatActivity {
     static final String syncServiceName = "SyncService";
     Messenger mService = null;
     boolean mBound;
-    static final int REQUEST_SYNC = 1;
-    static final int SEND_UPDATE = 2;
-    static final int SYNC_RESPONSE = 1;
-    static final int SEND_UPDATE_RESPONSE = 2;
-
     private PasswordSettingsManager settingsManager;
     private KgkManager kgkManager;
     private boolean isGenerated = false;
     private boolean showSettings = false;
     private boolean showLegacyPassword = false;
-    private LoadLocalSettingsTask loadSettingsTask;
-    private CreateNewKgkTask createNewKgkTask;
-    private GeneratePasswordTask generatePasswordTask;
-    private CreateKgkAndPasswordTask createKgkAndPasswordTask;
     private boolean applyCheckboxLetters = false;
     private boolean applyCheckboxDigits = false;
     private boolean applyCheckboxExtra = false;
@@ -79,348 +62,12 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private class LoadLocalSettingsTask extends AsyncTask<byte[], Void, IvKeyContainer> {
-        private KgkManager kgkManager;
-        private PasswordSettingsManager settingsManager;
-
-        LoadLocalSettingsTask(KgkManager kgkManager, PasswordSettingsManager settingsManager) {
-            this.kgkManager = kgkManager;
-            this.settingsManager = settingsManager;
-        }
-
-        @Override
-        protected IvKeyContainer doInBackground(byte[]... params) {
-            byte[] password = params[0];
-            byte[] salt = params[1];
-            byte[] ivKey = Crypter.createIvKey(password, salt);
-            for (int i = 0; i < password.length; i++) {
-                password[i] = 0x00;
-            }
-            return new IvKeyContainer(ivKey);
-        }
-
-        @Override
-        protected void onPreExecute() {
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(getBaseContext(),
-                    android.R.layout.simple_dropdown_item_1line,
-                    new String[]{getString(R.string.loading)});
-            AutoCompleteTextView autoCompleteTextViewDomain =
-                    (AutoCompleteTextView) findViewById(
-                            R.id.autoCompleteTextViewDomain);
-            autoCompleteTextViewDomain.setAdapter(adapter);
-            autoCompleteTextViewDomain.showDropDown();
-        }
-
-        @Override
-        protected void onPostExecute(IvKeyContainer ivKeyContainer) {
-            byte[] encryptedKgkBlock = kgkManager.gelLocalKgkBlock();
-            kgkManager.decryptKgk(
-                    new Crypter(ivKeyContainer.getIvKey()),
-                    encryptedKgkBlock);
-            AutoCompleteTextView autoCompleteTextViewDomain =
-                    (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
-            try {
-                settingsManager.loadLocalSettings(kgkManager);
-            } catch (WrongPasswordException passwordError) {
-                Toast.makeText(getBaseContext(),
-                        R.string.local_wrong_password, Toast.LENGTH_SHORT).show();
-                autoCompleteTextViewDomain.dismissDropDown();
-                kgkManager.reset();
-            }
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(getBaseContext(),
-                    android.R.layout.simple_dropdown_item_1line, settingsManager.getDomainList());
-            autoCompleteTextViewDomain.setAdapter(adapter);
-        }
+    public MainActivity getActivity() {
+        return this;
     }
 
-    private class CreateNewKgkTask extends AsyncTask<byte[], byte[], byte[]> {
-        private KgkManager kgkManager;
-        private PasswordSettingsManager settingsManager;
-
-        CreateNewKgkTask(KgkManager kgkManager, PasswordSettingsManager settingsManager) {
-            this.kgkManager = kgkManager;
-            this.settingsManager = settingsManager;
-        }
-
-        @Override
-        protected byte[] doInBackground(byte[]... params) {
-            byte[] password = params[0];
-            byte[] salt = Crypter.createSalt();
-            byte[] ivKey = Crypter.createIvKey(password, salt);
-            for (int i = 0; i < password.length; i++) {
-                password[i] = 0x00;
-            }
-            return ivKey;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(getBaseContext(),
-                    android.R.layout.simple_dropdown_item_1line,
-                    new String[]{getString(R.string.creatingKgk)});
-            AutoCompleteTextView autoCompleteTextViewDomain =
-                    (AutoCompleteTextView) findViewById(
-                            R.id.autoCompleteTextViewDomain);
-            autoCompleteTextViewDomain.setAdapter(adapter);
-            autoCompleteTextViewDomain.showDropDown();
-        }
-
-        @Override
-        protected void onPostExecute(byte[] ivKey) {
-            kgkManager.createAndSaveNewKgkBlock(new Crypter(ivKey));
-            AutoCompleteTextView autoCompleteTextViewDomain =
-                    (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
-            try {
-                settingsManager.loadLocalSettings(kgkManager);
-            } catch (WrongPasswordException passwordError) {
-                passwordError.printStackTrace();
-                autoCompleteTextViewDomain.dismissDropDown();
-            }
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(getBaseContext(),
-                    android.R.layout.simple_dropdown_item_1line, settingsManager.getDomainList());
-            autoCompleteTextViewDomain.setAdapter(adapter);
-            autoCompleteTextViewDomain.dismissDropDown();
-        }
-    }
-
-    private class GeneratePasswordTask extends AsyncTask<byte[], Void, JSONObject> {
-        PasswordSetting setting;
-
-        GeneratePasswordTask(PasswordSetting setting) {
-            this.setting = setting;
-        }
-
-        @Override
-        protected JSONObject doInBackground(byte[]... params) {
-            byte[] domain = params[0];
-            byte[] username = params[1];
-            byte[] kgk = params[2];
-            byte[] salt = params[3];
-            int iterations = ByteBuffer.wrap(Arrays.copyOfRange(params[4], 0, 4)).getInt();
-            boolean checkBoxLettersIsChecked = params[5][0] == 0x01;
-            boolean checkBoxDigitsIsChecked = params[6][0] == 0x01;
-            boolean checkBoxExtraIsChecked = params[7][0] == 0x01;
-            boolean forceLetters = params[8][0] == 0x01;
-            boolean forceDigits = params[9][0] == 0x01;
-            boolean forceExtra = params[10][0] == 0x01;
-            String generatedPassword;
-            do {
-                PasswordGenerator generator = new PasswordGenerator(
-                        domain,
-                        username,
-                        kgk,
-                        salt);
-                try {
-                    generator.hash(iterations);
-                    if (applyCheckboxLetters) {
-                        this.setting.setUseLetters(checkBoxLettersIsChecked);
-                    }
-                    if (applyCheckboxDigits) {
-                        this.setting.setUseDigits(checkBoxDigitsIsChecked);
-                    }
-                    if (applyCheckboxExtra) {
-                        this.setting.setUseExtra(checkBoxExtraIsChecked);
-                    }
-                    this.setting.setIterations(iterations);
-                    generatedPassword = generator.getPassword(setting);
-                } catch (NotHashedException e) {
-                    e.printStackTrace();
-                    generatedPassword = "Not hashed.";
-                }
-                iterations++;
-            } while (!PasswordAnalyzer.contains(generatedPassword,
-                    forceLetters, forceDigits, forceExtra));
-            JSONObject result = new JSONObject();
-            try {
-                result.put("generatedPassword", generatedPassword);
-                result.put("iterations", iterations - 1);
-            } catch (JSONException jsonError) {
-                jsonError.printStackTrace();
-            }
-            return result;
-        }
-
-        @Override
-        protected void onPostExecute(JSONObject result) {
-            TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
-            try {
-                this.setting.setIterations(result.getInt("iterations"));
-                textViewPassword.setText(result.getString("generatedPassword"));
-            } catch (JSONException jsonError) {
-                jsonError.printStackTrace();
-            }
-            CheckBox checkBoxLetters =
-                    (CheckBox) findViewById(R.id.checkBoxLetters);
-            CheckBox checkBoxDigits =
-                    (CheckBox) findViewById(R.id.checkBoxDigits);
-            CheckBox checkBoxSpecialCharacters =
-                    (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
-            if (applyCheckboxLetters) {
-                this.setting.setUseLetters(checkBoxLetters.isChecked());
-            }
-            if (applyCheckboxDigits) {
-                this.setting.setUseDigits(checkBoxDigits.isChecked());
-            }
-            if (applyCheckboxExtra) {
-                this.setting.setUseExtra(checkBoxSpecialCharacters.isChecked());
-            }
-            SeekBar seekBarLength =
-                    (SeekBar) findViewById(R.id.seekBarLength);
-            this.setting.setLength(seekBarLength.getProgress() + 4);
-            this.setting.setModificationDateToNow();
-            settingsManager.setSetting(this.setting);
-            settingsManager.storeLocalSettings(kgkManager);
-            isGenerated = true;
-            invalidateOptionsMenu();
-            Button generateButton = (Button) findViewById(R.id.generatorButton);
-            generateButton.setText(getResources().getString(R.string.re_generator_button));
-            TextView textViewIterationCount =
-                    (TextView) findViewById(R.id.iterationCount);
-            try {
-                textViewIterationCount.setText(Integer.toString(result.getInt("iterations")));
-                setIterationCountVisibility(View.VISIBLE);
-            } catch (JSONException jsonError) {
-                jsonError.printStackTrace();
-            }
-            // load settings because the domain might be new
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(getBaseContext(),
-                    android.R.layout.simple_dropdown_item_1line,
-                    settingsManager.getDomainList());
-            AutoCompleteTextView autoCompleteTextViewDomain =
-                    (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
-            autoCompleteTextViewDomain.setAdapter(adapter);
-        }
-    }
-
-    private class CreateKgkAndPasswordTask extends AsyncTask<byte[], Void, byte[]> {
-        int iterations;
-
-        CreateKgkAndPasswordTask(int iterations) {
-            this.iterations = iterations;
-        }
-
-        @Override
-        protected byte[] doInBackground(byte[]... params) {
-            byte[] password = params[0];
-            byte[] salt = Crypter.createSalt();
-            byte[] ivKey = Crypter.createIvKey(password, salt);
-            for (int i = 0; i < password.length; i++) {
-                password[i] = 0x00;
-            }
-            return ivKey;
-        }
-
-        @Override
-        protected void onPostExecute(byte[] ivKey) {
-            kgkManager.createAndSaveNewKgkBlock(new Crypter(ivKey));
-            AutoCompleteTextView autoCompleteTextViewDomain =
-                    (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
-            String domainStr = autoCompleteTextViewDomain.getText().toString();
-            byte[] domain = UTF8.encode(autoCompleteTextViewDomain.getText());
-            PasswordSetting setting = settingsManager.getSetting(domainStr);
-            generatePasswordTask = new GeneratePasswordTask(setting);
-            EditText editTextUsername =
-                    (EditText) findViewById(R.id.editTextUsername);
-            byte[] username = UTF8.encode(editTextUsername.getText());
-            byte[] kgk = kgkManager.getKgk();
-            CheckBox checkBoxLetters =
-                    (CheckBox) findViewById(R.id.checkBoxLetters);
-            CheckBox checkBoxDigits =
-                    (CheckBox) findViewById(R.id.checkBoxDigits);
-            CheckBox checkBoxExtra =
-                    (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
-            CheckBox checkBoxLettersForce =
-                    (CheckBox) findViewById(R.id.checkBoxLettersForce);
-            CheckBox checkBoxDigitsForce =
-                    (CheckBox) findViewById(R.id.checkBoxDigitsForce);
-            CheckBox checkBoxExtraForce =
-                    (CheckBox) findViewById(R.id.checkBoxSpecialCharacterForce);
-            generatePasswordTask.execute(domain, username, kgk, setting.getSalt(),
-                    ByteBuffer.allocate(4).putInt(iterations).array(),
-                    new byte[]{(byte) (checkBoxLetters.isChecked() ? 1 : 0 )},
-                    new byte[]{(byte) (checkBoxDigits.isChecked() ? 1 : 0 )},
-                    new byte[]{(byte) (checkBoxExtra.isChecked() ? 1 : 0 )},
-                    new byte[]{(byte) (checkBoxLettersForce.isChecked() ? 1 : 0 )},
-                    new byte[]{(byte) (checkBoxDigitsForce.isChecked() ? 1 : 0 )},
-                    new byte[]{(byte) (checkBoxExtraForce.isChecked() ? 1 : 0 )});
-        }
-    }
-
-    class ResponseHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-            int respCode = msg.what;
-
-            switch (respCode) {
-                case SYNC_RESPONSE: {
-                    String syncData = msg.getData().getString("respData");
-                    try {
-                        JSONObject syncDataObject = new JSONObject(syncData);
-                        if (!syncDataObject.getString("status").equals("ok")) break;
-                        EditText editTextMasterPassword = (EditText) findViewById(
-                                R.id.editTextMasterPassword);
-                        if (syncDataObject.has("result")) {
-                            byte[] password = UTF8.encode(editTextMasterPassword.getText());
-                            byte[] blob = Base64.decode(syncDataObject.getString("result"),
-                                    Base64.DEFAULT);
-                            kgkManager.updateFromBlob(password, blob);
-                            boolean changed = settingsManager.updateFromExportData(
-                                    kgkManager, blob);
-                            ArrayAdapter<String> adapter = new ArrayAdapter<>(getBaseContext(),
-                                    android.R.layout.simple_dropdown_item_1line,
-                                    settingsManager.getDomainList());
-                            AutoCompleteTextView autoCompleteTextViewDomain =
-                                    (AutoCompleteTextView) findViewById(
-                                            R.id.autoCompleteTextViewDomain);
-                            autoCompleteTextViewDomain.setAdapter(adapter);
-                            Toast.makeText(getApplicationContext(),
-                                    R.string.sync_loaded, Toast.LENGTH_SHORT).show();
-                            if (changed) {
-                                byte[] encryptedBlob = settingsManager.getExportData(kgkManager);
-                                if (mBound) {
-                                    Message updateMsg = Message.obtain(null, SEND_UPDATE, 0, 0);
-                                    updateMsg.replyTo = new Messenger(new ResponseHandler());
-                                    Bundle bUpdateMsg = new Bundle();
-                                    bUpdateMsg.putString("updatedData",
-                                            Base64.encodeToString(encryptedBlob, Base64.DEFAULT));
-                                    updateMsg.setData(bUpdateMsg);
-                                    try {
-                                        mService.send(updateMsg);
-                                    } catch (RemoteException e) {
-                                        Log.d("Sync error",
-                                                "Could not send update message to sync service.");
-                                        e.printStackTrace();
-                                    }
-                                }
-                            }
-                            Clearer.zero(password);
-                        }
-                    } catch (JSONException e) {
-                        Log.d("Sync error", "The response is not valid JSON.");
-                        e.printStackTrace();
-                    }
-                    break;
-                }
-                case SEND_UPDATE_RESPONSE: {
-                    String updateRequestAnswer = msg.getData().getString("respData");
-                    try {
-                        JSONObject syncDataObject = new JSONObject(updateRequestAnswer);
-                        if (syncDataObject.getString("status").equals("ok")) {
-                            settingsManager.setAllSettingsToSynced();
-                            Toast.makeText(getApplicationContext(),
-                                    R.string.sync_successful, Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(getApplicationContext(),
-                                    R.string.sync_error, Toast.LENGTH_SHORT).show();
-                        }
-                    } catch (JSONException e) {
-                        Log.d("update Settings error", "Server response is not JSON.");
-                        e.printStackTrace();
-                    }
-                    break;
-                }
-            }
-        }
+    public void setIsGenerated(boolean isGenerated) {
+        this.isGenerated = isGenerated;
     }
 
     private void updateView() {
@@ -487,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setIterationCountVisibility(int visible) {
+    public void setIterationCountVisibility(int visible) {
         TextView textViewIterationCountBeginning =
                 (TextView) findViewById(R.id.iterationCountBeginning);
         textViewIterationCountBeginning.setVisibility(visible);
@@ -520,7 +167,14 @@ public class MainActivity extends AppCompatActivity {
         byte[] domain = UTF8.encode(autoCompleteTextViewDomain.getText());
         PasswordSetting setting = this.settingsManager.getSetting(domainStr);
         if (kgkManager.hasKgk()) {
-            generatePasswordTask = new GeneratePasswordTask(setting);
+            GeneratePasswordTask generatePasswordTask = new GeneratePasswordTask(
+                    this,
+                    setting,
+                    kgkManager,
+                    settingsManager,
+                    applyCheckboxLetters,
+                    applyCheckboxDigits,
+                    applyCheckboxExtra);
             EditText editTextUsername =
                     (EditText) findViewById(R.id.editTextUsername);
             byte[] username = UTF8.encode(editTextUsername.getText());
@@ -539,17 +193,24 @@ public class MainActivity extends AppCompatActivity {
                     (CheckBox) findViewById(R.id.checkBoxSpecialCharacterForce);
             generatePasswordTask.execute(domain, username, kgk, setting.getSalt(),
                     ByteBuffer.allocate(4).putInt(iterations).array(),
-                    new byte[]{(byte) (checkBoxLetters.isChecked() ? 1 : 0 )},
-                    new byte[]{(byte) (checkBoxDigits.isChecked() ? 1 : 0 )},
-                    new byte[]{(byte) (checkBoxExtra.isChecked() ? 1 : 0 )},
-                    new byte[]{(byte) (checkBoxLettersForce.isChecked() ? 1 : 0 )},
-                    new byte[]{(byte) (checkBoxDigitsForce.isChecked() ? 1 : 0 )},
-                    new byte[]{(byte) (checkBoxExtraForce.isChecked() ? 1 : 0 )});
+                    new byte[]{(byte) (checkBoxLetters.isChecked() ? 1 : 0)},
+                    new byte[]{(byte) (checkBoxDigits.isChecked() ? 1 : 0)},
+                    new byte[]{(byte) (checkBoxExtra.isChecked() ? 1 : 0)},
+                    new byte[]{(byte) (checkBoxLettersForce.isChecked() ? 1 : 0)},
+                    new byte[]{(byte) (checkBoxDigitsForce.isChecked() ? 1 : 0)},
+                    new byte[]{(byte) (checkBoxExtraForce.isChecked() ? 1 : 0)});
         } else {
             EditText editTextMasterPassword =
                     (EditText) findViewById(R.id.editTextMasterPassword);
             byte[] password = UTF8.encode(editTextMasterPassword.getText());
-            createKgkAndPasswordTask = new CreateKgkAndPasswordTask(iterations);
+            CreateKgkAndPasswordTask createKgkAndPasswordTask = new CreateKgkAndPasswordTask(
+                    this,
+                    iterations,
+                    kgkManager,
+                    settingsManager,
+                    applyCheckboxLetters,
+                    applyCheckboxDigits,
+                    applyCheckboxExtra);
             createKgkAndPasswordTask.execute(password);
         }
     }
@@ -681,7 +342,13 @@ public class MainActivity extends AppCompatActivity {
                             (EditText) findViewById(R.id.editTextMasterPassword);
                     byte[] password = UTF8.encode(editTextMasterPassword.getText());
                     if (kgkManager.gelLocalKgkBlock().length == 112) {
-                        loadSettingsTask = new LoadLocalSettingsTask(kgkManager, settingsManager);
+                        TextView loadingMessage =
+                                (TextView) findViewById(R.id.textViewDecryptionMessage);
+                        loadingMessage.setText(getString(R.string.loading));
+                        LoadLocalSettingsTask loadSettingsTask = new LoadLocalSettingsTask(
+                                getActivity(),
+                                kgkManager,
+                                settingsManager);
                         loadSettingsTask.execute(password, kgkManager.getKgkCrypterSalt());
                     } else {
                         byte[] salt = Crypter.createSalt();
@@ -692,7 +359,7 @@ public class MainActivity extends AppCompatActivity {
                                 salt,
                                 Base64.DEFAULT));
                         savedDomainsEditor.apply();
-                        createNewKgkTask = new CreateNewKgkTask(
+                        CreateNewKgkTask createNewKgkTask = new CreateNewKgkTask(getActivity(),
                                 kgkManager, settingsManager);
                         createNewKgkTask.execute(password, salt);
                     }
@@ -905,8 +572,13 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("Sync error", "Sync service is not bound. This button should not be visible.");
                 return true;
             }
-            Message msg = Message.obtain(null, REQUEST_SYNC, 0, 0);
-            msg.replyTo = new Messenger(new ResponseHandler());
+            Message msg = Message.obtain(null, SyncResponseHandler.REQUEST_SYNC, 0, 0);
+            msg.replyTo = new Messenger(new SyncResponseHandler(
+                    this,
+                    kgkManager,
+                    settingsManager,
+                    mService,
+                    mBound));
             try {
                 mService.send(msg);
             } catch (RemoteException e) {

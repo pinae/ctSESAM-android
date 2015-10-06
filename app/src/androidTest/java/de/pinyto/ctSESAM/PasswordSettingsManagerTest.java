@@ -229,7 +229,12 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
         settingsManager.storeLocalSettings(kgkManager);
         PasswordSettingsManager settingsManager2 = new PasswordSettingsManager(
                 getActivity().getBaseContext());
-        settingsManager2.loadLocalSettings(kgkManager);
+        try {
+            settingsManager2.loadLocalSettings(kgkManager);
+        } catch (WrongPasswordException ex) {
+            ex.printStackTrace();
+            assertTrue(false);
+        }
         PasswordSetting setting2 = settingsManager2.getSetting("unit.test");
         assertEquals(setting.getLength(), setting2.getLength());
         assertEquals("2001-01-01T02:14:12", setting2.getCreationDate());

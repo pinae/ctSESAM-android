@@ -39,6 +39,17 @@
                 android:layout_below="@+id/editTextMasterPassword"
                 android:id="@+id/textViewDomainHeading" />
 
+            <TextView
+                android:text=""
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/editTextMasterPassword"
+                android:id="@+id/textViewDecryptionMessage"
+                android:layout_toEndOf="@+id/textViewDomainHeading"
+                android:layout_toRightOf="@+id/textViewDomainHeading"
+                android:layout_marginStart="16dp"
+                android:layout_marginLeft="16dp" />
+
             <AutoCompleteTextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
