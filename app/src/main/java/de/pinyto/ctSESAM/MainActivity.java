@@ -345,23 +345,18 @@ public class MainActivity extends AppCompatActivity {
                         TextView loadingMessage =
                                 (TextView) findViewById(R.id.textViewDecryptionMessage);
                         loadingMessage.setText(getString(R.string.loading));
-                        LoadLocalSettingsTask loadSettingsTask = new LoadLocalSettingsTask(
+                        LoadLocalSettingsTask loadLocalSettingsTask = new LoadLocalSettingsTask(
                                 getActivity(),
                                 kgkManager,
                                 settingsManager);
-                        loadSettingsTask.execute(password, kgkManager.getKgkCrypterSalt());
+                        Log.d("salt", Hextools.bytesToHex(kgkManager.getKgkCrypterSalt()));
+                        loadLocalSettingsTask.execute(password, kgkManager.getKgkCrypterSalt());
                     } else {
-                        byte[] salt = Crypter.createSalt();
-                        SharedPreferences savedDomains = getBaseContext().getSharedPreferences(
-                                "savedDomains", Context.MODE_PRIVATE);
-                        SharedPreferences.Editor savedDomainsEditor = savedDomains.edit();
-                        savedDomainsEditor.putString("salt", Base64.encodeToString(
-                                salt,
-                                Base64.DEFAULT));
-                        savedDomainsEditor.apply();
+                        kgkManager.storeSalt(Crypter.createSalt());
+                        Log.d("new salt", Hextools.bytesToHex(kgkManager.getKgkCrypterSalt()));
                         CreateNewKgkTask createNewKgkTask = new CreateNewKgkTask(getActivity(),
                                 kgkManager, settingsManager);
-                        createNewKgkTask.execute(password, salt);
+                        createNewKgkTask.execute(password, kgkManager.getKgkCrypterSalt());
                     }
                 }
                 if (!hasFocus && kgkManager.hasKgk()) {

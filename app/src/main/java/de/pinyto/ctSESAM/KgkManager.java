@@ -38,8 +38,9 @@ public class KgkManager {
         return salt;
     }
 
-    private void storeSalt(byte[] salt) {
+    public void storeSalt(byte[] salt) {
         this.salt = salt;
+        Log.d("stored salt", Hextools.bytesToHex(this.salt));
         SharedPreferences.Editor savedDomainsEditor = this.savedDomains.edit();
         savedDomainsEditor.putString("salt", Base64.encodeToString(
                 salt,
@@ -86,6 +87,7 @@ public class KgkManager {
                 this.salt2 = Arrays.copyOfRange(kgkBlock, 0, 32);
                 this.iv2 = Arrays.copyOfRange(kgkBlock, 32, 48);
                 this.kgk = Arrays.copyOfRange(kgkBlock, 48, 112);
+                Log.d("kgk", Hextools.bytesToHex(this.kgk));
             } catch (NoSuchPaddingException paddingError) {
                 paddingError.printStackTrace();
             }
@@ -124,12 +126,6 @@ public class KgkManager {
         this.iv2 = Crypter.createIv();
     }
 
-    public byte[] getFreshEncryptedKgk() {
-        this.freshIv2();
-        this.freshSalt2();
-        return this.getEncryptedKgk();
-    }
-
     public byte[] getEncryptedKgk() {
         byte[] kgkBlock = new byte[112];
         System.arraycopy(this.salt2, 0, kgkBlock, 0, this.salt2.length);
@@ -140,21 +136,13 @@ public class KgkManager {
         return encryptedKgk;
     }
 
-    public void createAndSaveNewKgkBlock(Crypter kgkCrypter) {
+    public void createAndStoreNewKgkBlock(Crypter kgkCrypter) {
         this.createNewKgk();
-        byte[] salt = Crypter.createSalt();
-        SharedPreferences.Editor savedDomainsEditor = this.savedDomains.edit();
-        savedDomainsEditor.putString("salt", Base64.encodeToString(
-                salt,
-                Base64.DEFAULT));
-        this.salt = salt;
+        Log.d("new kgk", Hextools.bytesToHex(this.kgk));
         this.kgkCrypter = kgkCrypter;
-        byte[] encryptedKgkBlock = this.getFreshEncryptedKgk();
-        Clearer.zero(salt);
-        savedDomainsEditor.putString("KGK", Base64.encodeToString(
-                encryptedKgkBlock,
-                Base64.DEFAULT));
-        savedDomainsEditor.apply();
+        this.freshIv2();
+        this.freshSalt2();
+        this.storeLocalKgkBlock();
     }
 
     public void updateFromBlob(byte[] password, byte[] blob) {
@@ -170,6 +158,7 @@ public class KgkManager {
     public void storeLocalKgkBlock() {
         SharedPreferences.Editor savedDomainsEditor = this.savedDomains.edit();
         byte[] encryptedKgkBlock = this.getEncryptedKgk();
+        Log.d("enc kgk saved", Hextools.bytesToHex(encryptedKgkBlock));
         savedDomainsEditor.putString("KGK", Base64.encodeToString(
                 encryptedKgkBlock,
                 Base64.DEFAULT));

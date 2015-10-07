@@ -203,7 +203,9 @@ public class PasswordSettingsManager {
     }
 
     public byte[] getExportData(KgkManager kgkManager) {
-        byte[] kgkBlock = kgkManager.getFreshEncryptedKgk();
+        kgkManager.freshIv2();
+        kgkManager.freshSalt2();
+        byte[] kgkBlock = kgkManager.getEncryptedKgk();
         Crypter settingsCrypter = this.getSettingsCrypter(kgkManager);
         byte[] encryptedSettings = settingsCrypter.encrypt(
                 Packer.compress(

@@ -50,7 +50,7 @@ class CreateKgkAndPasswordTask extends AsyncTask<byte[], Void, byte[]> {
 
     @Override
     protected void onPostExecute(byte[] ivKey) {
-        kgkManager.createAndSaveNewKgkBlock(new Crypter(ivKey));
+        kgkManager.createAndStoreNewKgkBlock(new Crypter(ivKey));
         MainActivity activity = mainActivityWeakRef.get();
         if (activity != null && !activity.isFinishing()) {
             AutoCompleteTextView autoCompleteTextViewDomain =

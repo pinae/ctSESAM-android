@@ -1,6 +1,7 @@
 package de.pinyto.ctSESAM;
 
 import android.os.AsyncTask;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.TextView;
@@ -11,7 +12,7 @@ import java.lang.ref.WeakReference;
 /**
  * Asynchronously load and decrypt local settings.
  */
-public class LoadLocalSettingsTask extends AsyncTask<byte[], Void, IvKeyContainer> {
+public class LoadLocalSettingsTask extends AsyncTask<byte[], Void, byte[]> {
     private KgkManager kgkManager;
     private PasswordSettingsManager settingsManager;
     private WeakReference<MainActivity> mainActivityWeakRef;
@@ -26,20 +27,22 @@ public class LoadLocalSettingsTask extends AsyncTask<byte[], Void, IvKeyContaine
     }
 
     @Override
-    protected IvKeyContainer doInBackground(byte[]... params) {
+    protected byte[] doInBackground(byte[]... params) {
         byte[] password = params[0];
         byte[] salt = params[1];
         byte[] ivKey = Crypter.createIvKey(password, salt);
         for (int i = 0; i < password.length; i++) {
             password[i] = 0x00;
         }
-        return new IvKeyContainer(ivKey);
+        return ivKey;
     }
 
     @Override
-    protected void onPostExecute(IvKeyContainer ivKeyContainer) {
+    protected void onPostExecute(byte[] ivKey) {
         byte[] encryptedKgkBlock = kgkManager.gelLocalKgkBlock();
-        kgkManager.decryptKgk(new Crypter(ivKeyContainer.getIvKey()), encryptedKgkBlock);
+        Log.d("encrypted length", Integer.toString(encryptedKgkBlock.length));
+        Log.d("encrypted kgk block", Hextools.bytesToHex(encryptedKgkBlock));
+        kgkManager.decryptKgk(new Crypter(ivKey), encryptedKgkBlock);
         MainActivity activity = mainActivityWeakRef.get();
         if (activity != null && !activity.isFinishing()) {
             AutoCompleteTextView autoCompleteTextViewDomain =

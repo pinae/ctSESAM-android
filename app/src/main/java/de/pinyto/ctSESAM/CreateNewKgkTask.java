@@ -27,7 +27,7 @@ class CreateNewKgkTask extends AsyncTask<byte[], byte[], byte[]> {
     @Override
     protected byte[] doInBackground(byte[]... params) {
         byte[] password = params[0];
-        byte[] salt = Crypter.createSalt();
+        byte[] salt = params[1];
         byte[] ivKey = Crypter.createIvKey(password, salt);
         for (int i = 0; i < password.length; i++) {
             password[i] = 0x00;
@@ -47,7 +47,7 @@ class CreateNewKgkTask extends AsyncTask<byte[], byte[], byte[]> {
 
     @Override
     protected void onPostExecute(byte[] ivKey) {
-        kgkManager.createAndSaveNewKgkBlock(new Crypter(ivKey));
+        kgkManager.createAndStoreNewKgkBlock(new Crypter(ivKey));
         MainActivity activity = mainActivityWeakRef.get();
         if (activity != null && !activity.isFinishing()) {
             AutoCompleteTextView autoCompleteTextViewDomain =
