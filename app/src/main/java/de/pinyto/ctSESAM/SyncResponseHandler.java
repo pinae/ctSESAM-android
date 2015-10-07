@@ -56,6 +56,7 @@ class SyncResponseHandler extends Handler {
                     try {
                         JSONObject syncDataObject = new JSONObject(syncData);
                         if (!syncDataObject.getString("status").equals("ok")) break;
+                        boolean updateRemote = true;
                         EditText editTextMasterPassword = (EditText) activity.findViewById(
                                 R.id.editTextMasterPassword);
                         if (syncDataObject.has("result")) {
@@ -63,7 +64,7 @@ class SyncResponseHandler extends Handler {
                             byte[] blob = Base64.decode(syncDataObject.getString("result"),
                                     Base64.DEFAULT);
                             kgkManager.updateFromBlob(password, blob);
-                            boolean changed = settingsManager.updateFromExportData(
+                            updateRemote = settingsManager.updateFromExportData(
                                     kgkManager, blob);
                             ArrayAdapter<String> adapter = new ArrayAdapter<>(
                                     activity.getBaseContext(),
@@ -75,30 +76,30 @@ class SyncResponseHandler extends Handler {
                             autoCompleteTextViewDomain.setAdapter(adapter);
                             Toast.makeText(activity.getBaseContext(),
                                     R.string.sync_loaded, Toast.LENGTH_SHORT).show();
-                            if (changed) {
-                                byte[] encryptedBlob = settingsManager.getExportData(kgkManager);
-                                if (mService != null && mBound) {
-                                    Message updateMsg = Message.obtain(null, SEND_UPDATE, 0, 0);
-                                    updateMsg.replyTo = new Messenger(new SyncResponseHandler(
-                                            activity,
-                                            kgkManager,
-                                            settingsManager,
-                                            mService,
-                                            mBound));
-                                    Bundle bUpdateMsg = new Bundle();
-                                    bUpdateMsg.putString("updatedData",
-                                            Base64.encodeToString(encryptedBlob, Base64.DEFAULT));
-                                    updateMsg.setData(bUpdateMsg);
-                                    try {
-                                        mService.send(updateMsg);
-                                    } catch (RemoteException e) {
-                                        Log.d("Sync error",
-                                                "Could not send update message to sync service.");
-                                        e.printStackTrace();
-                                    }
+                            Clearer.zero(password);
+                        }
+                        if (updateRemote) {
+                            byte[] encryptedBlob = settingsManager.getExportData(kgkManager);
+                            if (mService != null && mBound) {
+                                Message updateMsg = Message.obtain(null, SEND_UPDATE, 0, 0);
+                                updateMsg.replyTo = new Messenger(new SyncResponseHandler(
+                                        activity,
+                                        kgkManager,
+                                        settingsManager,
+                                        mService,
+                                        mBound));
+                                Bundle bUpdateMsg = new Bundle();
+                                bUpdateMsg.putString("updatedData",
+                                        Base64.encodeToString(encryptedBlob, Base64.DEFAULT));
+                                updateMsg.setData(bUpdateMsg);
+                                try {
+                                    mService.send(updateMsg);
+                                } catch (RemoteException e) {
+                                    Log.d("Sync error",
+                                            "Could not send update message to sync service.");
+                                    e.printStackTrace();
                                 }
                             }
-                            Clearer.zero(password);
                         }
                     } catch (JSONException e) {
                         Log.d("Sync error", "The response is not valid JSON.");

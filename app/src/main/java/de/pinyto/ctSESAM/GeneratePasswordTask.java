@@ -52,6 +52,7 @@ class GeneratePasswordTask extends AsyncTask<byte[], Void, JSONObject> {
         byte[] kgk = params[2];
         byte[] salt = params[3];
         int iterations = ByteBuffer.wrap(Arrays.copyOfRange(params[4], 0, 4)).getInt();
+        int length = ByteBuffer.wrap(Arrays.copyOfRange(params[4], 0, 4)).getInt();
         boolean checkBoxLettersIsChecked = params[5][0] == 0x01;
         boolean checkBoxDigitsIsChecked = params[6][0] == 0x01;
         boolean checkBoxExtraIsChecked = params[7][0] == 0x01;
@@ -77,6 +78,7 @@ class GeneratePasswordTask extends AsyncTask<byte[], Void, JSONObject> {
                     this.setting.setUseExtra(checkBoxExtraIsChecked);
                 }
                 this.setting.setIterations(iterations);
+                this.setting.setLength(length);
                 generatedPassword = generator.getPassword(setting);
             } catch (NotHashedException e) {
                 e.printStackTrace();

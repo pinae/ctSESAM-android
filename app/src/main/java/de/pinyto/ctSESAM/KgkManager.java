@@ -40,7 +40,6 @@ public class KgkManager {
 
     public void storeSalt(byte[] salt) {
         this.salt = salt;
-        Log.d("stored salt", Hextools.bytesToHex(this.salt));
         SharedPreferences.Editor savedDomainsEditor = this.savedDomains.edit();
         savedDomainsEditor.putString("salt", Base64.encodeToString(
                 salt,
@@ -87,7 +86,6 @@ public class KgkManager {
                 this.salt2 = Arrays.copyOfRange(kgkBlock, 0, 32);
                 this.iv2 = Arrays.copyOfRange(kgkBlock, 32, 48);
                 this.kgk = Arrays.copyOfRange(kgkBlock, 48, 112);
-                Log.d("kgk", Hextools.bytesToHex(this.kgk));
             } catch (NoSuchPaddingException paddingError) {
                 paddingError.printStackTrace();
             }
@@ -138,7 +136,6 @@ public class KgkManager {
 
     public void createAndStoreNewKgkBlock(Crypter kgkCrypter) {
         this.createNewKgk();
-        Log.d("new kgk", Hextools.bytesToHex(this.kgk));
         this.kgkCrypter = kgkCrypter;
         this.freshIv2();
         this.freshSalt2();
@@ -158,7 +155,6 @@ public class KgkManager {
     public void storeLocalKgkBlock() {
         SharedPreferences.Editor savedDomainsEditor = this.savedDomains.edit();
         byte[] encryptedKgkBlock = this.getEncryptedKgk();
-        Log.d("enc kgk saved", Hextools.bytesToHex(encryptedKgkBlock));
         savedDomainsEditor.putString("KGK", Base64.encodeToString(
                 encryptedKgkBlock,
                 Base64.DEFAULT));

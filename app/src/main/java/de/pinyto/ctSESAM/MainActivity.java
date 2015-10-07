@@ -191,8 +191,10 @@ public class MainActivity extends AppCompatActivity {
                     (CheckBox) findViewById(R.id.checkBoxDigitsForce);
             CheckBox checkBoxExtraForce =
                     (CheckBox) findViewById(R.id.checkBoxSpecialCharacterForce);
+            SeekBar seekBarLength = (SeekBar) findViewById(R.id.seekBarLength);
             generatePasswordTask.execute(domain, username, kgk, setting.getSalt(),
                     ByteBuffer.allocate(4).putInt(iterations).array(),
+                    ByteBuffer.allocate(4).putInt(seekBarLength.getProgress() + 4).array(),
                     new byte[]{(byte) (checkBoxLetters.isChecked() ? 1 : 0)},
                     new byte[]{(byte) (checkBoxDigits.isChecked() ? 1 : 0)},
                     new byte[]{(byte) (checkBoxExtra.isChecked() ? 1 : 0)},
@@ -349,11 +351,9 @@ public class MainActivity extends AppCompatActivity {
                                 getActivity(),
                                 kgkManager,
                                 settingsManager);
-                        Log.d("salt", Hextools.bytesToHex(kgkManager.getKgkCrypterSalt()));
                         loadLocalSettingsTask.execute(password, kgkManager.getKgkCrypterSalt());
                     } else {
                         kgkManager.storeSalt(Crypter.createSalt());
-                        Log.d("new salt", Hextools.bytesToHex(kgkManager.getKgkCrypterSalt()));
                         CreateNewKgkTask createNewKgkTask = new CreateNewKgkTask(getActivity(),
                                 kgkManager, settingsManager);
                         createNewKgkTask.execute(password, kgkManager.getKgkCrypterSalt());

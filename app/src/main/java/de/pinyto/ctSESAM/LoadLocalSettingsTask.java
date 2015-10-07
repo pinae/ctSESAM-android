@@ -40,8 +40,6 @@ public class LoadLocalSettingsTask extends AsyncTask<byte[], Void, byte[]> {
     @Override
     protected void onPostExecute(byte[] ivKey) {
         byte[] encryptedKgkBlock = kgkManager.gelLocalKgkBlock();
-        Log.d("encrypted length", Integer.toString(encryptedKgkBlock.length));
-        Log.d("encrypted kgk block", Hextools.bytesToHex(encryptedKgkBlock));
         kgkManager.decryptKgk(new Crypter(ivKey), encryptedKgkBlock);
         MainActivity activity = mainActivityWeakRef.get();
         if (activity != null && !activity.isFinishing()) {
