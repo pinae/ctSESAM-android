@@ -6,7 +6,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -17,12 +16,12 @@ import android.os.RemoteException;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -43,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     boolean mBound;
     private PasswordSettingsManager settingsManager;
     private KgkManager kgkManager;
-    private boolean isGenerated = false;
+    private PasswordGenerator passwordGenerator;
     private boolean showSettings = false;
     private boolean showLegacyPassword = false;
     private boolean applyCheckboxLetters = false;
@@ -66,8 +65,8 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
-    public void setIsGenerated(boolean isGenerated) {
-        this.isGenerated = isGenerated;
+    public void setPasswordGenerator(PasswordGenerator generator) {
+        this.passwordGenerator = generator;
     }
 
     private void updateView() {
@@ -160,59 +159,69 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void generatePassword(int iterations) {
+    public void generatePassword() {
         AutoCompleteTextView autoCompleteTextViewDomain =
                 (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
         String domainStr = autoCompleteTextViewDomain.getText().toString();
         byte[] domain = UTF8.encode(autoCompleteTextViewDomain.getText());
+        EditText editTextUsername =
+                (EditText) findViewById(R.id.editTextUsername);
+        byte[] username = UTF8.encode(editTextUsername.getText());
         PasswordSetting setting = this.settingsManager.getSetting(domainStr);
         if (kgkManager.hasKgk()) {
-            GeneratePasswordTask generatePasswordTask = new GeneratePasswordTask(
-                    this,
-                    setting,
-                    kgkManager,
-                    settingsManager,
-                    applyCheckboxLetters,
-                    applyCheckboxDigits,
-                    applyCheckboxExtra);
-            EditText editTextUsername =
-                    (EditText) findViewById(R.id.editTextUsername);
-            byte[] username = UTF8.encode(editTextUsername.getText());
-            byte[] kgk = kgkManager.getKgk();
-            CheckBox checkBoxLetters =
-                    (CheckBox) findViewById(R.id.checkBoxLetters);
-            CheckBox checkBoxDigits =
-                    (CheckBox) findViewById(R.id.checkBoxDigits);
-            CheckBox checkBoxExtra =
-                    (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
-            CheckBox checkBoxLettersForce =
-                    (CheckBox) findViewById(R.id.checkBoxLettersForce);
-            CheckBox checkBoxDigitsForce =
-                    (CheckBox) findViewById(R.id.checkBoxDigitsForce);
-            CheckBox checkBoxExtraForce =
-                    (CheckBox) findViewById(R.id.checkBoxSpecialCharacterForce);
-            SeekBar seekBarLength = (SeekBar) findViewById(R.id.seekBarLength);
-            generatePasswordTask.execute(domain, username, kgk, setting.getSalt(),
-                    ByteBuffer.allocate(4).putInt(iterations).array(),
-                    ByteBuffer.allocate(4).putInt(seekBarLength.getProgress() + 4).array(),
-                    new byte[]{(byte) (checkBoxLetters.isChecked() ? 1 : 0)},
-                    new byte[]{(byte) (checkBoxDigits.isChecked() ? 1 : 0)},
-                    new byte[]{(byte) (checkBoxExtra.isChecked() ? 1 : 0)},
-                    new byte[]{(byte) (checkBoxLettersForce.isChecked() ? 1 : 0)},
-                    new byte[]{(byte) (checkBoxDigitsForce.isChecked() ? 1 : 0)},
-                    new byte[]{(byte) (checkBoxExtraForce.isChecked() ? 1 : 0)});
+            if (this.passwordGenerator == null) {
+                GeneratePasswordTask generatePasswordTask = new GeneratePasswordTask(this);
+                generatePasswordTask.execute(
+                        domain,
+                        username,
+                        kgkManager.getKgk(),
+                        setting.getSalt(),
+                        ByteBuffer.allocate(4).putInt(setting.getIterations()).array());
+            } else {
+                CheckBox checkBoxLetters =
+                        (CheckBox) findViewById(R.id.checkBoxLetters);
+                CheckBox checkBoxDigits =
+                        (CheckBox) findViewById(R.id.checkBoxDigits);
+                CheckBox checkBoxSpecialCharacters =
+                        (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
+                if (applyCheckboxLetters) {
+                    setting.setUseLetters(checkBoxLetters.isChecked());
+                }
+                if (applyCheckboxDigits) {
+                    setting.setUseDigits(checkBoxDigits.isChecked());
+                }
+                if (applyCheckboxExtra) {
+                    setting.setUseExtra(checkBoxSpecialCharacters.isChecked());
+                }
+                SeekBar seekBarLength = (SeekBar) findViewById(R.id.seekBarLength);
+                setting.setLength(seekBarLength.getProgress() + 4);
+                setting.setModificationDateToNow();
+                settingsManager.setSetting(setting);
+                settingsManager.storeLocalSettings(kgkManager);
+                TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
+                textViewPassword.setText(this.passwordGenerator.getPassword(setting));
+                invalidateOptionsMenu();
+                Button generateButton = (Button) findViewById(R.id.generatorButton);
+                generateButton.setText(getResources().getString(R.string.re_generator_button));
+                TextView textViewIterationCount =
+                        (TextView) findViewById(R.id.iterationCount);
+                textViewIterationCount.setText(Integer.toString(setting.getIterations()));
+                setIterationCountVisibility(View.VISIBLE);
+                // load settings because the domain might be new
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(getBaseContext(),
+                        android.R.layout.simple_dropdown_item_1line,
+                        settingsManager.getDomainList());
+                autoCompleteTextViewDomain.setAdapter(adapter);
+            }
         } else {
             EditText editTextMasterPassword =
                     (EditText) findViewById(R.id.editTextMasterPassword);
             byte[] password = UTF8.encode(editTextMasterPassword.getText());
             CreateKgkAndPasswordTask createKgkAndPasswordTask = new CreateKgkAndPasswordTask(
                     this,
-                    iterations,
+                    setting.getIterations(),
                     kgkManager,
-                    settingsManager,
-                    applyCheckboxLetters,
-                    applyCheckboxDigits,
-                    applyCheckboxExtra);
+                    settingsManager);
             createKgkAndPasswordTask.execute(password);
         }
     }
@@ -228,7 +237,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setToNotGenerated() {
-        isGenerated = false;
+        this.passwordGenerator = null;
         Button generateButton = (Button) findViewById(R.id.generatorButton);
         generateButton.setText(getResources().getString(R.string.generator_button));
         setIterationCountVisibility(View.INVISIBLE);
@@ -481,17 +490,7 @@ public class MainActivity extends AppCompatActivity {
         Button generateButton = (Button) findViewById(R.id.generatorButton);
         generateButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                // Load fields
-                AutoCompleteTextView autoCompleteTextViewDomain =
-                        (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
-                String domain = autoCompleteTextViewDomain.getText().toString();
-                // Load iteration count from settings
-                int iterations = settingsManager.getSetting(domain).getIterations();
-                if (isGenerated) {
-                    iterations++;
-                }
-                // Generate password
-                generatePassword(iterations);
+                generatePassword();
             }
         });
     }
@@ -533,7 +532,7 @@ public class MainActivity extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.activity_main_actions, menu);
         MenuItem copyItem = menu.findItem(R.id.action_copy);
-        copyItem.setVisible(isGenerated);
+        copyItem.setVisible(this.passwordGenerator != null);
         MenuItem syncItem = menu.findItem(R.id.action_sync);
         EditText editTextMasterPassword = (EditText) findViewById(R.id.editTextMasterPassword);
         syncItem.setVisible(
