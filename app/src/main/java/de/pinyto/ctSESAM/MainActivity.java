@@ -171,6 +171,9 @@ public class MainActivity extends AppCompatActivity {
         if (kgkManager.hasKgk()) {
             if (this.passwordGenerator == null) {
                 GeneratePasswordTask generatePasswordTask = new GeneratePasswordTask(this);
+                if (setting.getIterations() <= 0) {
+                    setting.setIterations(4096);
+                }
                 generatePasswordTask.execute(
                         domain,
                         username,
