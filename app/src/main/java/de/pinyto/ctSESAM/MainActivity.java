@@ -208,7 +208,7 @@ public class MainActivity extends AppCompatActivity {
                 generateButton.setText(getResources().getString(R.string.re_generator_button));
                 TextView textViewIterationCount =
                         (TextView) findViewById(R.id.iterationCount);
-                textViewIterationCount.setText(Integer.toString(setting.getIterations()));
+                textViewIterationCount.setText(String.format("%d", setting.getIterations()));
                 setIterationCountVisibility(View.VISIBLE);
                 // load settings because the domain might be new
                 ArrayAdapter<String> adapter = new ArrayAdapter<>(getBaseContext(),
@@ -288,7 +288,7 @@ public class MainActivity extends AppCompatActivity {
         applyCheckboxDigits = false;
         applyCheckboxExtra = false;
         seekBarLength.setProgress(passwordSetting.getLength() - 4);
-        lengthLabel.setText(Integer.toString(passwordSetting.getLength()));
+        lengthLabel.setText(String.format("%d", passwordSetting.getIterations()));
     }
 
     private void setButtonEnabledByDomainLength() {
@@ -476,16 +476,19 @@ public class MainActivity extends AppCompatActivity {
 
         SeekBar seekBarLength = (SeekBar) findViewById(R.id.seekBarLength);
         seekBarLength.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 TextView textViewLengthDisplay =
                         (TextView) findViewById(R.id.textViewLengthDisplay);
-                textViewLengthDisplay.setText(Integer.toString(progress + 4));
+                textViewLengthDisplay.setText(String.format("%d", progress + 4));
                 setToNotGenerated();
             }
 
+            @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
             }
 
+            @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
             }
         });

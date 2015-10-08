@@ -1,7 +1,6 @@
 package de.pinyto.ctSESAM;
 
 import android.os.AsyncTask;
-import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.TextView;
