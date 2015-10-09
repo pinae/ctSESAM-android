@@ -13,6 +13,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,6 +38,7 @@ public class PasswordSetting {
     private String notes;
     private String url;
     private String template;
+    private boolean preferTemplate = false;
     private boolean synced = false;
 
     PasswordSetting(String domain) {
@@ -126,6 +128,9 @@ public class PasswordSetting {
             this.characterSet = this.defaultCharacterSetLowerCase +
                     this.defaultCharacterSetUpperCase + this.characterSet;
         }
+        if (!preferTemplate) {
+            calculateTemplate();
+        }
     }
 
     public boolean useLowerCase() {
@@ -140,6 +145,9 @@ public class PasswordSetting {
         this.removeFromCharacterSet(this.defaultCharacterSetLowerCase);
         if (useLowerCase) {
             this.characterSet = this.defaultCharacterSetLowerCase + this.characterSet;
+        }
+        if (!preferTemplate) {
+            calculateTemplate();
         }
     }
 
@@ -170,6 +178,9 @@ public class PasswordSetting {
             } else {
                 this.characterSet = this.defaultCharacterSetUpperCase + this.characterSet;
             }
+        }
+        if (!preferTemplate) {
+            calculateTemplate();
         }
     }
 
@@ -206,6 +217,9 @@ public class PasswordSetting {
                 this.characterSet = this.defaultCharacterSetDigits + this.characterSet;
             }
         }
+        if (!preferTemplate) {
+            calculateTemplate();
+        }
     }
 
     public boolean useExtra() {
@@ -213,37 +227,37 @@ public class PasswordSetting {
             return this.characterSet.length() >= this.defaultCharacterSetLowerCase.length() +
                     this.defaultCharacterSetUpperCase.length() +
                     this.defaultCharacterSetDigits.length() +
-                    this.defaultCharacterSetExtra.length() &&
+                    this.getExtraCharacterSetAsString().length() &&
                     this.characterSet.substring(this.defaultCharacterSetLowerCase.length() +
                                     this.defaultCharacterSetUpperCase.length() +
                                     this.defaultCharacterSetDigits.length(),
                             this.defaultCharacterSetLowerCase.length() +
                                     this.defaultCharacterSetUpperCase.length() +
                                     this.defaultCharacterSetDigits.length() +
-                                    this.defaultCharacterSetExtra.length()).equals(
-                            this.defaultCharacterSetExtra);
+                                    this.getExtraCharacterSetAsString().length()).equals(
+                            this.getExtraCharacterSetAsString());
         } else if (this.useLetters()) {
             return this.characterSet.length() >= this.defaultCharacterSetLowerCase.length() +
                     this.defaultCharacterSetUpperCase.length() +
-                    this.defaultCharacterSetExtra.length() &&
+                    this.getExtraCharacterSetAsString().length() &&
                     this.characterSet.substring(this.defaultCharacterSetLowerCase.length() +
                                     this.defaultCharacterSetUpperCase.length(),
                             this.defaultCharacterSetLowerCase.length() +
                                     this.defaultCharacterSetUpperCase.length() +
-                                    this.defaultCharacterSetExtra.length()).equals(
-                            this.defaultCharacterSetExtra);
+                                    this.getExtraCharacterSetAsString().length()).equals(
+                            this.getExtraCharacterSetAsString());
         } else if (this.useDigits()) {
             return this.characterSet.length() >= this.defaultCharacterSetDigits.length() +
-                    this.defaultCharacterSetExtra.length() &&
+                    this.getExtraCharacterSetAsString().length() &&
                     this.characterSet.substring(this.defaultCharacterSetDigits.length(),
                             this.defaultCharacterSetDigits.length() +
-                                    this.defaultCharacterSetExtra.length()).equals(
-                            this.defaultCharacterSetExtra);
+                                    this.getExtraCharacterSetAsString().length()).equals(
+                            this.getExtraCharacterSetAsString());
         } else {
-            return this.characterSet.length() >= this.defaultCharacterSetExtra.length() &&
+            return this.characterSet.length() >= this.getExtraCharacterSetAsString().length() &&
                     this.characterSet.substring(0,
-                            this.defaultCharacterSetExtra.length()).equals(
-                            this.defaultCharacterSetExtra);
+                            this.getExtraCharacterSetAsString().length()).equals(
+                            this.getExtraCharacterSetAsString());
         }
     }
 
@@ -257,7 +271,7 @@ public class PasswordSetting {
                         this.defaultCharacterSetLowerCase.length() +
                                 this.defaultCharacterSetUpperCase.length() +
                                 this.defaultCharacterSetDigits.length()) +
-                        this.defaultCharacterSetExtra +
+                        this.getExtraCharacterSetAsString() +
                         this.characterSet.substring(this.defaultCharacterSetLowerCase.length() +
                                 this.defaultCharacterSetUpperCase.length() +
                                 this.defaultCharacterSetDigits.length());
@@ -265,17 +279,20 @@ public class PasswordSetting {
                 this.characterSet = this.characterSet.substring(0,
                         this.defaultCharacterSetLowerCase.length() +
                                 this.defaultCharacterSetUpperCase.length()) +
-                        this.defaultCharacterSetExtra +
+                        this.getExtraCharacterSetAsString() +
                         this.characterSet.substring(this.defaultCharacterSetLowerCase.length() +
                                 this.defaultCharacterSetUpperCase.length());
             } else if (this.useDigits()) {
                 this.characterSet = this.characterSet.substring(0,
                         this.defaultCharacterSetDigits.length()) +
-                        this.defaultCharacterSetExtra +
+                        this.getExtraCharacterSetAsString() +
                         this.characterSet.substring(this.defaultCharacterSetDigits.length());
             } else {
-                this.characterSet = this.defaultCharacterSetExtra + this.characterSet;
+                this.characterSet = this.getExtraCharacterSetAsString() + this.characterSet;
             }
+        }
+        if (!preferTemplate) {
+            calculateTemplate();
         }
     }
 
@@ -379,6 +396,9 @@ public class PasswordSetting {
 
     public void setLength(int length) {
         this.length = length;
+        if (!preferTemplate) {
+            this.calculateTemplate();
+        }
     }
 
     public int getIterations() {
@@ -495,12 +515,51 @@ public class PasswordSetting {
         }
     }
 
-    public String getTemplate() {
-        if (this.template == null) {
-            this.template = "";
-            for (int i = 0; i < this.getLength(); i++) {
+    private String ShuffleString(String s)
+    {
+        int index;
+        char temp;
+        char[] array = s.toCharArray();
+        Random random = new Random();
+        for (int i = array.length - 1; i > 0; i--)
+        {
+            index = random.nextInt(i + 1);
+            temp = array[index];
+            array[index] = array[i];
+            array[i] = temp;
+        }
+        return String.valueOf(array);
+    }
+
+    private void calculateTemplate() {
+        this.template = "";
+        boolean aInserted = false;
+        boolean AInserted = false;
+        boolean nInserted = false;
+        boolean oInserted = false;
+        for (int i = 0; i < this.getLength(); i++) {
+            if (this.useLowerCase() && !aInserted) {
+                this.template = this.template + "a";
+                aInserted = true;
+            } else if (this.useUpperCase() && !AInserted) {
+                this.template = this.template + "A";
+                AInserted = true;
+            } else if (this.useDigits() && !nInserted) {
+                this.template = this.template + "n";
+                nInserted = true;
+            } else if (this.useExtra() && !oInserted) {
+                this.template = this.template + "o";
+                oInserted = true;
+            } else {
                 this.template = this.template + "x";
             }
+        }
+        this.template = this.ShuffleString(this.template);
+    }
+
+    public String getTemplate() {
+        if (this.template == null) {
+            this.calculateTemplate();
         }
         return this.template;
     }
@@ -508,6 +567,7 @@ public class PasswordSetting {
     public void setFullTemplate(String fullTemplate) {
         Matcher matcher = Pattern.compile("([0123456]);([aAnox]+)").matcher(fullTemplate);
         if (matcher.matches() && matcher.groupCount() >= 2) {
+            this.preferTemplate = true;
             int complexity = Integer.parseInt(matcher.group(1));
             this.template = matcher.group(2);
             switch (complexity) {
@@ -590,7 +650,9 @@ public class PasswordSetting {
             domainObject.put("mDate", this.getModificationDate());
             domainObject.put("usedCharacters", this.getCharacterSetAsString());
             domainObject.put("extras", this.getExtraCharacterSetAsString());
-            domainObject.put("passwordTemplate", this.getFullTemplate());
+            if (preferTemplate) {
+                domainObject.put("passwordTemplate", this.getFullTemplate());
+            }
         } catch (JSONException e) {
             System.out.println("Settings packing error: Unable to pack the JSON data.");
         }
