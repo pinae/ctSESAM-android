@@ -4,6 +4,7 @@ import android.os.AsyncTask;
 
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
 
 /**
@@ -23,7 +24,8 @@ class GeneratePasswordTask extends AsyncTask<byte[], Void, PasswordGenerator> {
         byte[] username = params[1];
         byte[] kgk = params[2];
         byte[] salt = params[3];
-        int iterations = ByteBuffer.wrap(Arrays.copyOfRange(params[4], 0, 4)).getInt();
+        int iterations = ByteBuffer.wrap(
+                Arrays.copyOfRange(params[4], 0, 4)).order(ByteOrder.BIG_ENDIAN).getInt();
         try {
             return new PasswordGenerator(
                     domain,

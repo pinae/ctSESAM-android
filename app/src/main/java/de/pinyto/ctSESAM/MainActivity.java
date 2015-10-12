@@ -31,6 +31,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -155,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
                         username,
                         kgkManager.getKgk(),
                         setting.getSalt(),
-                        ByteBuffer.allocate(4).putInt(setting.getIterations()).array());
+                        ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(setting.getIterations()).array());
             } else {
                 CheckBox checkBoxLetters =
                         (CheckBox) findViewById(R.id.checkBoxLetters);

@@ -6,6 +6,7 @@ import android.widget.EditText;
 
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 /**
  * Create kgk and password at once.
@@ -57,7 +58,7 @@ class CreateKgkAndPasswordTask extends AsyncTask<byte[], Void, byte[]> {
                     username,
                     kgkManager.getKgk(),
                     setting.getSalt(),
-                    ByteBuffer.allocate(4).putInt(iterations).array());
+                    ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(iterations).array());
         }
     }
 }
