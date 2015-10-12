@@ -38,7 +38,6 @@ public class PasswordSetting {
     private String notes;
     private String url;
     private String template;
-    private boolean preferTemplate = false;
     private boolean synced = false;
 
     PasswordSetting(String domain) {
@@ -122,14 +121,15 @@ public class PasswordSetting {
     }
 
     public void setUseLetters(boolean useLetters) {
+        boolean createNewTemplate = this.useLetters() != useLetters;
         this.removeFromCharacterSet(this.defaultCharacterSetLowerCase +
                 this.defaultCharacterSetUpperCase);
         if (useLetters) {
             this.characterSet = this.defaultCharacterSetLowerCase +
                     this.defaultCharacterSetUpperCase + this.characterSet;
         }
-        if (!preferTemplate) {
-            calculateTemplate();
+        if (createNewTemplate) {
+            this.calculateTemplate();
         }
     }
 
@@ -142,12 +142,13 @@ public class PasswordSetting {
     }
 
     public void setUseLowerCase(boolean useLowerCase) {
+        boolean createNewTemplate = this.useLowerCase() != useLowerCase;
         this.removeFromCharacterSet(this.defaultCharacterSetLowerCase);
         if (useLowerCase) {
             this.characterSet = this.defaultCharacterSetLowerCase + this.characterSet;
         }
-        if (!preferTemplate) {
-            calculateTemplate();
+        if (createNewTemplate) {
+            this.calculateTemplate();
         }
     }
 
@@ -168,6 +169,7 @@ public class PasswordSetting {
     }
 
     public void setUseUpperCase(boolean useUpperCase) {
+        boolean createNewTemplate = this.useUpperCase() != useUpperCase;
         this.removeFromCharacterSet(this.defaultCharacterSetUpperCase);
         if (useUpperCase) {
             if (this.useLowerCase()) {
@@ -179,8 +181,8 @@ public class PasswordSetting {
                 this.characterSet = this.defaultCharacterSetUpperCase + this.characterSet;
             }
         }
-        if (!preferTemplate) {
-            calculateTemplate();
+        if (createNewTemplate) {
+            this.calculateTemplate();
         }
     }
 
@@ -204,6 +206,7 @@ public class PasswordSetting {
     }
 
     public void setUseDigits(boolean useDigits) {
+        boolean createNewTemplate = this.useDigits() != useDigits;
         this.removeFromCharacterSet(this.defaultCharacterSetDigits);
         if (useDigits) {
             if (this.useLetters()) {
@@ -217,8 +220,8 @@ public class PasswordSetting {
                 this.characterSet = this.defaultCharacterSetDigits + this.characterSet;
             }
         }
-        if (!preferTemplate) {
-            calculateTemplate();
+        if (createNewTemplate) {
+            this.calculateTemplate();
         }
     }
 
@@ -262,6 +265,7 @@ public class PasswordSetting {
     }
 
     public void setUseExtra(boolean useExtra) {
+        boolean createNewTemplate = this.useExtra() != useExtra;
         this.removeFromCharacterSetExcept(this.defaultCharacterSetLowerCase +
                 this.defaultCharacterSetUpperCase +
                 this.defaultCharacterSetDigits);
@@ -291,8 +295,8 @@ public class PasswordSetting {
                 this.characterSet = this.getExtraCharacterSetAsString() + this.characterSet;
             }
         }
-        if (!preferTemplate) {
-            calculateTemplate();
+        if (createNewTemplate) {
+            this.calculateTemplate();
         }
     }
 
@@ -395,8 +399,9 @@ public class PasswordSetting {
     }
 
     public void setLength(int length) {
+        boolean createNewTemplate = this.length != length;
         this.length = length;
-        if (!preferTemplate) {
+        if (createNewTemplate) {
             this.calculateTemplate();
         }
     }
@@ -567,9 +572,7 @@ public class PasswordSetting {
     public void setFullTemplate(String fullTemplate) {
         Matcher matcher = Pattern.compile("([0123456]);([aAnox]+)").matcher(fullTemplate);
         if (matcher.matches() && matcher.groupCount() >= 2) {
-            this.preferTemplate = true;
             int complexity = Integer.parseInt(matcher.group(1));
-            this.template = matcher.group(2);
             switch (complexity) {
                 case 0:
                     this.setUseDigits(true);
@@ -614,8 +617,7 @@ public class PasswordSetting {
                     this.setUseExtra(true);
                     break;
             }
-        } else {
-            this.template = this.getTemplate();
+            this.template = matcher.group(2);
         }
     }
 
@@ -650,9 +652,7 @@ public class PasswordSetting {
             domainObject.put("mDate", this.getModificationDate());
             domainObject.put("usedCharacters", this.getCharacterSetAsString());
             domainObject.put("extras", this.getExtraCharacterSetAsString());
-            if (preferTemplate) {
-                domainObject.put("passwordTemplate", this.getFullTemplate());
-            }
+            domainObject.put("passwordTemplate", this.getFullTemplate());
         } catch (JSONException e) {
             System.out.println("Settings packing error: Unable to pack the JSON data.");
         }
