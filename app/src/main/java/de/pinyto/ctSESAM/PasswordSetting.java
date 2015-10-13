@@ -38,6 +38,7 @@ public class PasswordSetting {
     private String notes;
     private String url;
     private String template;
+    private boolean forceCharacterClasses = false;
     private boolean synced = false;
 
     PasswordSetting(String domain) {
@@ -543,16 +544,16 @@ public class PasswordSetting {
         boolean nInserted = false;
         boolean oInserted = false;
         for (int i = 0; i < this.getLength(); i++) {
-            if (this.useLowerCase() && !aInserted) {
+            if (this.forceCharacterClasses && this.useLowerCase() && !aInserted) {
                 this.template = this.template + "a";
                 aInserted = true;
-            } else if (this.useUpperCase() && !AInserted) {
+            } else if (this.forceCharacterClasses && this.useUpperCase() && !AInserted) {
                 this.template = this.template + "A";
                 AInserted = true;
-            } else if (this.useDigits() && !nInserted) {
+            } else if (this.forceCharacterClasses && this.useDigits() && !nInserted) {
                 this.template = this.template + "n";
                 nInserted = true;
-            } else if (this.useExtra() && !oInserted) {
+            } else if (this.forceCharacterClasses && this.useExtra() && !oInserted) {
                 this.template = this.template + "o";
                 oInserted = true;
             } else {
@@ -572,6 +573,7 @@ public class PasswordSetting {
     public void setFullTemplate(String fullTemplate) {
         Matcher matcher = Pattern.compile("([0123456]);([aAnox]+)").matcher(fullTemplate);
         if (matcher.matches() && matcher.groupCount() >= 2) {
+            this.forceCharacterClasses = true;
             int complexity = Integer.parseInt(matcher.group(1));
             switch (complexity) {
                 case 0:
@@ -652,7 +654,9 @@ public class PasswordSetting {
             domainObject.put("mDate", this.getModificationDate());
             domainObject.put("usedCharacters", this.getCharacterSetAsString());
             domainObject.put("extras", this.getExtraCharacterSetAsString());
-            domainObject.put("passwordTemplate", this.getFullTemplate());
+            if (this.forceCharacterClasses) {
+                domainObject.put("passwordTemplate", this.getFullTemplate());
+            }
         } catch (JSONException e) {
             System.out.println("Settings packing error: Unable to pack the JSON data.");
         }
