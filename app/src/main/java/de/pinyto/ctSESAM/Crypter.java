@@ -24,27 +24,9 @@ public class Crypter {
     private byte[] iv;
 
     public Crypter(byte[] keyIv) {
-        switch (keyIv.length) {
-            case 32:
-                this.key = keyIv;
-                this.iv = new byte[]{(byte) 0xb5, 0x4f, (byte) 0xcf, (byte) 0xb0,
-                        (byte) 0x88, 0x09, 0x55, (byte) 0xe5, (byte) 0xbf, 0x79, (byte) 0xaf, 0x37,
-                        0x71, 0x1c, 0x28, (byte) 0xb6};
-                break;
-            case 48:
-                this.key = Arrays.copyOfRange(keyIv, 0, 32);
-                this.iv = Arrays.copyOfRange(keyIv, 32, 48);
-                for (int i = 0; i < keyIv.length; i++) {
-                    keyIv[i] = 0x00;
-                }
-                break;
-            default:
-                this.key = Crypter.createKey(keyIv, "pepper".getBytes());
-                this.iv = new byte[]{(byte) 0xb5, 0x4f, (byte) 0xcf, (byte) 0xb0,
-                        (byte) 0x88, 0x09, 0x55, (byte) 0xe5, (byte) 0xbf, 0x79, (byte) 0xaf, 0x37,
-                        0x71, 0x1c, 0x28, (byte) 0xb6};
-                break;
-        }
+        this.key = Arrays.copyOfRange(keyIv, 0, 32);
+        this.iv = Arrays.copyOfRange(keyIv, 32, 48);
+        Clearer.zero(keyIv);
     }
 
     public static byte[] createKey(byte[] password, byte[] salt) {
