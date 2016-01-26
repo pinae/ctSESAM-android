@@ -9,10 +9,12 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,23 +24,20 @@ import java.util.regex.Pattern;
  */
 public class PasswordSetting {
     private String domain;
+    private String url;
     private String username;
     private String legacyPassword;
-    private final String defaultCharacterSetLowerCase = "abcdefghijklmnopqrstuvwxyz";
-    private final String defaultCharacterSetUpperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private final String defaultCharacterSetDigits = "0123456789";
-    private final String defaultCharacterSetExtra = "#!\"~|@^°$%&/()[]{}=-_+*<>;:.";
-    private String characterSet;
-    private String characterSetExtra;
+    private String notes;
     private int iterations = 4096;
-    private int length = 10;
     private byte[] salt;
     private Date cDate;
     private Date mDate;
-    private String notes;
-    private String url;
-    private String template;
-    private boolean forceCharacterClasses = false;
+    private final String defaultCharacterSetDigits = "0123456789";
+    private final String defaultCharacterSetLowerCase = "abcdefghijklmnopqrstuvwxyz";
+    private final String defaultCharacterSetUpperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private final String defaultCharacterSetExtra = "#!\"~|@^°$%&/()[]{}=-_+*<>;:.";
+    private String characterSetExtra;
+    private String template = "aAnoxxxxxx";
     private boolean synced = false;
 
     PasswordSetting(String domain) {
@@ -46,7 +45,8 @@ public class PasswordSetting {
         this.salt = Crypter.createSalt();
         this.cDate = Calendar.getInstance().getTime();
         this.mDate = this.cDate;
-        this.characterSet = this.getDefaultCharacterSet();
+        this.characterSetExtra = this.defaultCharacterSetExtra;
+        this.calculateTemplate();
     }
 
     public String getDomain() {
@@ -55,6 +55,11 @@ public class PasswordSetting {
 
     public void setDomain(String domain) {
         this.domain = domain;
+        this.synced = false;
+    }
+
+    public boolean hasUsername() {
+        return this.username != null && this.username.length() > 0;
     }
 
     public String getUsername() {
@@ -66,6 +71,9 @@ public class PasswordSetting {
     }
 
     public void setUsername(String username) {
+        if (!username.equals(this.username)) {
+            this.synced = false;
+        }
         this.username = username;
     }
 
@@ -82,240 +90,31 @@ public class PasswordSetting {
     }
 
     public void setLegacyPassword(String legacyPassword) {
+        if (!legacyPassword.equals(this.legacyPassword)) {
+            this.synced = false;
+        }
         this.legacyPassword = legacyPassword;
-    }
-
-    public boolean useLetters() {
-        return this.useLowerCase() && this.useUpperCase();
-    }
-
-    private void removeFromCharacterSet(String remstr) {
-        String newSet = "";
-        for (int i = 0; i < this.characterSet.length(); i++) {
-            boolean addThisChar = true;
-            for (int j = 0; j < remstr.length(); j++) {
-                if (this.characterSet.charAt(i) == remstr.charAt(j)) {
-                    addThisChar = false;
-                }
-            }
-            if (addThisChar) {
-                newSet += this.characterSet.charAt(i);
-            }
-        }
-        this.characterSet = newSet;
-    }
-
-    private void removeFromCharacterSetExcept(String exceptStr) {
-        String newSet = "";
-        for (int i = 0; i < this.characterSet.length(); i++) {
-            boolean addThisChar = false;
-            for (int j = 0; j < exceptStr.length(); j++) {
-                if (this.characterSet.charAt(i) == exceptStr.charAt(j)) {
-                    addThisChar = true;
-                }
-            }
-            if (addThisChar) {
-                newSet += this.characterSet.charAt(i);
-            }
-        }
-        this.characterSet = newSet;
-    }
-
-    public void setUseLetters(boolean useLetters) {
-        boolean createNewTemplate = this.useLetters() != useLetters;
-        this.removeFromCharacterSet(this.defaultCharacterSetLowerCase +
-                this.defaultCharacterSetUpperCase);
-        if (useLetters) {
-            this.characterSet = this.defaultCharacterSetLowerCase +
-                    this.defaultCharacterSetUpperCase + this.characterSet;
-        }
-        if (createNewTemplate) {
-            this.calculateTemplate();
-        }
-    }
-
-    public boolean useLowerCase() {
-        return this.characterSet == null ||
-                this.characterSet.length() >= this.defaultCharacterSetLowerCase.length() &&
-                        this.characterSet.substring(0,
-                                this.defaultCharacterSetLowerCase.length()).equals(
-                                this.defaultCharacterSetLowerCase);
-    }
-
-    public void setUseLowerCase(boolean useLowerCase) {
-        boolean createNewTemplate = this.useLowerCase() != useLowerCase;
-        this.removeFromCharacterSet(this.defaultCharacterSetLowerCase);
-        if (useLowerCase) {
-            this.characterSet = this.defaultCharacterSetLowerCase + this.characterSet;
-        }
-        if (createNewTemplate) {
-            this.calculateTemplate();
-        }
-    }
-
-    public boolean useUpperCase() {
-        if (this.useLowerCase()) {
-            return this.characterSet.length() >= this.defaultCharacterSetLowerCase.length() +
-                    this.defaultCharacterSetUpperCase.length() &&
-                    this.characterSet.substring(this.defaultCharacterSetLowerCase.length(),
-                            this.defaultCharacterSetLowerCase.length() +
-                                    this.defaultCharacterSetUpperCase.length()).equals(
-                            this.defaultCharacterSetUpperCase);
-        } else {
-            return this.characterSet.length() >= this.defaultCharacterSetUpperCase.length() &&
-                this.characterSet.substring(0,
-                        this.defaultCharacterSetUpperCase.length()).equals(
-                        this.defaultCharacterSetUpperCase);
-        }
-    }
-
-    public void setUseUpperCase(boolean useUpperCase) {
-        boolean createNewTemplate = this.useUpperCase() != useUpperCase;
-        this.removeFromCharacterSet(this.defaultCharacterSetUpperCase);
-        if (useUpperCase) {
-            if (this.useLowerCase()) {
-                this.characterSet = this.characterSet.substring(0,
-                        this.defaultCharacterSetLowerCase.length()) +
-                        this.defaultCharacterSetUpperCase +
-                        this.characterSet.substring( this.defaultCharacterSetLowerCase.length());
-            } else {
-                this.characterSet = this.defaultCharacterSetUpperCase + this.characterSet;
-            }
-        }
-        if (createNewTemplate) {
-            this.calculateTemplate();
-        }
-    }
-
-    public boolean useDigits() {
-        if (this.useLetters()) {
-            return this.characterSet.length() >= this.defaultCharacterSetLowerCase.length() +
-                    this.defaultCharacterSetUpperCase.length() +
-                    this.defaultCharacterSetDigits.length() &&
-                    this.characterSet.substring(this.defaultCharacterSetLowerCase.length() +
-                                    this.defaultCharacterSetUpperCase.length(),
-                            this.defaultCharacterSetLowerCase.length() +
-                                    this.defaultCharacterSetUpperCase.length() +
-                                    this.defaultCharacterSetDigits.length()).equals(
-                            this.defaultCharacterSetDigits);
-        } else {
-            return this.characterSet.length() >= this.defaultCharacterSetDigits.length() &&
-                    this.characterSet.substring(0,
-                            this.defaultCharacterSetDigits.length()).equals(
-                            this.defaultCharacterSetDigits);
-        }
-    }
-
-    public void setUseDigits(boolean useDigits) {
-        boolean createNewTemplate = this.useDigits() != useDigits;
-        this.removeFromCharacterSet(this.defaultCharacterSetDigits);
-        if (useDigits) {
-            if (this.useLetters()) {
-                this.characterSet = this.characterSet.substring(0,
-                        this.defaultCharacterSetLowerCase.length() +
-                                this.defaultCharacterSetUpperCase.length()) +
-                        this.defaultCharacterSetDigits +
-                        this.characterSet.substring( this.defaultCharacterSetLowerCase.length() +
-                                this.defaultCharacterSetUpperCase.length());
-            } else {
-                this.characterSet = this.defaultCharacterSetDigits + this.characterSet;
-            }
-        }
-        if (createNewTemplate) {
-            this.calculateTemplate();
-        }
-    }
-
-    public boolean useExtra() {
-        if (this.useLetters() && this.useDigits()) {
-            return this.characterSet.length() >= this.defaultCharacterSetLowerCase.length() +
-                    this.defaultCharacterSetUpperCase.length() +
-                    this.defaultCharacterSetDigits.length() +
-                    this.getExtraCharacterSetAsString().length() &&
-                    this.characterSet.substring(this.defaultCharacterSetLowerCase.length() +
-                                    this.defaultCharacterSetUpperCase.length() +
-                                    this.defaultCharacterSetDigits.length(),
-                            this.defaultCharacterSetLowerCase.length() +
-                                    this.defaultCharacterSetUpperCase.length() +
-                                    this.defaultCharacterSetDigits.length() +
-                                    this.getExtraCharacterSetAsString().length()).equals(
-                            this.getExtraCharacterSetAsString());
-        } else if (this.useLetters()) {
-            return this.characterSet.length() >= this.defaultCharacterSetLowerCase.length() +
-                    this.defaultCharacterSetUpperCase.length() +
-                    this.getExtraCharacterSetAsString().length() &&
-                    this.characterSet.substring(this.defaultCharacterSetLowerCase.length() +
-                                    this.defaultCharacterSetUpperCase.length(),
-                            this.defaultCharacterSetLowerCase.length() +
-                                    this.defaultCharacterSetUpperCase.length() +
-                                    this.getExtraCharacterSetAsString().length()).equals(
-                            this.getExtraCharacterSetAsString());
-        } else if (this.useDigits()) {
-            return this.characterSet.length() >= this.defaultCharacterSetDigits.length() +
-                    this.getExtraCharacterSetAsString().length() &&
-                    this.characterSet.substring(this.defaultCharacterSetDigits.length(),
-                            this.defaultCharacterSetDigits.length() +
-                                    this.getExtraCharacterSetAsString().length()).equals(
-                            this.getExtraCharacterSetAsString());
-        } else {
-            return this.characterSet.length() >= this.getExtraCharacterSetAsString().length() &&
-                    this.characterSet.substring(0,
-                            this.getExtraCharacterSetAsString().length()).equals(
-                            this.getExtraCharacterSetAsString());
-        }
-    }
-
-    public void setUseExtra(boolean useExtra) {
-        boolean createNewTemplate = this.useExtra() != useExtra;
-        this.removeFromCharacterSetExcept(this.defaultCharacterSetLowerCase +
-                this.defaultCharacterSetUpperCase +
-                this.defaultCharacterSetDigits);
-        if (useExtra) {
-            if (this.useLetters() && useDigits()) {
-                this.characterSet = this.characterSet.substring(0,
-                        this.defaultCharacterSetLowerCase.length() +
-                                this.defaultCharacterSetUpperCase.length() +
-                                this.defaultCharacterSetDigits.length()) +
-                        this.getExtraCharacterSetAsString() +
-                        this.characterSet.substring(this.defaultCharacterSetLowerCase.length() +
-                                this.defaultCharacterSetUpperCase.length() +
-                                this.defaultCharacterSetDigits.length());
-            } else if (this.useLetters()) {
-                this.characterSet = this.characterSet.substring(0,
-                        this.defaultCharacterSetLowerCase.length() +
-                                this.defaultCharacterSetUpperCase.length()) +
-                        this.getExtraCharacterSetAsString() +
-                        this.characterSet.substring(this.defaultCharacterSetLowerCase.length() +
-                                this.defaultCharacterSetUpperCase.length());
-            } else if (this.useDigits()) {
-                this.characterSet = this.characterSet.substring(0,
-                        this.defaultCharacterSetDigits.length()) +
-                        this.getExtraCharacterSetAsString() +
-                        this.characterSet.substring(this.defaultCharacterSetDigits.length());
-            } else {
-                this.characterSet = this.getExtraCharacterSetAsString() + this.characterSet;
-            }
-        }
-        if (createNewTemplate) {
-            this.calculateTemplate();
-        }
     }
 
     public String getDefaultCharacterSet() {
         String set = "";
+        set = set + this.defaultCharacterSetDigits;
         set = set + this.defaultCharacterSetLowerCase;
         set = set + this.defaultCharacterSetUpperCase;
-        set = set + this.defaultCharacterSetDigits;
         set = set + this.defaultCharacterSetExtra;
         return set;
     }
 
-    public void setCharacterSet(String characterSet) {
-        if (characterSet == null || characterSet.length() <= 0) {
-            this.characterSet = this.getDefaultCharacterSet();
-        } else {
-            this.characterSet = characterSet;
-        }
+    public String getLowerCaseCharacterSetAsString() {
+        return this.defaultCharacterSetLowerCase;
+    }
+
+    public String getUpperCaseCharacterSetAsString() {
+        return this.defaultCharacterSetUpperCase;
+    }
+
+    public String getDigitsCharacterSetAsString() {
+        return this.defaultCharacterSetDigits;
     }
 
     public List<String> getCharacterSet() {
@@ -328,11 +127,23 @@ public class PasswordSetting {
     }
 
     public String getCharacterSetAsString() {
-        if (this.characterSet != null) {
-            return this.characterSet;
-        } else {
-            return this.getDefaultCharacterSet();
+        String set = "";
+        if (this.getTemplate().contains("n")) {
+            set = set + this.getDigitsCharacterSetAsString();
         }
+        if (this.getTemplate().contains("a")) {
+            set = set + this.getLowerCaseCharacterSetAsString();
+        }
+        if (this.getTemplate().contains("A")) {
+            set = set + this.getUpperCaseCharacterSetAsString();
+        }
+        if (this.getTemplate().contains("o")) {
+            set = set + this.getExtraCharacterSetAsString();
+        }
+        if (set.length() <= 0) {
+            set = this.getDefaultCharacterSet();
+        }
+        return set;
     }
 
     public void setExtraCharacterSet(String extraCharacterSet) {
@@ -392,19 +203,14 @@ public class PasswordSetting {
     }
 
     public void setSalt(byte[] salt) {
+        if (!Arrays.equals(salt, this.salt)) {
+            this.synced = false;
+        }
         this.salt = salt;
     }
 
     public int getLength() {
-        return this.length;
-    }
-
-    public void setLength(int length) {
-        boolean createNewTemplate = this.length != length;
-        this.length = length;
-        if (createNewTemplate) {
-            this.calculateTemplate();
-        }
+        return this.getTemplate().length();
     }
 
     public int getIterations() {
@@ -412,7 +218,14 @@ public class PasswordSetting {
     }
 
     public void setIterations(int iterations) {
+        if (iterations != this.iterations) {
+            this.synced = false;
+        }
         this.iterations = iterations;
+    }
+
+    public Date getCDate() {
+        return this.cDate;
     }
 
     public String getCreationDate() {
@@ -423,14 +236,17 @@ public class PasswordSetting {
     public void setCreationDate(String cDate) {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH);
         try {
+            if (df.parse(cDate).compareTo(this.cDate) != 0) {
+                this.synced = false;
+            }
             this.cDate = df.parse(cDate);
         } catch (ParseException e) {
             System.out.println("This date has a wrong format: " + cDate);
             e.printStackTrace();
-            this.cDate = Calendar.getInstance().getTime();
         }
         if (this.cDate.compareTo(this.mDate) > 0) {
             this.mDate = this.cDate;
+            this.synced = false;
         }
     }
 
@@ -446,18 +262,20 @@ public class PasswordSetting {
     public void setModificationDate(String mDate) {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH);
         try {
+            if (df.parse(mDate).compareTo(this.mDate) != 0) {
+                this.synced = false;
+            }
             this.mDate = df.parse(mDate);
         } catch (ParseException e) {
             System.out.println("This date has a wrong format: " + mDate);
             e.printStackTrace();
-            this.mDate = Calendar.getInstance().getTime();
         }
         if (this.cDate.compareTo(this.mDate) > 0) {
             System.out.println("The modification date was before the creation Date. " +
                     "Set the creation date to the earlier date.");
             this.cDate = this.mDate;
+            this.synced = false;
         }
-        this.synced = false;
     }
 
     public void setModificationDateToNow() {
@@ -479,6 +297,9 @@ public class PasswordSetting {
     }
 
     public void setNotes(String notes) {
+        if (!notes.equals(this.notes)) {
+            this.synced = false;
+        }
         this.notes = notes;
     }
 
@@ -491,31 +312,16 @@ public class PasswordSetting {
     }
 
     public void setUrl(String url) {
+        if (!url.equals(this.url)) {
+            this.synced = false;
+        }
         this.url = url;
     }
 
     public String getFullTemplate() {
-        if (this.useDigits() && !this.useLowerCase() &&
-                !this.useUpperCase() && !this.useExtra()) {
-            return "0;" + this.getTemplate();
-        } else if (!this.useDigits() && this.useLowerCase() &&
-                !this.useUpperCase() && !this.useExtra()) {
-            return "1;" + this.getTemplate();
-        } else if (!this.useDigits() && !this.useLowerCase() &&
-                this.useUpperCase() && !this.useExtra()) {
-            return "2;" + this.getTemplate();
-        } else if (this.useDigits() && this.useLowerCase() &&
-                !this.useUpperCase() && !this.useExtra()) {
-            return "3;" + this.getTemplate();
-        } else if (!this.useDigits() && this.useLowerCase() &&
-                this.useUpperCase() && !this.useExtra()) {
-            return "4;" + this.getTemplate();
-        } else if (this.useDigits() && this.useLowerCase() &&
-                this.useUpperCase() && !this.useExtra()) {
-            return "5;" + this.getTemplate();
-        } else if (this.useDigits() && this.useLowerCase() &&
-                this.useUpperCase() && this.useExtra()) {
-            return "6;" + this.getTemplate();
+        int complexity = this.getComplexity();
+        if (complexity >= 0) {
+            return Integer.toString(complexity) + ";" + this.getTemplate();
         } else {
             return "";
         }
@@ -537,23 +343,26 @@ public class PasswordSetting {
         return String.valueOf(array);
     }
 
-    private void calculateTemplate() {
+    private void calculateTemplate(boolean useLowerCase,
+                                   boolean useUpperCase,
+                                   boolean useDigits,
+                                   boolean useExtra) {
         this.template = "";
         boolean aInserted = false;
         boolean AInserted = false;
         boolean nInserted = false;
         boolean oInserted = false;
         for (int i = 0; i < this.getLength(); i++) {
-            if (this.forceCharacterClasses && this.useLowerCase() && !aInserted) {
+            if (useLowerCase && !aInserted) {
                 this.template = this.template + "a";
                 aInserted = true;
-            } else if (this.forceCharacterClasses && this.useUpperCase() && !AInserted) {
+            } else if (useUpperCase && !AInserted) {
                 this.template = this.template + "A";
                 AInserted = true;
-            } else if (this.forceCharacterClasses && this.useDigits() && !nInserted) {
+            } else if (useDigits && !nInserted) {
                 this.template = this.template + "n";
                 nInserted = true;
-            } else if (this.forceCharacterClasses && this.useExtra() && !oInserted) {
+            } else if (useExtra && !oInserted) {
                 this.template = this.template + "o";
                 oInserted = true;
             } else {
@@ -563,63 +372,56 @@ public class PasswordSetting {
         this.template = this.ShuffleString(this.template);
     }
 
-    public String getTemplate() {
-        if (this.template == null) {
-            this.calculateTemplate();
+    private void calculateTemplate() {
+        boolean use_lower_case = this.getTemplate().contains("a");
+        boolean use_upper_case = this.getTemplate().contains("A");
+        boolean use_digits = this.getTemplate().contains("n");
+        boolean use_extra = this.getTemplate().contains("o");
+        if (!use_lower_case && !use_upper_case && !use_digits && !use_extra) {
+            use_lower_case = true;
+            use_upper_case = true;
+            use_digits = true;
+            use_extra = true;
         }
+        this.calculateTemplate(use_lower_case, use_upper_case, use_digits, use_extra);
+    }
+
+    public String getTemplate() {
         return this.template;
     }
 
     public void setFullTemplate(String fullTemplate) {
         Matcher matcher = Pattern.compile("([0123456]);([aAnox]+)").matcher(fullTemplate);
         if (matcher.matches() && matcher.groupCount() >= 2) {
-            this.forceCharacterClasses = true;
             int complexity = Integer.parseInt(matcher.group(1));
-            switch (complexity) {
-                case 0:
-                    this.setUseDigits(true);
-                    this.setUseLowerCase(false);
-                    this.setUseUpperCase(false);
-                    this.setUseExtra(false);
-                    break;
-                case 1:
-                    this.setUseDigits(false);
-                    this.setUseLowerCase(true);
-                    this.setUseUpperCase(false);
-                    this.setUseExtra(false);
-                    break;
-                case 2:
-                    this.setUseDigits(false);
-                    this.setUseLowerCase(false);
-                    this.setUseUpperCase(true);
-                    this.setUseExtra(false);
-                    break;
-                case 3:
-                    this.setUseDigits(true);
-                    this.setUseLowerCase(true);
-                    this.setUseUpperCase(false);
-                    this.setUseExtra(false);
-                    break;
-                case 4:
-                    this.setUseDigits(false);
-                    this.setUseLowerCase(true);
-                    this.setUseUpperCase(true);
-                    this.setUseExtra(false);
-                    break;
-                case 5:
-                    this.setUseDigits(true);
-                    this.setUseLowerCase(true);
-                    this.setUseUpperCase(true);
-                    this.setUseExtra(false);
-                    break;
-                case 6:
-                    this.setUseDigits(true);
-                    this.setUseLowerCase(true);
-                    this.setUseUpperCase(true);
-                    this.setUseExtra(true);
-                    break;
-            }
             this.template = matcher.group(2);
+        }
+    }
+
+    public int getComplexity() {
+        if (this.getTemplate().contains("n") && !this.getTemplate().contains("a") &&
+                !this.getTemplate().contains("A") && !this.getTemplate().contains("o")) {
+            return 0;
+        } else if (!this.getTemplate().contains("n") && this.getTemplate().contains("a") &&
+                !this.getTemplate().contains("A") && !this.getTemplate().contains("o")) {
+            return 1;
+        } else if (!this.getTemplate().contains("n") && !this.getTemplate().contains("a") &&
+                this.getTemplate().contains("A") && !this.getTemplate().contains("o")) {
+            return 2;
+        } else if (this.getTemplate().contains("n") && this.getTemplate().contains("a") &&
+                !this.getTemplate().contains("A") && !this.getTemplate().contains("o")) {
+            return 3;
+        } else if (!this.getTemplate().contains("n") && this.getTemplate().contains("a") &&
+                this.getTemplate().contains("A") && !this.getTemplate().contains("o")) {
+            return 4;
+        } else if (this.getTemplate().contains("n") && this.getTemplate().contains("a") &&
+                this.getTemplate().contains("A") && !this.getTemplate().contains("o")) {
+            return 5;
+        } else if (this.getTemplate().contains("n") && this.getTemplate().contains("a") &&
+                this.getTemplate().contains("A") && this.getTemplate().contains("o")) {
+            return 6;
+        } else {
+            return -1;
         }
     }
 
@@ -648,15 +450,13 @@ public class PasswordSetting {
                 domainObject.put("notes", this.getNotes());
             }
             domainObject.put("iterations", this.getIterations());
-            domainObject.put("salt", Base64.encodeToString(this.getSalt(), Base64.DEFAULT));
-            domainObject.put("length", this.getLength());
+            if (this.salt != null && this.salt.length > 0) {
+                domainObject.put("salt", Base64.encodeToString(this.getSalt(), Base64.DEFAULT));
+            }
             domainObject.put("cDate", this.getCreationDate());
             domainObject.put("mDate", this.getModificationDate());
-            domainObject.put("usedCharacters", this.getCharacterSetAsString());
             domainObject.put("extras", this.getExtraCharacterSetAsString());
-            if (this.forceCharacterClasses) {
-                domainObject.put("passwordTemplate", this.getFullTemplate());
-            }
+            domainObject.put("passwordTemplate", this.getFullTemplate());
         } catch (JSONException e) {
             System.out.println("Settings packing error: Unable to pack the JSON data.");
         }
@@ -685,23 +485,27 @@ public class PasswordSetting {
         if (loadedSetting.has("salt")) {
             this.setSalt(Base64.decode(loadedSetting.getString("salt"), Base64.DEFAULT));
         }
-        if (loadedSetting.has("length")) {
-            this.setLength(loadedSetting.getInt("length"));
-        }
         if (loadedSetting.has("cDate")) {
             this.setCreationDate(loadedSetting.getString("cDate"));
         }
         if (loadedSetting.has("mDate")) {
             this.setModificationDate(loadedSetting.getString("mDate"));
         }
-        if (loadedSetting.has("usedCharacters")) {
-            this.setCharacterSet(loadedSetting.getString("usedCharacters"));
-        }
         if (loadedSetting.has("extras")) {
             this.setExtraCharacterSet(loadedSetting.getString("extras"));
         }
         if (loadedSetting.has("passwordTemplate")) {
             this.setFullTemplate(loadedSetting.getString("passwordTemplate"));
+        }
+        if (loadedSetting.has("length") && loadedSetting.has("usedCharacters") &&
+                !loadedSetting.has("passwordTemplate")) {
+            String conversionTemplate = "o";
+            for (int i = 1; i < loadedSetting.getInt("length"); i++) {
+                conversionTemplate = conversionTemplate + "x";
+            }
+            this.template = conversionTemplate;
+            this.setExtraCharacterSet(loadedSetting.getString("usedCharacters"));
+            this.calculateTemplate(false, false, false, true);
         }
     }
 }

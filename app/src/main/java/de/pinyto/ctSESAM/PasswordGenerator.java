@@ -74,7 +74,7 @@ public class PasswordGenerator {
                     BigInteger[] divAndMod = hashNumber.divideAndRemainder(setSize);
                     hashNumber = divAndMod[0];
                     int mod = divAndMod[1].intValue();
-                    password += characterSet.get(mod);
+                    password += set.get(mod);
                 }
             }
         }

@@ -75,86 +75,25 @@
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true" />
 
-            <CheckBox
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/letters"
-                android:id="@+id/checkBoxLetters"
-                android:layout_below="@+id/editTextUsername"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:checked="true" />
-
-            <CheckBox
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/digits"
-                android:id="@+id/checkBoxDigits"
-                android:layout_below="@+id/checkBoxLetters"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:checked="true" />
-
-            <CheckBox
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/special_characters"
-                android:id="@+id/checkBoxSpecialCharacter"
-                android:layout_below="@+id/checkBoxDigits"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:checked="true" />
-
-            <TextView
-                android:text="@string/length"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/checkBoxSpecialCharacter"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:id="@+id/textViewLengthHeading" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceSmall"
-                android:text="@string/length_init"
-                android:id="@+id/textViewLengthDisplay"
-                android:layout_below="@+id/checkBoxSpecialCharacter"
-                android:layout_toEndOf="@+id/textViewLengthHeading"
-                android:layout_toRightOf="@+id/textViewLengthHeading"
-                android:layout_marginStart="4dp"
-                android:layout_marginLeft="4dp" />
-
-            <SeekBar
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/seekBarLength"
-                android:layout_below="@+id/textViewLengthHeading"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:max="21"
-                android:progress="6" />
-
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/generator_button"
                 android:id="@+id/generatorButton"
-                android:layout_below="@+id/seekBarLength"
                 android:layout_centerVertical="true"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
-                android:visibility="visible" />
+                android:visibility="visible"
+                android:layout_below="@+id/editTextUsername" />
 
             <TextView
                 android:text="@string/password"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/seekBarLength"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
-                android:id="@+id/textViewPasswordHeading" />
+                android:id="@+id/textViewPasswordHeading"
+                android:layout_below="@+id/editTextUsername" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -167,29 +106,6 @@
                 android:layout_alignParentStart="true"
                 android:gravity="center"
                 android:textAlignment="center" />
-
-            <TextView
-                android:text="@string/password"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/editTextUsername"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:id="@+id/textViewLegacyPasswordHeading"
-                android:visibility="invisible" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceLarge"
-                android:text="@string/init_password"
-                android:id="@+id/textViewLegacyPassword"
-                android:layout_below="@id/textViewLegacyPasswordHeading"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:gravity="center"
-                android:textAlignment="center"
-                android:visibility="invisible" />
 
         </RelativeLayout>
 

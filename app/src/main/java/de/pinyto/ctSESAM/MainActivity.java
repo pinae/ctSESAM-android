@@ -45,10 +45,6 @@ public class MainActivity extends AppCompatActivity {
     private PasswordGenerator passwordGenerator;
     private boolean showSettings = false;
     private boolean showPassword = false;
-    private boolean showLegacyPassword = false;
-    private boolean applyCheckboxLetters = false;
-    private boolean applyCheckboxDigits = false;
-    private boolean applyCheckboxExtra = false;
 
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -71,28 +67,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateView() {
-        CheckBox checkBoxLetters =
-                (CheckBox) findViewById(R.id.checkBoxLetters);
-        CheckBox checkBoxDigits =
-                (CheckBox) findViewById(R.id.checkBoxDigits);
-        CheckBox checkBoxSpecialCharacters =
-                (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
-        TextView lengthHeading = (TextView) findViewById(R.id.textViewLengthHeading);
-        TextView lengthLabel = (TextView) findViewById(R.id.textViewLengthDisplay);
-        SeekBar seekBarLength =
-                (SeekBar) findViewById(R.id.seekBarLength);
         Button generateButton = (Button) findViewById(R.id.generatorButton);
         TextView passwordHeading = (TextView) findViewById(R.id.textViewPasswordHeading);
         TextView password = (TextView) findViewById(R.id.textViewPassword);
-        TextView legacyPasswordHeading = (TextView) findViewById(R.id.textViewLegacyPasswordHeading);
-        TextView legacyPassword = (TextView) findViewById(R.id.textViewLegacyPassword);
         if (this.showSettings) {
-            checkBoxLetters.setVisibility(View.VISIBLE);
-            checkBoxDigits.setVisibility(View.VISIBLE);
-            checkBoxSpecialCharacters.setVisibility(View.VISIBLE);
-            lengthHeading.setVisibility(View.VISIBLE);
-            lengthLabel.setVisibility(View.VISIBLE);
-            seekBarLength.setVisibility(View.VISIBLE);
             if (this.showPassword) {
                 generateButton.setVisibility(View.INVISIBLE);
                 passwordHeading.setVisibility(View.VISIBLE);
@@ -103,22 +81,9 @@ public class MainActivity extends AppCompatActivity {
                 password.setVisibility(View.INVISIBLE);
             }
         } else {
-            checkBoxLetters.setVisibility(View.INVISIBLE);
-            checkBoxDigits.setVisibility(View.INVISIBLE);
-            checkBoxSpecialCharacters.setVisibility(View.INVISIBLE);
-            lengthHeading.setVisibility(View.INVISIBLE);
-            lengthLabel.setVisibility(View.INVISIBLE);
-            seekBarLength.setVisibility(View.INVISIBLE);
             generateButton.setVisibility(View.INVISIBLE);
             passwordHeading.setVisibility(View.INVISIBLE);
             password.setVisibility(View.INVISIBLE);
-        }
-        if (this.showLegacyPassword) {
-            legacyPasswordHeading.setVisibility(View.VISIBLE);
-            legacyPassword.setVisibility(View.VISIBLE);
-        } else {
-            legacyPasswordHeading.setVisibility(View.INVISIBLE);
-            legacyPassword.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -143,51 +108,36 @@ public class MainActivity extends AppCompatActivity {
         byte[] domain = UTF8.encode(autoCompleteTextViewDomain.getText());
         EditText editTextUsername =
                 (EditText) findViewById(R.id.editTextUsername);
+        TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
         byte[] username = UTF8.encode(editTextUsername.getText());
         PasswordSetting setting = this.settingsManager.getSetting(domainStr);
         if (this.kgkManager.hasKgk()) {
-            if (this.passwordGenerator == null) {
-                GeneratePasswordTask generatePasswordTask = new GeneratePasswordTask(this);
-                if (setting.getIterations() <= 0) {
-                    setting.setIterations(4096);
+            if (!setting.hasLegacyPassword()) {
+                if (this.passwordGenerator == null) {
+                    GeneratePasswordTask generatePasswordTask = new GeneratePasswordTask(this);
+                    if (setting.getIterations() <= 0) {
+                        setting.setIterations(4096);
+                    }
+                    generatePasswordTask.execute(
+                            domain,
+                            username,
+                            kgkManager.getKgk(),
+                            setting.getSalt(),
+                            ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN)
+                                    .putInt(setting.getIterations()).array());
+                } else {
+                    this.settingsManager.setSetting(setting);
+                    this.settingsManager.storeLocalSettings(this.kgkManager);
+                    textViewPassword.setText(this.passwordGenerator.getPassword(setting));
+                    this.showPassword = true;
+                    this.updateView();
+                    this.invalidateOptionsMenu();
+                    // load settings because the domain might be new
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(getBaseContext(),
+                            android.R.layout.simple_dropdown_item_1line,
+                            this.settingsManager.getDomainList());
+                    autoCompleteTextViewDomain.setAdapter(adapter);
                 }
-                generatePasswordTask.execute(
-                        domain,
-                        username,
-                        kgkManager.getKgk(),
-                        setting.getSalt(),
-                        ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(setting.getIterations()).array());
-            } else {
-                CheckBox checkBoxLetters =
-                        (CheckBox) findViewById(R.id.checkBoxLetters);
-                CheckBox checkBoxDigits =
-                        (CheckBox) findViewById(R.id.checkBoxDigits);
-                CheckBox checkBoxSpecialCharacters =
-                        (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
-                if (applyCheckboxLetters) {
-                    setting.setUseLetters(checkBoxLetters.isChecked());
-                }
-                if (applyCheckboxDigits) {
-                    setting.setUseDigits(checkBoxDigits.isChecked());
-                }
-                if (applyCheckboxExtra) {
-                    setting.setUseExtra(checkBoxSpecialCharacters.isChecked());
-                }
-                SeekBar seekBarLength = (SeekBar) findViewById(R.id.seekBarLength);
-                setting.setLength(seekBarLength.getProgress() + 4);
-                setting.setModificationDateToNow();
-                this.settingsManager.setSetting(setting);
-                this.settingsManager.storeLocalSettings(this.kgkManager);
-                TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
-                textViewPassword.setText(this.passwordGenerator.getPassword(setting));
-                this.showPassword = true;
-                this.updateView();
-                this.invalidateOptionsMenu();
-                // load settings because the domain might be new
-                ArrayAdapter<String> adapter = new ArrayAdapter<>(getBaseContext(),
-                        android.R.layout.simple_dropdown_item_1line,
-                        this.settingsManager.getDomainList());
-                autoCompleteTextViewDomain.setAdapter(adapter);
             }
         } else {
             EditText editTextMasterPassword =
@@ -199,6 +149,12 @@ public class MainActivity extends AppCompatActivity {
                     this.kgkManager,
                     this.settingsManager);
             createKgkAndPasswordTask.execute(password);
+        }
+        if (setting.hasLegacyPassword()) {
+            textViewPassword.setText(setting.getLegacyPassword());
+            this.showPassword = true;
+            this.updateView();
+            this.invalidateOptionsMenu();
         }
     }
 
@@ -219,46 +175,15 @@ public class MainActivity extends AppCompatActivity {
         textViewPassword.setText("");
     }
 
-    private void setCheckboxChecked(CheckBox cb, boolean checked) {
-        cb.setChecked(checked);
-        if (checked) {
-            cb.setBackgroundColor(Color.TRANSPARENT);
-        } else {
-            cb.setBackgroundColor(Color.MAGENTA);
-        }
-    }
-
     private void loadSettings() {
         AutoCompleteTextView autoCompleteTextViewDomain =
                 (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
         String domain = autoCompleteTextViewDomain.getText().toString();
         EditText editTextUsername =
                 (EditText) findViewById(R.id.editTextUsername);
-        CheckBox checkBoxSpecialCharacters =
-                (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
-        CheckBox checkBoxLetters =
-                (CheckBox) findViewById(R.id.checkBoxLetters);
-        CheckBox checkBoxDigits =
-                (CheckBox) findViewById(R.id.checkBoxDigits);
-        SeekBar seekBarLength =
-                (SeekBar) findViewById(R.id.seekBarLength);
-        TextView lengthLabel =
-                (TextView) findViewById(R.id.textViewLengthDisplay);
-        TextView legacyPassword =
-                (TextView) findViewById(R.id.textViewLegacyPassword);
         PasswordSetting passwordSetting = settingsManager.getSetting(domain);
-        this.showSettings = !passwordSetting.hasLegacyPassword() && domain.length() > 0;
-        this.showLegacyPassword = passwordSetting.hasLegacyPassword();
-        legacyPassword.setText(passwordSetting.getLegacyPassword());
+        this.showSettings = domain.length() > 0;
         editTextUsername.setText(passwordSetting.getUsername());
-        this.setCheckboxChecked(checkBoxLetters, passwordSetting.useLetters());
-        this.setCheckboxChecked(checkBoxDigits, passwordSetting.useDigits());
-        this.setCheckboxChecked(checkBoxSpecialCharacters, passwordSetting.useExtra());
-        applyCheckboxLetters = false;
-        applyCheckboxDigits = false;
-        applyCheckboxExtra = false;
-        seekBarLength.setProgress(passwordSetting.getLength() - 4);
-        lengthLabel.setText(String.format("%d", passwordSetting.getLength()));
     }
 
     @Override
@@ -298,7 +223,6 @@ public class MainActivity extends AppCompatActivity {
             public void afterTextChanged(Editable editable) {
                 setToNotGenerated();
                 showSettings = editable.length() > 0;
-                showLegacyPassword = false;
                 showPassword = false;
                 for (String domain : settingsManager.getDomainList()) {
                     if (domain.contentEquals(editable)) {
@@ -343,65 +267,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 loadSettings();
-            }
-        });
-
-        final CheckBox checkBoxLetters =
-                (CheckBox) findViewById(R.id.checkBoxLetters);
-        checkBoxLetters.setOnCheckedChangeListener(
-                new CheckBox.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(
-                            CompoundButton compoundButton,
-                            boolean isChecked) {
-                        compoundButton.setBackgroundColor(Color.TRANSPARENT);
-                        applyCheckboxLetters = true;
-                        generatePassword();
-                    }
-                });
-        final CheckBox checkBoxDigits =
-                (CheckBox) findViewById(R.id.checkBoxDigits);
-        checkBoxDigits.setOnCheckedChangeListener(
-                new CheckBox.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(
-                            CompoundButton compoundButton,
-                            boolean isChecked) {
-                        compoundButton.setBackgroundColor(Color.TRANSPARENT);
-                        applyCheckboxDigits = true;
-                        generatePassword();
-                    }
-                });
-        final CheckBox checkBoxSpecialCharacters =
-                (CheckBox) findViewById(R.id.checkBoxSpecialCharacter);
-        checkBoxSpecialCharacters.setOnCheckedChangeListener(
-                new CheckBox.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(
-                            CompoundButton compoundButton,
-                            boolean isChecked) {
-                        compoundButton.setBackgroundColor(Color.TRANSPARENT);
-                        applyCheckboxExtra = true;
-                        generatePassword();
-                    }
-                });
-
-        SeekBar seekBarLength = (SeekBar) findViewById(R.id.seekBarLength);
-        seekBarLength.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                TextView textViewLengthDisplay =
-                        (TextView) findViewById(R.id.textViewLengthDisplay);
-                textViewLengthDisplay.setText(String.format("%d", progress + 4));
-                generatePassword();
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
             }
         });
 
