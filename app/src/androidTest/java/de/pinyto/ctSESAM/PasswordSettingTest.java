@@ -28,35 +28,26 @@ public class PasswordSettingTest extends TestCase {
         assertEquals("K6x/vyG9(p", s.getLegacyPassword());
     }
 
-    public void testCharacterSet() {
+    public void testExtraCharacterSet() {
         PasswordSetting s = new PasswordSetting("unit.test");
-        s.setCharacterSet("&=Oo0wWsS$#uUvVzZ");
-        assertEquals("&=Oo0wWsS$#uUvVzZ", s.getCharacterSetAsString());
-        s.setCharacterSet(
-                "abcdefghijklmnopqrstuvwxyz" +
-                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-                        "0123456789" +
-                        "#!\"~|@^°$%&/()[]{}=-_+*<>;:.");
-        assertTrue(s.useLetters());
-        assertTrue(s.useDigits());
-        assertTrue(s.useExtra());
+        s.setExtraCharacterSet("&=Oo0wWsS$#uUvVzZ");
+        assertEquals("&=Oo0wWsS$#uUvVzZ", s.getExtraCharacterSetAsString());
     }
 
     public void testGetCharacterSetAsString() {
         PasswordSetting s = new PasswordSetting("unit.test");
-        s.setUseLetters(false);
+        s.setTemplate("noxxxxxx");
         assertEquals("0123456789#!\"~|@^°$%&/()[]{}=-_+*<>;:.", s.getCharacterSetAsString());
-        s.setUseLetters(true);
-        s.setUseDigits(false);
-        s.setUseExtra(false);
+        s.setTemplate("xxaAxxxxxx");
         assertEquals("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
                 s.getCharacterSetAsString());
     }
 
     public void testGetCharacterSet() {
         PasswordSetting s = new PasswordSetting("unit.test");
-        assertEquals("c", s.getCharacterSet().get(2));
-        s.setCharacterSet("axFLp0");
+        assertEquals("2", s.getCharacterSet().get(2));
+        s.setExtraCharacterSet("axFLp0");
+        s.setTemplate("oxxx");
         assertEquals(6, s.getCharacterSet().size());
         assertEquals("F", s.getCharacterSet().get(2));
         assertEquals("0", s.getCharacterSet().get(5));
@@ -96,35 +87,69 @@ public class PasswordSettingTest extends TestCase {
         assertEquals("Beware of the password!", s.getNotes());
     }
 
+    public void testTemplate() {
+        PasswordSetting s = new PasswordSetting("unit.test");
+        assertEquals(10, s.getLength());
+        assertTrue(s.getTemplate().contains("a"));
+        assertTrue(s.getTemplate().contains("A"));
+        assertTrue(s.getTemplate().contains("n"));
+        assertTrue(s.getTemplate().contains("o"));
+        assertTrue(s.getTemplate().contains("x"));
+        s.setTemplate("xan");
+        assertEquals(3, s.getLength());
+        assertTrue(s.getTemplate().contains("a"));
+        assertFalse(s.getTemplate().contains("A"));
+        assertTrue(s.getTemplate().contains("n"));
+        assertFalse(s.getTemplate().contains("o"));
+        assertTrue(s.getTemplate().contains("x"));
+        assertEquals("xan", s.getTemplate());
+        assertEquals("3;xan", s.getFullTemplate());
+        s.setTemplate("3;xan");
+        assertEquals(3, s.getLength());
+        assertTrue(s.getTemplate().contains("a"));
+        assertFalse(s.getTemplate().contains("A"));
+        assertTrue(s.getTemplate().contains("n"));
+        assertFalse(s.getTemplate().contains("o"));
+        assertTrue(s.getTemplate().contains("x"));
+        assertEquals("xan", s.getTemplate());
+    }
+
     public void testToJson() {
         PasswordSetting s = new PasswordSetting("unit.test");
         s.setModificationDate("2005-01-01T01:14:12");
         s.setCreationDate("2001-01-01T02:14:12");
+        s.setUsername("Hugo");
+        s.setLegacyPassword("Wamma");
         s.setSalt("something".getBytes());
         s.setIterations(213);
-        s.setLength(14);
-        s.setCharacterSet("XVLCWKHGFQUIAEOSNRTDYÜÖÄPZBMJ");
         s.setNotes("Some note.");
         try {
             assertTrue(s.toJSON().has("domain"));
             assertEquals("unit.test", s.toJSON().getString("domain"));
-            assertTrue(s.toJSON().has("cDate"));
-            assertEquals("2001-01-01T02:14:12", s.toJSON().getString("cDate"));
-            assertTrue(s.toJSON().has("mDate"));
-            assertEquals("2005-01-01T01:14:12", s.toJSON().getString("mDate"));
+            assertTrue(s.toJSON().has("username"));
+            assertEquals("Hugo", s.toJSON().getString("username"));
+            assertTrue(s.toJSON().has("legacyPassword"));
+            assertEquals("Wamma", s.toJSON().getString("legacyPassword"));
+            assertTrue(s.toJSON().has("notes"));
+            assertEquals("Some note.", s.toJSON().getString("notes"));
+            assertTrue(s.toJSON().has("iterations"));
+            assertEquals(213, s.toJSON().getInt("iterations"));
             assertTrue(s.toJSON().has("salt"));
             assertEquals(
                     Base64.encodeToString("something".getBytes(), Base64.DEFAULT),
                     s.toJSON().getString("salt"));
-            assertTrue(s.toJSON().has("iterations"));
-            assertEquals(213, s.toJSON().getInt("iterations"));
-            assertTrue(s.toJSON().has("length"));
-            assertEquals(14, s.toJSON().getInt("length"));
-            assertTrue(s.toJSON().has("usedCharacters"));
-            assertEquals("XVLCWKHGFQUIAEOSNRTDYÜÖÄPZBMJ",
-                    s.toJSON().getString("usedCharacters"));
-            assertTrue(s.toJSON().has("notes"));
-            assertEquals("Some note.", s.toJSON().getString("notes"));
+            assertTrue(s.toJSON().has("cDate"));
+            assertEquals("2001-01-01T02:14:12", s.toJSON().getString("cDate"));
+            assertTrue(s.toJSON().has("mDate"));
+            assertEquals("2005-01-01T01:14:12", s.toJSON().getString("mDate"));
+            assertTrue(s.toJSON().has("extras"));
+            assertEquals("#!\"~|@^°$%&/()[]{}=-_+*<>;:.", s.toJSON().getString("extras"));
+            assertTrue(s.toJSON().has("passwordTemplate"));
+            assertEquals(10, s.toJSON().getString("passwordTemplate").length());
+            assertTrue(s.toJSON().getString("passwordTemplate").contains("a"));
+            assertTrue(s.toJSON().getString("passwordTemplate").contains("A"));
+            assertTrue(s.toJSON().getString("passwordTemplate").contains("n"));
+            assertTrue(s.toJSON().getString("passwordTemplate").contains("o"));
         } catch (JSONException e) {
             assertTrue(false);
         }
@@ -134,8 +159,8 @@ public class PasswordSettingTest extends TestCase {
         String json = "{\"domain\": \"unit.test\", \"username\": \"testilinius\", " +
                 "\"notes\": \"interesting note\", \"legacyPassword\": \"rtSr?bS,mi\", " +
                 "\"iterations\": 5341, " +
-                "\"length\": 16, \"salt\": \"ZmFzY2luYXRpbmc=\", " +
-                "\"usedCharacters\": \"abcdefghijklmnopqrstuvwxyz\", " +
+                "\"passwordTemplate\": \"xnxxAxaoxx\", \"salt\": \"ZmFzY2luYXRpbmc=\", " +
+                "\"extras\": \"#&{}[]()%\", " +
                 "\"cDate\": \"2001-01-01T02:14:12\", \"mDate\": \"2005-01-01T01:14:12\"}";
         try {
             JSONObject data = new JSONObject(json);
@@ -145,13 +170,12 @@ public class PasswordSettingTest extends TestCase {
             assertEquals("testilinius", s.getUsername());
             assertEquals("interesting note", s.getNotes());
             assertEquals("rtSr?bS,mi", s.getLegacyPassword());
-            assertTrue(s.useLowerCase());
-            assertFalse(s.useUpperCase());
-            assertFalse(s.useDigits());
-            assertFalse(s.useExtra());
-            assertEquals("abcdefghijklmnopqrstuvwxyz", s.getCharacterSetAsString());
+            assertEquals("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ#&{}[]()%",
+                    s.getCharacterSetAsString());
             assertEquals(5341, s.getIterations());
-            assertEquals(16, s.getLength());
+            assertEquals(10, s.getLength());
+            assertEquals("xnxxAxaoxx", s.getTemplate());
+            assertEquals("#&{}[]()%", s.getExtraCharacterSetAsString());
             byte[] expectedSalt;
             try {
                 expectedSalt = "fascinating".getBytes("UTF-8");
@@ -172,9 +196,9 @@ public class PasswordSettingTest extends TestCase {
 
     public void testSetCharacterSetExtra() {
         PasswordSetting s = new PasswordSetting("unit.test");
-        s.setCharacterSet("…ſ²³›ABC‹¢¥¥„“`´•");
-        s.setUseExtra(false);
-        assertEquals("ABC", s.getCharacterSetAsString());
+        s.setExtraCharacterSet("…ſ²³›ABC‹¢¥¥„“`´•");
+        s.setTemplate("xox");
+        assertEquals("…ſ²³›ABC‹¢¥¥„“`´•", s.getExtraCharacterSetAsString());
     }
 
 }

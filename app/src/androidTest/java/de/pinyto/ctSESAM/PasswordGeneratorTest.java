@@ -12,79 +12,55 @@ public class PasswordGeneratorTest extends TestCase {
         byte[] username = UTF8.encode("hugo");
         byte[] kgk = UTF8.encode("secret");
         byte[] salt = UTF8.encode("pepper");
-        PasswordGenerator pg = new PasswordGenerator(domain, username, kgk, salt);
         try {
-            pg.hash(2);
+            PasswordGenerator pg = new PasswordGenerator(domain, username, kgk, salt, 2);
             PasswordSetting setting = new PasswordSetting("unit.test");
-            setting.setLength(10);
-            assertEquals("kajf=-=(.5", pg.getPassword(setting));
-        } catch (NotHashedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void testHashTwiceAndGetPassword () {
-        byte[] domain = UTF8.encode("unit.test");
-        byte[] username = UTF8.encode("hugo");
-        byte[] kgk = UTF8.encode("secret");
-        byte[] salt = UTF8.encode("pepper");
-        PasswordGenerator pg = new PasswordGenerator(domain, username, kgk, salt);
-        try {
-            pg.hash(2);
-            pg.hash(5);
-            PasswordSetting setting = new PasswordSetting("unit.test");
-            setting.setLength(10);
-            assertEquals("U3_p9x/ugu", pg.getPassword(setting));
+            setting.setTemplate("xxaxAnxoxx");
+            assertEquals("a0b/Q3°[4_", pg.getPassword(setting));
         } catch (NotHashedException e) {
             e.printStackTrace();
         }
     }
 
     public void testHashOnceAndGetPasswordEmptyInputs () {
-        PasswordGenerator pg = new PasswordGenerator(
-                new byte[] {},
-                new byte[] {},
-                new byte[] {},
-                new byte[] {});
         try {
-            pg.hash(2);
+            PasswordGenerator pg = new PasswordGenerator(
+                    new byte[] {},
+                    new byte[] {},
+                    new byte[] {},
+                    new byte[] {},
+                    2);
             PasswordSetting setting = new PasswordSetting("unit.test");
-            setting.setLength(10);
-            assertEquals("f7C=$851%^", pg.getPassword(setting));
-        } catch (NotHashedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void testHashOnceAndGetPasswordLengthZero () {
-        byte[] domain = UTF8.encode("unit.test");
-        byte[] username = UTF8.encode("hugo");
-        byte[] kgk = UTF8.encode("secret");
-        byte[] salt = UTF8.encode("pepper");
-        PasswordGenerator pg = new PasswordGenerator(domain, username, kgk, salt);
-        try {
-            pg.hash(2);
-            PasswordSetting setting = new PasswordSetting("unit.test");
-            setting.setLength(0);
-            assertEquals("", pg.getPassword(setting));
+            setting.setTemplate("xxaxAnxoxx");
+            assertEquals("5XmUG8z°_|", pg.getPassword(setting));
         } catch (NotHashedException e) {
             e.printStackTrace();
         }
     }
 
     public void testHashOnceAndGetPasswordLengthMax () {
-        PasswordGenerator pg = new PasswordGenerator(
-                new byte[] {},
-                new byte[] {},
-                new byte[] {},
-                new byte[] {});
         try {
-            pg.hash(2);
+            PasswordGenerator pg = new PasswordGenerator(
+                    new byte[] {},
+                    new byte[] {},
+                    new byte[] {},
+                    new byte[] {},
+                    2);
             PasswordSetting setting = new PasswordSetting("unit.test");
-            setting.setLength(1000);
-            assertEquals(79, pg.getPassword(setting).length());
+            setting.setTemplate("Aoanxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" +
+                    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" +
+                    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" +
+                    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" +
+                    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" +
+                    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" +
+                    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" +
+                    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" +
+                    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" +
+                    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" +
+                    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+            assertEquals(81, pg.getPassword(setting).length());
             assertEquals(
-                "f7C=$851%^ud;=!AIrn2kOv_nl°^P=Y%js_|_tq|=WC_;@!\"\"g@y>[W$7*te)P*see*e^gVbyBl4M{F",
+                "X=l2&d$n_|Jx}!W_]Kn°=}/r0bBvsf%P(Cb{NIyY=a^zuCvex=fu^($T)7cVwcla{j°YrVyP!^!rZP@w1",
                 pg.getPassword(setting));
         } catch (NotHashedException e) {
             e.printStackTrace();
@@ -92,14 +68,17 @@ public class PasswordGeneratorTest extends TestCase {
     }
 
     public void testHashOnceAndGetPasswordEmptyInputsZeroHashes () {
-        PasswordGenerator pg = new PasswordGenerator(
-                new byte[] {},
-                new byte[] {},
-                new byte[] {},
-                new byte[] {});
         boolean thrown = false;
         try {
-            pg.hash(0);
+            PasswordGenerator pg = new PasswordGenerator(
+                    new byte[] {},
+                    new byte[] {},
+                    new byte[] {},
+                    new byte[] {},
+                    0);
+            PasswordSetting setting = new PasswordSetting("unit.test");
+            setting.setTemplate("axonA");
+            pg.getPassword(setting);
         } catch (NotHashedException e) {
             thrown = true;
         }
@@ -111,11 +90,11 @@ public class PasswordGeneratorTest extends TestCase {
         byte[] username = UTF8.encode("hugo");
         byte[] kgk = UTF8.encode("secret");
         byte[] salt = UTF8.encode("pepper");
-        PasswordGenerator pg = new PasswordGenerator(domain, username, kgk, salt);
         boolean thrown = false;
         try {
+            PasswordGenerator pg = new PasswordGenerator(domain, username, kgk, salt, 0);
             PasswordSetting setting = new PasswordSetting("unit.test");
-            setting.setLength(1000);
+            setting.setTemplate("axonA");
             pg.getPassword(setting);
         } catch (NotHashedException e) {
             thrown = true;
@@ -128,28 +107,11 @@ public class PasswordGeneratorTest extends TestCase {
         byte[] username = UTF8.encode("hugo");
         byte[] kgk = UTF8.encode("secret");
         byte[] salt = UTF8.encode("pepper");
-        PasswordGenerator pg = new PasswordGenerator(domain, username, kgk, salt);
         boolean thrown = false;
         try {
-            pg.hash(-3);
-        } catch (NotHashedException e) {
-            thrown = true;
-        }
-        assertTrue(thrown);
-    }
-
-    public void testHashTwiceWithPositiveAndNegativeIterationCountRaisesError () {
-        byte[] domain = UTF8.encode("unit.test");
-        byte[] username = UTF8.encode("hugo");
-        byte[] kgk = UTF8.encode("secret");
-        byte[] salt = UTF8.encode("pepper");
-        PasswordGenerator pg = new PasswordGenerator(domain, username, kgk, salt);
-        boolean thrown = false;
-        try {
-            pg.hash(2);
-            pg.hash(-1);
+            PasswordGenerator pg = new PasswordGenerator(domain, username, kgk, salt, -3);
             PasswordSetting setting = new PasswordSetting("unit.test");
-            setting.setLength(1000);
+            setting.setTemplate("axonA");
             pg.getPassword(setting);
         } catch (NotHashedException e) {
             thrown = true;

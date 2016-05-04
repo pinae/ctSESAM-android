@@ -1,6 +1,7 @@
 package de.pinyto.ctSESAM;
 
 import android.util.Base64;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -347,12 +348,13 @@ public class PasswordSetting {
                                    boolean useUpperCase,
                                    boolean useDigits,
                                    boolean useExtra) {
+        int targetLength = this.getLength();
         this.template = "";
         boolean aInserted = false;
         boolean AInserted = false;
         boolean nInserted = false;
         boolean oInserted = false;
-        for (int i = 0; i < this.getLength(); i++) {
+        for (int i = 0; i < targetLength; i++) {
             if (useLowerCase && !aInserted) {
                 this.template = this.template + "a";
                 aInserted = true;
@@ -390,11 +392,13 @@ public class PasswordSetting {
         return this.template;
     }
 
-    public void setFullTemplate(String fullTemplate) {
-        Matcher matcher = Pattern.compile("([0123456]);([aAnox]+)").matcher(fullTemplate);
-        if (matcher.matches() && matcher.groupCount() >= 2) {
-            int complexity = Integer.parseInt(matcher.group(1));
-            this.template = matcher.group(2);
+    public void setTemplate(String template) {
+        Matcher matcher = Pattern.compile("(([01234567]);)?([aAnox]+)").matcher(template);
+        if (matcher.matches() && matcher.groupCount() >= 3) {
+            if (matcher.group(2) != null) {
+                this.setComplexity(Integer.parseInt(matcher.group(2)));
+            }
+            this.template = matcher.group(3);
         }
     }
 
@@ -422,6 +426,12 @@ public class PasswordSetting {
             return 6;
         } else {
             return -1;
+        }
+    }
+
+    public void setComplexity(int complexity) {
+        if (complexity < 0 || complexity > 7) {
+            Log.e("Complexity error", "Illegal complexity: " + Integer.toString(complexity));
         }
     }
 
@@ -456,7 +466,7 @@ public class PasswordSetting {
             domainObject.put("cDate", this.getCreationDate());
             domainObject.put("mDate", this.getModificationDate());
             domainObject.put("extras", this.getExtraCharacterSetAsString());
-            domainObject.put("passwordTemplate", this.getFullTemplate());
+            domainObject.put("passwordTemplate", this.getTemplate());
         } catch (JSONException e) {
             System.out.println("Settings packing error: Unable to pack the JSON data.");
         }
@@ -495,7 +505,7 @@ public class PasswordSetting {
             this.setExtraCharacterSet(loadedSetting.getString("extras"));
         }
         if (loadedSetting.has("passwordTemplate")) {
-            this.setFullTemplate(loadedSetting.getString("passwordTemplate"));
+            this.setTemplate(loadedSetting.getString("passwordTemplate"));
         }
         if (loadedSetting.has("length") && loadedSetting.has("usedCharacters") &&
                 !loadedSetting.has("passwordTemplate")) {

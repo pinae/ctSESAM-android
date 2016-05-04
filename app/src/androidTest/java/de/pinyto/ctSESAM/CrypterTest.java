@@ -29,19 +29,19 @@ public class CrypterTest extends TestCase {
         Crypter crypter = new Crypter(Crypter.createKey(password, new byte[]{}));
         byte[] ciphertext = crypter.encrypt(message);
         assertEquals(
-                "62fqFDS+SftUttn7LVPG+Jpd1TeW6+Z77iwQlgZItkp0Z8BBlhsiR/FB9WD7nL2gXK8tjAr/rgLe\n" +
-                "HYrz5M4BztfWwZuYL7QZVD5PaEkLMBctNpUzvagAlopCCqmFQaFnd2S1nExtG6d5Isuj6wsQNBCh\n" +
-                "ZlF4Yr2cx/tOQ50D9LenWa7k77UKIUKwMiactwCHt+BV/gQTd2bmlzBegioD1WKi0hqX8rAUnEm5\n" +
-                "9cRVbUUn8Bkm4SiOz/AQyyfAlXx24GoTZZj42olJX8LqnXqe+g==\n",
+                "5XJcX8Ju/KY9P17gSZWbvsMCxazUyWVS3SmGpwOqOJkBQU1Cyu0n9RkxbNJ1CJSoF8BPTH5d5xy6\n" +
+                "IGIUb3kN6EdWBppTk/PAHbgQX/tBiW2Uwi7DMEg6GGebqr+Dj94Ur9JnpiCRUTZfDgUyTpy5GQQ3\n" +
+                "TQUlDTqpvs+5n6cpdombXBnpcfl2ddQhawJLOFpGtED0h4LZtW0nEc7mvvSSRosXHohRNScrUCg0\n" +
+                "Jm5/J29HVXQmFEyNmHYt2Wckk1gCP+Mt34klaNnuk3yFDLtQmg==\n",
                 Base64.encodeToString(ciphertext, Base64.DEFAULT));
     }
 
     public void testDecrypt() {
         String cyphertext =
-                "62fqFDS+SftUttn7LVPG+Jpd1TeW6+Z77iwQlgZItkp0Z8BBlhsiR/FB9WD7nL2gXK8tjAr/rgLe\n" +
-                "HYrz5M4BztfWwZuYL7QZVD5PaEkLMBctNpUzvagAlopCCqmFQaFnd2S1nExtG6d5Isuj6wsQNBCh\n" +
-                "ZlF4Yr2cx/tOQ50D9LenWa7k77UKIUKwMiactwCHt+BV/gQTd2bmlzBegioD1WKi0hqX8rAUnEm5\n" +
-                "9cRVbUUn8Bkm4SiOz/AQyyfAlXx24GoTZZj42olJX8LqnXqe+g==\n";
+                "5XJcX8Ju/KY9P17gSZWbvsMCxazUyWVS3SmGpwOqOJkBQU1Cyu0n9RkxbNJ1CJSoF8BPTH5d5xy6\n" +
+                "IGIUb3kN6EdWBppTk/PAHbgQX/tBiW2Uwi7DMEg6GGebqr+Dj94Ur9JnpiCRUTZfDgUyTpy5GQQ3\n" +
+                "TQUlDTqpvs+5n6cpdombXBnpcfl2ddQhawJLOFpGtED0h4LZtW0nEc7mvvSSRosXHohRNScrUCg0\n" +
+                "Jm5/J29HVXQmFEyNmHYt2Wckk1gCP+Mt34klaNnuk3yFDLtQmg==\n";
         byte[] password;
         try {
             password = "secret".getBytes("UTF-8");

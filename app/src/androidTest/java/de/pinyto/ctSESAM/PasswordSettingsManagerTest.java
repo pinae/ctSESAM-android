@@ -31,15 +31,9 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
 
     public void testSetSetting() {
         PasswordSetting setting = new PasswordSetting("unit.test");
-        setting.setUseDigits(true);
-        setting.setUseLetters(false);
-        setting.setUseExtra(false);
-        setting.setLength(4);
+        setting.setTemplate("nnnn");
         settingsManager.setSetting(setting);
         PasswordSetting checkSetting = settingsManager.getSetting("unit.test");
-        assertTrue(checkSetting.useDigits());
-        assertFalse(checkSetting.useLetters());
-        assertFalse(checkSetting.useExtra());
         assertEquals(4, checkSetting.getLength());
         assertEquals(4096, checkSetting.getIterations());
         settingsManager.deleteSetting(checkSetting.getDomain());
@@ -54,7 +48,8 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
 
     public void testSaveUnsupportedSettings() {
         PasswordSetting setting = new PasswordSetting("unit.test");
-        setting.setCharacterSet("ABCKWXkwx345/$#");
+        setting.setExtraCharacterSet("ABCKWXkwx345/$#");
+        setting.setTemplate("ooooooo");
         setting.setLegacyPassword("Insecure");
         setting.setUsername("hugo");
         setting.setSalt("hmpf".getBytes());
@@ -88,10 +83,7 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
 
     public void testGetBlob() {
         PasswordSetting setting = new PasswordSetting("unit.test");
-        setting.setUseDigits(true);
-        setting.setUseLetters(false);
-        setting.setUseExtra(false);
-        setting.setLength(4);
+        setting.setTemplate("nnnn");
         settingsManager.setSetting(setting);
         byte[] password = "some secret".getBytes();
         kgkManager.decryptKgk(password,
@@ -112,8 +104,11 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
                 JSONObject dataset = data.getJSONObject(keysIterator.next());
                 if (dataset.getString("domain").equals("unit.test")) {
                     found = true;
-                    assertEquals("0123456789", dataset.getString("usedCharacters"));
-                    assertEquals(4, dataset.getInt("length"));
+                    assertTrue(dataset.has("extras"));
+                    assertEquals("#!\"~|@^°$%&/()[]{}=-_+*<>;:.", dataset.getString("extras"));
+                    assertTrue(dataset.has("passwordTemplate"));
+                    assertEquals("nnnn", dataset.getString("passwordTemplate"));
+                    assertTrue(dataset.has("iterations"));
                     assertEquals(4096, dataset.getInt("iterations"));
                 }
             }
@@ -126,10 +121,7 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
 
     public void testUpdateBlob() {
         PasswordSetting setting = new PasswordSetting("unit.test");
-        setting.setUseDigits(true);
-        setting.setUseLetters(false);
-        setting.setUseExtra(false);
-        setting.setLength(4);
+        setting.setTemplate("nnnn");
         setting.setCreationDate("2001-01-01T02:14:12");
         setting.setModificationDate("2001-01-01T02:14:13");
         settingsManager.setSetting(setting);
@@ -177,9 +169,6 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
             assertEquals("2001-01-01T02:14:12", updated.getCreationDate());
             assertEquals(4097, updated.getIterations());
             assertEquals(12, updated.getLength());
-            assertTrue(updated.useDigits());
-            assertFalse(updated.useLetters());
-            assertFalse(updated.useExtra());
         } catch (JSONException e) {
             e.printStackTrace();
             assertTrue(false);
@@ -189,10 +178,7 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
 
     public void testSetAllSettingsToSynced() {
         PasswordSetting setting = new PasswordSetting("unit.test");
-        setting.setUseDigits(true);
-        setting.setUseLetters(false);
-        setting.setUseExtra(false);
-        setting.setLength(4);
+        setting.setTemplate("nnnn");
         setting.setCreationDate("2001-01-01T02:14:12");
         setting.setModificationDate("2001-01-01T02:14:13");
         settingsManager.setSetting(setting);
@@ -216,10 +202,7 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
 
     public void testSaveAndLoadLocally() {
         PasswordSetting setting = new PasswordSetting("unit.test");
-        setting.setUseDigits(true);
-        setting.setUseLetters(false);
-        setting.setUseExtra(false);
-        setting.setLength(4);
+        setting.setTemplate("nnnn");
         setting.setCreationDate("2001-01-01T02:14:12");
         setting.setModificationDate("2001-01-01T02:14:13");
         settingsManager.setSetting(setting);
