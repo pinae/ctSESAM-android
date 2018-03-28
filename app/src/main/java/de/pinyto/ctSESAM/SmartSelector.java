@@ -7,10 +7,8 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import java.util.HashMap;
 
 /**
  * TODO: document your custom view class.
@@ -157,7 +155,6 @@ public class SmartSelector extends View {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_DOWN:
             case MotionEvent.ACTION_MOVE:
-                //event.getPointerId(0);
                 float x = event.getX(0);
                 float y = event.getY(0);
                 selectTile(x, y);
