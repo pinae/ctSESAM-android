@@ -17,10 +17,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
+            <de.pinyto.ctSESAM.SmartSelector
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/smartSelector" />
+
             <TextView
                 android:text="@string/masterpassword"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_below="@+id/smartSelector"
                 android:id="@+id/textViewMasterpasswordHeading" />
 
             <EditText

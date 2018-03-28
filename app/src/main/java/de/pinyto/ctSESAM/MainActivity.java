@@ -276,6 +276,15 @@ public class MainActivity extends AppCompatActivity {
                 generatePassword();
             }
         });
+
+        SmartSelector smartSelector = (SmartSelector) findViewById(R.id.smartSelector);
+        smartSelector.setOnStrengthSelectedEventListener(
+                new SmartSelector.OnStrengthSelectedEventListener() {
+            @Override
+            public void onStrengthSelected(int length, int complexity) {
+                Log.d("Password complexity", Integer.toString(length) + " | " + Integer.toString(complexity));
+            }
+        });
     }
 
     private boolean isAppInstalled(String packageName) {

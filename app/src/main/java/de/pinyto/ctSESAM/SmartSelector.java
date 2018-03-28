@@ -30,6 +30,7 @@ public class SmartSelector extends View {
     private int extra_count = 24;
     private int selectedComplexity = -1;
     private int selectedLength = -1;
+    OnStrengthSelectedEventListener StrengthSelectedListener;
 
     public SmartSelector(Context context) {
         super(context);
@@ -59,6 +60,14 @@ public class SmartSelector extends View {
         tilePaint.setColor(0xff0000aa);
         tilePaint.setStyle(Paint.Style.FILL);
         calculateColorMatrix();
+    }
+
+    public interface OnStrengthSelectedEventListener {
+        void onStrengthSelected(int length, int complexity);
+    }
+
+    public void setOnStrengthSelectedEventListener(OnStrengthSelectedEventListener eventListener) {
+        StrengthSelectedListener = eventListener;
     }
 
     private void calculatePadding() {
@@ -135,8 +144,10 @@ public class SmartSelector extends View {
         float tileWidth = (float) (contentWidth-1) / (maxLength-minLength+1);
         selectedLength = (int) (x / tileWidth);
         selectedComplexity = (int) (y / tileHeight);
-        Log.d("Selected", "(" + Integer.toString((int) (x / tileWidth)) + ", " +
-                Integer.toString((int) (y / tileHeight)) + ")");
+        if (StrengthSelectedListener != null) {
+            StrengthSelectedListener.onStrengthSelected(minLength+selectedLength,
+                    colorMatrix[0].length-1-selectedComplexity);
+        }
     }
 
     @Override
