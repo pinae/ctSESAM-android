@@ -16,16 +16,15 @@ import android.view.View;
 public class SmartSelector extends View {
     private int tileHeight = 60;
     private int contentWidth;
-    private int contentHeight;
     private Rect wholeCanvasRect;
     private Paint backgroundPaint, tilePaint;
     private int[][] colorMatrix;
     private int minLength = 4;
     private int maxLength = 32;
-    private int digit_count = 10;
-    private int lower_count = 36;
-    private int upper_count = 36;
-    private int extra_count = 24;
+    private int digitCount = 10;
+    private int lowerCount = 36;
+    private int upperCount = 36;
+    private int extraCount = 24;
     private int selectedComplexity = -1;
     private int selectedLength = -1;
     OnStrengthSelectedEventListener StrengthSelectedListener;
@@ -74,7 +73,7 @@ public class SmartSelector extends View {
         int paddingRight = getPaddingRight();
         int paddingBottom = getPaddingBottom();
         contentWidth = getWidth() - paddingLeft - paddingRight;
-        contentHeight = getHeight() - paddingTop - paddingBottom;
+        int contentHeight = getHeight() - paddingTop - paddingBottom;
         wholeCanvasRect = new Rect(0, 0, contentWidth, contentHeight);
     }
 
@@ -86,13 +85,13 @@ public class SmartSelector extends View {
 
     private void calculateColorMatrix() {
         int[] complexity = new int[]{
-                digit_count,
-                lower_count,
-                upper_count,
-                digit_count + lower_count,
-                lower_count + upper_count,
-                lower_count + upper_count + digit_count,
-                lower_count + upper_count + digit_count + extra_count};
+                digitCount,
+                lowerCount,
+                upperCount,
+                digitCount + lowerCount,
+                lowerCount + upperCount,
+                lowerCount + upperCount + digitCount,
+                lowerCount + upperCount + digitCount + extraCount};
         colorMatrix = new int[maxLength-minLength+1][complexity.length];
         for (int i = 0; i < maxLength-minLength+1; i++) {
             for (int j=0; j < complexity.length; j++) {
@@ -172,5 +171,27 @@ public class SmartSelector extends View {
     @Override
     public boolean performClick() {
         return super.performClick();
+    }
+
+    public void setCharacterCounts(int digitCount, int lowerCount,
+                                   int upperCount, int extraCount) {
+        this.digitCount = digitCount;
+        this.lowerCount = lowerCount;
+        this.upperCount = upperCount;
+        this.extraCount = extraCount;
+        calculateColorMatrix();
+        postInvalidate();
+    }
+
+    public void setMinLength(int minLength) {
+        this.minLength = minLength;
+        calculateColorMatrix();
+        postInvalidate();
+    }
+
+    public void setMaxLength(int maxLength) {
+        this.maxLength = maxLength;
+        calculateColorMatrix();
+        postInvalidate();
     }
 }
