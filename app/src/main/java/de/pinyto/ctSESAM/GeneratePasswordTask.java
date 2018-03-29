@@ -11,11 +11,11 @@ import java.util.Arrays;
  * Calculate a password and display it.
  */
 class GeneratePasswordTask extends AsyncTask<byte[], Void, PasswordGenerator> {
-    private WeakReference<MainActivity> mainActivityWeakRef;
+    private WeakReference<OnPasswordGeneratedListener> passwordGeneratedListenerWeakRef;
 
-    GeneratePasswordTask(MainActivity mainActivity) {
+    GeneratePasswordTask(OnPasswordGeneratedListener passwordGeneratedListener) {
         super();
-        this.mainActivityWeakRef = new WeakReference<>(mainActivity);
+        this.passwordGeneratedListenerWeakRef = new WeakReference<>(passwordGeneratedListener);
     }
 
     @Override
@@ -41,10 +41,14 @@ class GeneratePasswordTask extends AsyncTask<byte[], Void, PasswordGenerator> {
 
     @Override
     protected void onPostExecute(PasswordGenerator generator) {
-        MainActivity activity = mainActivityWeakRef.get();
-        if (activity != null && !activity.isFinishing()) {
-            activity.setPasswordGenerator(generator);
-            activity.generatePassword();
+        OnPasswordGeneratedListener passwordGeneratedListener =
+                passwordGeneratedListenerWeakRef.get();
+        if (passwordGeneratedListener != null) {
+            passwordGeneratedListener.onFinished(generator);
         }
+    }
+
+    public interface OnPasswordGeneratedListener {
+        void onFinished(PasswordGenerator generator);
     }
 }

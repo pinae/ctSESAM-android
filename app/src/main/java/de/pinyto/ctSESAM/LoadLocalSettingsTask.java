@@ -1,11 +1,6 @@
 package de.pinyto.ctSESAM;
 
 import android.os.AsyncTask;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
-import android.widget.TextView;
-import android.widget.Toast;
-
 import java.lang.ref.WeakReference;
 
 /**
@@ -14,13 +9,13 @@ import java.lang.ref.WeakReference;
 public class LoadLocalSettingsTask extends AsyncTask<byte[], Void, byte[]> {
     private KgkManager kgkManager;
     private PasswordSettingsManager settingsManager;
-    private WeakReference<MainActivity> mainActivityWeakRef;
+    private WeakReference<OnKgkDecryptionFinishedListener> finishedListenerWeakRef;
 
-    LoadLocalSettingsTask(MainActivity mainActivity,
+    LoadLocalSettingsTask(OnKgkDecryptionFinishedListener finishedListener,
                           KgkManager kgkManager,
                           PasswordSettingsManager settingsManager) {
         super();
-        this.mainActivityWeakRef = new WeakReference<>(mainActivity);
+        this.finishedListenerWeakRef = new WeakReference<>(finishedListener);
         this.kgkManager = kgkManager;
         this.settingsManager = settingsManager;
     }
@@ -40,24 +35,21 @@ public class LoadLocalSettingsTask extends AsyncTask<byte[], Void, byte[]> {
     protected void onPostExecute(byte[] ivKey) {
         byte[] encryptedKgkBlock = kgkManager.gelLocalKgkBlock();
         kgkManager.decryptKgk(new Crypter(ivKey), encryptedKgkBlock);
-        MainActivity activity = mainActivityWeakRef.get();
-        if (activity != null && !activity.isFinishing()) {
-            AutoCompleteTextView autoCompleteTextViewDomain =
-                    (AutoCompleteTextView) activity.findViewById(R.id.autoCompleteTextViewDomain);
-            try {
-                settingsManager.loadLocalSettings(kgkManager);
-            } catch (WrongPasswordException passwordError) {
-                Toast.makeText(activity.getBaseContext(),
-                        R.string.local_wrong_password, Toast.LENGTH_SHORT).show();
-                autoCompleteTextViewDomain.dismissDropDown();
-                kgkManager.reset();
+        OnKgkDecryptionFinishedListener finishedListener = finishedListenerWeakRef.get();
+        try {
+            settingsManager.loadLocalSettings(kgkManager);
+            if (finishedListener != null) {
+                finishedListener.onFinished(true);
             }
-            TextView loadingMessage =
-                    (TextView) activity.findViewById(R.id.textViewDecryptionMessage);
-            loadingMessage.setText("");
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(activity.getBaseContext(),
-                    android.R.layout.simple_dropdown_item_1line, settingsManager.getDomainList());
-            autoCompleteTextViewDomain.setAdapter(adapter);
+        } catch (WrongPasswordException passwordError) {
+            kgkManager.reset();
+            if (finishedListener != null) {
+                finishedListener.onFinished(false);
+            }
         }
+    }
+
+    public interface OnKgkDecryptionFinishedListener {
+        void onFinished(boolean success);
     }
 }

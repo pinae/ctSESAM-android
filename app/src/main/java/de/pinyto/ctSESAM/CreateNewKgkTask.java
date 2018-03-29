@@ -1,9 +1,6 @@
 package de.pinyto.ctSESAM;
 
 import android.os.AsyncTask;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
-import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
 
@@ -13,13 +10,13 @@ import java.lang.ref.WeakReference;
 class CreateNewKgkTask extends AsyncTask<byte[], byte[], byte[]> {
     private KgkManager kgkManager;
     private PasswordSettingsManager settingsManager;
-    private WeakReference<MainActivity> mainActivityWeakRef;
+    private WeakReference<OnNewKgkFinishedListener> finishedListenerWeakRef;
 
-    CreateNewKgkTask(MainActivity mainActivity,
+    CreateNewKgkTask(OnNewKgkFinishedListener finishedListener,
                      KgkManager kgkManager,
                      PasswordSettingsManager settingsManager) {
         super();
-        this.mainActivityWeakRef = new WeakReference<>(mainActivity);
+        this.finishedListenerWeakRef = new WeakReference<>(finishedListener);
         this.kgkManager = kgkManager;
         this.settingsManager = settingsManager;
     }
@@ -36,34 +33,23 @@ class CreateNewKgkTask extends AsyncTask<byte[], byte[], byte[]> {
     }
 
     @Override
-    protected void onPreExecute() {
-        MainActivity activity = mainActivityWeakRef.get();
-        if (activity != null && !activity.isFinishing()) {
-            TextView loadingMessage =
-                    (TextView) activity.findViewById(R.id.textViewDecryptionMessage);
-            loadingMessage.setText(activity.getString(R.string.creatingKgk));
+    protected void onPostExecute(byte[] ivKey) {
+        kgkManager.createAndStoreNewKgkBlock(new Crypter(ivKey));
+        OnNewKgkFinishedListener finishedListener = finishedListenerWeakRef.get();
+        try {
+            settingsManager.loadLocalSettings(kgkManager);
+            if (finishedListener != null) {
+                finishedListener.onFinished(true);
+            }
+        } catch (WrongPasswordException passwordError) {
+            passwordError.printStackTrace();
+            if (finishedListener != null) {
+                finishedListener.onFinished(false);
+            }
         }
     }
 
-    @Override
-    protected void onPostExecute(byte[] ivKey) {
-        kgkManager.createAndStoreNewKgkBlock(new Crypter(ivKey));
-        MainActivity activity = mainActivityWeakRef.get();
-        if (activity != null && !activity.isFinishing()) {
-            AutoCompleteTextView autoCompleteTextViewDomain =
-                    (AutoCompleteTextView) activity.findViewById(R.id.autoCompleteTextViewDomain);
-            try {
-                settingsManager.loadLocalSettings(kgkManager);
-            } catch (WrongPasswordException passwordError) {
-                passwordError.printStackTrace();
-                autoCompleteTextViewDomain.dismissDropDown();
-            }
-            TextView loadingMessage =
-                    (TextView) activity.findViewById(R.id.textViewDecryptionMessage);
-            loadingMessage.setText("");
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(activity.getBaseContext(),
-                    android.R.layout.simple_dropdown_item_1line, settingsManager.getDomainList());
-            autoCompleteTextViewDomain.setAdapter(adapter);
-        }
+    public interface OnNewKgkFinishedListener {
+        void onFinished(boolean success);
     }
 }
