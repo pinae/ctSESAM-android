@@ -24,4 +24,8 @@
     <string name="sync_loaded">Einstellungen geladen</string>
     <string name="contentDescriptionForce">Eines dieser Zeichen muss im Passwort vorkommen</string>
     <string name="contentDescriptionInSet">Diese Zeichen können im Passwort vorkommen</string>
+    <string name="unlock">Entsperren</string>
+    <string name="KgkCreationError">Es gab einen Fehler beim erzeugen des Kgk.</string>
+    <string name="settingsListEmpty">Nichts.</string>
+    <string name="KgkCreationFinished">Der neue Kgk wurde erzeugt. Versuchen Sie zu entsperren.</string>
 </resources>

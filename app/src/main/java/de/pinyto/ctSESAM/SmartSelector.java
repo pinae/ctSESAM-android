@@ -11,7 +11,11 @@ import android.view.MotionEvent;
 import android.view.View;
 
 /**
- * TODO: document your custom view class.
+ * Two-dimensional View for selecting a password strength. It selects
+ * the length and the complexity (number of different characters) at
+ * the same time. It can also be used to display the current selection.
+ * Colors indicate if the selected strength is sufficient for a secure
+ * password (green) or not (red).
  */
 public class SmartSelector extends View {
     private int tileHeight = 60;
@@ -98,10 +102,10 @@ public class SmartSelector extends View {
                 double s = 20;
                 double tianhe2_years = (Math.pow(complexity[j], (i+minLength))*0.4/3120000)/
                         (60*60*24*365);
-                double strength_red = 1-s/(s+Math.log(tianhe2_years+1)/Math.log(50));
-                double strength_green = 1-s/(s+Math.log(tianhe2_years+1)/Math.log(1.2));
-                int redValue = (int) Math.round(215*(1-strength_red));
-                int greenValue = (int) Math.round(190*strength_green);
+                double stren_r = 1-s/(s+Math.log(tianhe2_years+1)/Math.log(50));
+                double stren_g = 1-s/(s+Math.log(tianhe2_years+1)/Math.log(1.2));
+                int redValue = (int) Math.round(215*(1-stren_r));
+                int greenValue = (int) Math.round(190*stren_g);
                 colorMatrix[i][j] = Color.argb(0xff, redValue, greenValue, 0);
             }
         }
@@ -168,10 +172,10 @@ public class SmartSelector extends View {
         return true;
     }
 
-    @Override
+    /*@Override
     public boolean performClick() {
         return super.performClick();
-    }
+    }*/
 
     public void setCharacterCounts(int digitCount, int lowerCount,
                                    int upperCount, int extraCount) {
@@ -193,5 +197,13 @@ public class SmartSelector extends View {
         this.maxLength = maxLength;
         calculateColorMatrix();
         postInvalidate();
+    }
+
+    public void setSelectedComplexity(int complexity) {
+        this.selectedComplexity = complexity;
+    }
+
+    public void setSelectedLength(int length) {
+        this.selectedLength = length;
     }
 }

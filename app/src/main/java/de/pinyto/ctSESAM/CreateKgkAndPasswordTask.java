@@ -52,7 +52,13 @@ class CreateKgkAndPasswordTask extends AsyncTask<byte[], Void, byte[]> {
             EditText editTextUsername =
                     (EditText) activity.findViewById(R.id.editTextUsername);
             byte[] username = UTF8.encode(editTextUsername.getText());
-            GeneratePasswordTask generatePasswordTask = new GeneratePasswordTask(activity);
+            GeneratePasswordTask generatePasswordTask = new GeneratePasswordTask(
+                    new GeneratePasswordTask.OnPasswordGeneratedListener() {
+                @Override
+                public void onFinished(PasswordGenerator generator) {
+                    // TODO: Do Stuff Here
+                }
+            });
             generatePasswordTask.execute(
                     domain,
                     username,

@@ -1,6 +1,8 @@
 package de.pinyto.ctSESAM;
 
 import android.os.AsyncTask;
+import android.util.Log;
+
 import java.lang.ref.WeakReference;
 
 /**

@@ -3,7 +3,7 @@ package de.pinyto.ctSESAM;
 import android.app.Activity;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.app.Fragment;
 import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,6 +17,9 @@ import android.widget.TextView;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 
 /**
@@ -35,6 +38,7 @@ public class DomainDetails extends Fragment {
     private OnPasswordGeneratedListener passwordGeneratedListener;
     private TextView textViewPassword;
     private TextView passwordHeading;
+    private SmartSelector smartSelector;
     private Button generateButton;
     private boolean showSettings = false;
     private boolean showPassword = false;
@@ -77,6 +81,31 @@ public class DomainDetails extends Fragment {
         View fLayout = inflater.inflate(R.layout.fragment_domain_details, container, false);
         textViewPassword = (TextView) fLayout.findViewById(R.id.textViewPassword);
         passwordHeading = (TextView) fLayout.findViewById(R.id.textViewPasswordHeading);
+        smartSelector = (SmartSelector) fLayout.findViewById(R.id.smartSelector);
+        smartSelector.setOnStrengthSelectedEventListener(
+                new SmartSelector.OnStrengthSelectedEventListener() {
+            @Override
+            public void onStrengthSelected(int length, int complexity) {
+                StringBuilder template = new StringBuilder();
+                if (complexity % 3 == 0 || complexity >= 5) {
+                    template.append("n");
+                }
+                if (complexity == 1 || complexity >= 3) {
+                    template.append("a");
+                }
+                if (complexity == 2 || complexity >= 4) {
+                    template.append("A");
+                }
+                if (complexity >= 6) {
+                    template.append("o");
+                }
+                while (template.length() < length) {
+                    template.append("x");
+                }
+                String shuffledTemplate = shuffleString(template.toString());
+                setting.setTemplate(shuffledTemplate);
+            }
+        });
         generateButton = (Button) fLayout.findViewById(R.id.generatorButton);
         generateButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -182,5 +211,20 @@ public class DomainDetails extends Fragment {
             passwordHeading.setVisibility(View.INVISIBLE);
             textViewPassword.setVisibility(View.INVISIBLE);
         }
+    }
+
+    private static String shuffleString(String string)
+    {
+        List<String> letters = Arrays.asList(string.split(""));
+        Collections.shuffle(letters);
+        String shuffled = "";
+        for (String letter : letters) {
+            shuffled += letter;
+        }
+        return shuffled;
+    }
+
+    public void clearPassword() {
+        textViewPassword.setText("");
     }
 }

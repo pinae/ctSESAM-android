@@ -227,12 +227,12 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
             Message msg = Message.obtain(null, SyncResponseHandler.REQUEST_SYNC, 0, 0);
-            msg.replyTo = new Messenger(new SyncResponseHandler(
+            /*msg.replyTo = new Messenger(new SyncResponseHandler(
                     this,
                     kgkManager,
                     settingsManager,
                     mService,
-                    mBound));
+                    mBound));*/
             try {
                 mService.send(msg);
             } catch (RemoteException e) {

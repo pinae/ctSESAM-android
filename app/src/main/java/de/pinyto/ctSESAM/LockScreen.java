@@ -2,8 +2,9 @@ package de.pinyto.ctSESAM;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.app.Fragment;
 import android.text.Editable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +29,8 @@ public class LockScreen extends Fragment {
     private PasswordSettingsManager settingsManager;
     private EditText editTextMasterPassword;
     private TextView textViewDecryptionMessage;
+    private LoadLocalSettingsTask.OnKgkDecryptionFinishedListener kgkDecryptionFinishedListener;
+    private CreateNewKgkTask.OnNewKgkFinishedListener newKgkFinishedListener;
 
     public LockScreen() {
         // Required empty public constructor
@@ -70,6 +73,7 @@ public class LockScreen extends Fragment {
 
     @Override
     public void onPause() {
+        super.onPause();
         clearMasterPassword();
     }
 
@@ -84,7 +88,6 @@ public class LockScreen extends Fragment {
         }
         kgkManager = new KgkManager(activity.getBaseContext());
         settingsManager = new PasswordSettingsManager(activity.getBaseContext());
-        clearMasterPassword();
     }
 
     @Override
@@ -99,6 +102,10 @@ public class LockScreen extends Fragment {
      */
     public interface OnUnlockSuccessfulListener {
         void onUnlock(KgkManager kgkManager);
+    }
+
+    public void setUnlockSuccessfulListener(OnUnlockSuccessfulListener listener) {
+        this.unlockSuccessfulListener = listener;
     }
 
     private void clearMasterPassword() {
@@ -125,19 +132,21 @@ public class LockScreen extends Fragment {
         if (kgkManager.gelLocalKgkBlock().length == 112) {
             setMessageTextStyle(false);
             textViewDecryptionMessage.setText(getString(R.string.loading));
-            LoadLocalSettingsTask loadLocalSettingsTask = new LoadLocalSettingsTask(
+            kgkDecryptionFinishedListener =
                     new LoadLocalSettingsTask.OnKgkDecryptionFinishedListener() {
-                        @Override
-                        public void onFinished(boolean success) {
-                            if (success) {
-                                textViewDecryptionMessage.setText("");
-                                unlockSuccessfulListener.onUnlock(kgkManager);
-                            } else {
-                                setMessageTextStyle(true);
-                                textViewDecryptionMessage.setText(R.string.local_wrong_password);
-                            }
-                        }
-                    },
+                @Override
+                public void onFinished(boolean success) {
+                    if (success) {
+                        textViewDecryptionMessage.setText("");
+                        unlockSuccessfulListener.onUnlock(kgkManager);
+                    } else {
+                        setMessageTextStyle(true);
+                        textViewDecryptionMessage.setText(R.string.local_wrong_password);
+                    }
+                }
+            };
+            LoadLocalSettingsTask loadLocalSettingsTask = new LoadLocalSettingsTask(
+                    kgkDecryptionFinishedListener,
                     kgkManager,
                     settingsManager);
             loadLocalSettingsTask.execute(password, kgkManager.getKgkCrypterSalt());
@@ -145,21 +154,22 @@ public class LockScreen extends Fragment {
             kgkManager.storeSalt(Crypter.createSalt());
             setMessageTextStyle(false);
             textViewDecryptionMessage.setText(getString(R.string.creatingKgk));
+            newKgkFinishedListener = new CreateNewKgkTask.OnNewKgkFinishedListener() {
+                @Override
+                public void onFinished(boolean success) {
+                    if (success) {
+                        setMessageTextStyle(false);
+                        textViewDecryptionMessage.setText(
+                                getString(R.string.KgkCreationFinished));
+                    } else {
+                        setMessageTextStyle(true);
+                        textViewDecryptionMessage.setText(
+                                getString(R.string.KgkCreationError));
+                    }
+                }
+            };
             CreateNewKgkTask createNewKgkTask = new CreateNewKgkTask(
-                    new CreateNewKgkTask.OnNewKgkFinishedListener() {
-                        @Override
-                        public void onFinished(boolean success) {
-                            if (success) {
-                                setMessageTextStyle(false);
-                                textViewDecryptionMessage.setText(
-                                        getString(R.string.KgkCreationFinished));
-                            } else {
-                                setMessageTextStyle(true);
-                                textViewDecryptionMessage.setText(
-                                        getString(R.string.KgkCreationError));
-                            }
-                        }
-                    },
+                    newKgkFinishedListener,
                     kgkManager,
                     settingsManager);
             createNewKgkTask.execute(password, kgkManager.getKgkCrypterSalt());

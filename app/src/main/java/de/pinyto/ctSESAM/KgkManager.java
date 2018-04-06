@@ -26,6 +26,13 @@ public class KgkManager {
                 "savedDomains", Context.MODE_PRIVATE);
     }
 
+    KgkManager(Context contentContext, byte[] keyIv) {
+        this.savedDomains = contentContext.getSharedPreferences(
+                "savedDomains", Context.MODE_PRIVATE);
+        this.kgkCrypter = new Crypter(keyIv);
+        getKgkCrypterSalt();
+    }
+
     public byte[] getKgkCrypterSalt() {
         byte[] salt = Base64.decode(
                 this.savedDomains.getString("salt", ""),
@@ -163,10 +170,20 @@ public class KgkManager {
     }
 
     public void reset() {
+        Clearer.zero(this.salt);
+        Clearer.zero(this.iv2);
+        Clearer.zero(this.salt2);
+        Clearer.zero(this.kgk);
         this.salt = null;
         this.iv2 = null;
         this.salt2 = null;
         this.kgk = null;
         this.kgkCrypter = null;
+    }
+
+    public byte[] exportKeyIvAndReset() {
+        byte[] keyIv = this.kgkCrypter.exportKeyIvAndClear();
+        this.reset();
+        return keyIv;
     }
 }
