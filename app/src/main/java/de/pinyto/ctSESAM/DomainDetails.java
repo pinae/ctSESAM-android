@@ -225,6 +225,8 @@ public class DomainDetails extends Fragment {
     }
 
     public void clearPassword() {
-        textViewPassword.setText("");
+        if (textViewPassword != null) {
+            textViewPassword.setText("");
+        }
     }
 }

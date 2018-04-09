@@ -21,16 +21,18 @@
             android:id="@+id/listDomainName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
             android:layout_marginLeft="@dimen/text_margin"
             android:layout_marginTop="4dp"
-            android:textAppearance="?attr/textAppearanceListItem" />
+            android:text="Abcdefghijklmnopqrtuvwxyz"
+            android:textAppearance="?attr/textAppearanceListItem"
+            android:textSize="24sp" />
 
         <TextView
             android:id="@+id/listSettingHints"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="right" />
+            android:gravity="right"
+            android:textSize="8sp" />
 
     </LinearLayout>
 </LinearLayout>

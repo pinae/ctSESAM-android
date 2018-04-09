@@ -20,11 +20,14 @@ public class DomainDetailsActivity extends SyncServiceEnabledFragmentActivity {
                 intent.getStringExtra(PasswordSettingsListActivity.DOMAIN));
         domainDetailsFragment = (DomainDetails) getFragmentManager().findFragmentById(
                 R.id.domainDetailsFragment);
+        setToNotGenerated();
     }
 
     protected void setToNotGenerated() {
         super.setToNotGenerated();
-        domainDetailsFragment.clearPassword();
+        if (domainDetailsFragment != null) {
+            domainDetailsFragment.clearPassword();
+        }
     }
 
     private void setDomainFieldFromClipboard() {
