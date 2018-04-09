@@ -195,4 +195,12 @@ public class PasswordSettingsListFragment extends Fragment implements AdapterVie
         }
         return R.mipmap.ic_launcher;
     }
+
+    public void setDomainFilter(CharSequence sequence) {
+        if (domainEntry != null) {
+            domainEntry.setText(sequence);
+        } else {
+            Log.e("Paste error", "domainEntry object does not exist.");
+        }
+    }
 }

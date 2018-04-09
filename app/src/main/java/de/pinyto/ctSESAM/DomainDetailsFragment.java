@@ -1,16 +1,12 @@
 package de.pinyto.ctSESAM;
 
 import android.app.Activity;
-import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
-import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -25,17 +21,19 @@ import java.util.List;
 /**
  * A {@link Fragment} for account details.
  * Activities that contain this fragment must implement the
- * {@link DomainDetails.OnPasswordGeneratedListener} interface
+ * {@link DomainDetailsFragment.OnPasswordGeneratedListener} interface
  * to handle interaction events.
- * Use the {@link DomainDetails#newInstance} factory method to
+ * Use the {@link DomainDetailsFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class DomainDetails extends Fragment {
+public class DomainDetailsFragment extends Fragment implements SmartSelector.OnStrengthSelectedEventListener {
     private KgkManager kgkManager;
     private PasswordSettingsManager settingsManager;
     private PasswordSetting setting;
     private PasswordGenerator passwordGenerator;
     private OnPasswordGeneratedListener passwordGeneratedListener;
+    private TextView domainView;
+    private EditText usernameView;
     private TextView textViewPassword;
     private TextView passwordHeading;
     private SmartSelector smartSelector;
@@ -43,7 +41,7 @@ public class DomainDetails extends Fragment {
     private boolean showSettings = false;
     private boolean showPassword = false;
 
-    public DomainDetails() {
+    public DomainDetailsFragment() {
         // Required empty public constructor
     }
 
@@ -54,12 +52,12 @@ public class DomainDetails extends Fragment {
      * @param kgkManager No password generation without a KgkManager
      * @param settingsManager The settingsManager is used to store changes in the current setting
      * @param setting The PasswordSetting object which contains the domain name
-     * @return A new instance of fragment DomainDetails.
+     * @return A new instance of fragment DomainDetailsFragment.
      */
-    public static DomainDetails newInstance(KgkManager kgkManager,
-                                            PasswordSettingsManager settingsManager,
-                                            PasswordSetting setting) {
-        DomainDetails fragment = new DomainDetails();
+    public static DomainDetailsFragment newInstance(KgkManager kgkManager,
+                                                    PasswordSettingsManager settingsManager,
+                                                    PasswordSetting setting) {
+        DomainDetailsFragment fragment = new DomainDetailsFragment();
         Bundle args = new Bundle();
         //args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
@@ -79,33 +77,12 @@ public class DomainDetails extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View fLayout = inflater.inflate(R.layout.fragment_domain_details, container, false);
+        domainView = (TextView) fLayout.findViewById(R.id.textViewDomain);
+        usernameView = (EditText) fLayout.findViewById(R.id.editTextUsername);
         textViewPassword = (TextView) fLayout.findViewById(R.id.textViewPassword);
         passwordHeading = (TextView) fLayout.findViewById(R.id.textViewPasswordHeading);
         smartSelector = (SmartSelector) fLayout.findViewById(R.id.smartSelector);
-        smartSelector.setOnStrengthSelectedEventListener(
-                new SmartSelector.OnStrengthSelectedEventListener() {
-            @Override
-            public void onStrengthSelected(int length, int complexity) {
-                StringBuilder template = new StringBuilder();
-                if (complexity % 3 == 0 || complexity >= 5) {
-                    template.append("n");
-                }
-                if (complexity == 1 || complexity >= 3) {
-                    template.append("a");
-                }
-                if (complexity == 2 || complexity >= 4) {
-                    template.append("A");
-                }
-                if (complexity >= 6) {
-                    template.append("o");
-                }
-                while (template.length() < length) {
-                    template.append("x");
-                }
-                String shuffledTemplate = shuffleString(template.toString());
-                setting.setTemplate(shuffledTemplate);
-            }
-        });
+        smartSelector.setOnStrengthSelectedEventListener(this);
         generateButton = (Button) fLayout.findViewById(R.id.generatorButton);
         generateButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -120,6 +97,7 @@ public class DomainDetails extends Fragment {
     public void onPause() {
         textViewPassword.setText("");
         passwordGenerator = null;
+        super.onPause();
     }
 
     @Override
@@ -131,6 +109,28 @@ public class DomainDetails extends Fragment {
     public void onDetach() {
         super.onDetach();
         passwordGeneratedListener = null;
+    }
+
+    @Override
+    public void onStrengthSelected(int length, int complexity) {
+        StringBuilder template = new StringBuilder();
+        if (complexity % 3 == 0 || complexity >= 5) {
+            template.append("n");
+        }
+        if (complexity == 1 || complexity >= 3) {
+            template.append("a");
+        }
+        if (complexity == 2 || complexity >= 4) {
+            template.append("A");
+        }
+        if (complexity >= 6) {
+            template.append("o");
+        }
+        while (template.length() < length) {
+            template.append("x");
+        }
+        String shuffledTemplate = shuffleString(template.toString());
+        setting.setTemplate(shuffledTemplate);
     }
 
     /**
@@ -196,6 +196,10 @@ public class DomainDetails extends Fragment {
     }
 
     private void updateView() {
+        domainView.setText(setting.getDomain());
+        usernameView.setText(setting.getUsername());
+        smartSelector.setSelectedLength(setting.getLength());
+        smartSelector.setSelectedComplexity(setting.getComplexity());
         if (this.showSettings) {
             if (this.showPassword) {
                 generateButton.setVisibility(View.INVISIBLE);
@@ -228,5 +232,10 @@ public class DomainDetails extends Fragment {
         if (textViewPassword != null) {
             textViewPassword.setText("");
         }
+    }
+
+    public void setSetting(PasswordSetting setting) {
+        this.setting = setting;
+        this.updateView();
     }
 }

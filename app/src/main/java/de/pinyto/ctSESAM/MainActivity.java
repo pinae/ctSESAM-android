@@ -94,9 +94,9 @@ public class MainActivity extends AppCompatActivity {
             ClipData clipDataCurrent = clipboard.getPrimaryClip();
             CharSequence pasteData = clipDataCurrent.getItemAt(0).getText();
             if (pasteData != null) {
-                AutoCompleteTextView autoCompleteTextViewDomain =
-                        (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
-                autoCompleteTextViewDomain.setText(DomainExtractor.extract(pasteData.toString()));
+                //AutoCompleteTextView autoCompleteTextViewDomain =
+                //        (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
+                //autoCompleteTextViewDomain.setText(DomainExtractor.extract(pasteData.toString()));
             }
         }
     }
@@ -119,14 +119,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadSettings() {
-        AutoCompleteTextView autoCompleteTextViewDomain =
-                (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
-        String domain = autoCompleteTextViewDomain.getText().toString();
+        //AutoCompleteTextView autoCompleteTextViewDomain =
+        //        (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewDomain);
+        //String domain = autoCompleteTextViewDomain.getText().toString();
         EditText editTextUsername =
                 (EditText) findViewById(R.id.editTextUsername);
-        PasswordSetting passwordSetting = settingsManager.getSetting(domain);
-        this.showSettings = domain.length() > 0;
-        editTextUsername.setText(passwordSetting.getUsername());
+        //PasswordSetting passwordSetting = settingsManager.getSetting(domain);
+        //this.showSettings = domain.length() > 0;
+        //editTextUsername.setText(passwordSetting.getUsername());
     }
 
     @Override

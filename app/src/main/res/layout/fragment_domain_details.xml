@@ -7,7 +7,7 @@
     android:paddingLeft="16dp"
     android:paddingRight="16dp"
     android:paddingBottom="16dp"
-    tools:context=".DomainDetails">
+    tools:context=".DomainDetailsFragment">
 
     <TextView
         android:text="@string/domain"
@@ -15,20 +15,17 @@
         android:layout_height="wrap_content"
         android:id="@+id/textViewDomainHeading" />
 
-    <AutoCompleteTextView
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/textViewDomainHeading"
-        android:id="@+id/autoCompleteTextViewDomain"
-        android:inputType="textUri"
-        android:imeOptions="actionNext"
-        android:completionThreshold="@integer/completionThreshold" />
+        android:id="@+id/textViewDomain" />
 
     <TextView
         android:text="@string/username"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/autoCompleteTextViewDomain"
+        android:layout_below="@+id/textViewDomain"
         android:id="@+id/textViewUsernameHeading" />
 
     <EditText

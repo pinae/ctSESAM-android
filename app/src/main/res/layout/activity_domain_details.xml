@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".DomainDetailsActivity">
 
-    <fragment android:name="de.pinyto.ctSESAM.DomainDetails"
+    <fragment android:name="de.pinyto.ctSESAM.DomainDetailsFragment"
         android:id="@+id/domainDetailsFragment"
         android:layout_weight="1"
         android:layout_width="0dp"

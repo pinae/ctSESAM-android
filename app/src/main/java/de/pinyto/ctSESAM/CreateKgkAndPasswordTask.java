@@ -44,10 +44,10 @@ class CreateKgkAndPasswordTask extends AsyncTask<byte[], Void, byte[]> {
         kgkManager.createAndStoreNewKgkBlock(new Crypter(ivKey));
         MainActivity activity = mainActivityWeakRef.get();
         if (activity != null && !activity.isFinishing()) {
-            AutoCompleteTextView autoCompleteTextViewDomain =
-                    (AutoCompleteTextView) activity.findViewById(R.id.autoCompleteTextViewDomain);
-            String domainStr = autoCompleteTextViewDomain.getText().toString();
-            byte[] domain = UTF8.encode(autoCompleteTextViewDomain.getText());
+            //AutoCompleteTextView autoCompleteTextViewDomain =
+            //        (AutoCompleteTextView) activity.findViewById(R.id.autoCompleteTextViewDomain);
+            String domainStr = ""; // TODO
+            byte[] domain = UTF8.encode(""); //TODO
             PasswordSetting setting = settingsManager.getSetting(domainStr);
             EditText editTextUsername =
                     (EditText) activity.findViewById(R.id.editTextUsername);
