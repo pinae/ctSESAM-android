@@ -30,4 +30,5 @@
     <string name="contentDescriptionInSet">These characters can be in the password.</string>
     <string name="contentDescriptionForce">One of these characters must be in the password.</string>
     <string name="settingsListEmpty">Nothing there.</string>
+    <string name="masterPasswordFieldHint">Enter the masterpassword.</string>
 </resources>

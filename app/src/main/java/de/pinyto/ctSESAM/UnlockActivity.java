@@ -4,16 +4,16 @@ import android.content.Intent;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 
-public class UnlockActivity extends FragmentActivity implements LockScreen.OnUnlockSuccessfulListener {
+public class UnlockActivity extends FragmentActivity implements LockScreenFragment.OnUnlockSuccessfulListener {
     public static final String KEYIVKEY = "de.pinyto.ctsesam.KEYIV";
-    private LockScreen lockScreen;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_unlock);
-        lockScreen = (LockScreen) getFragmentManager().findFragmentById(R.id.lockScreenFragment);
-        lockScreen.setUnlockSuccessfulListener(this);
+        LockScreenFragment lockScreenFragment = (LockScreenFragment)
+                getFragmentManager().findFragmentById(R.id.lockScreenFragment);
+        lockScreenFragment.setUnlockSuccessfulListener(this);
     }
 
     @Override
