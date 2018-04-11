@@ -8,8 +8,6 @@ import org.json.JSONObject;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import javax.crypto.NoSuchPaddingException;
-
 /**
  * Testing the management of password settings.
  */
@@ -87,7 +85,7 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
         settingsManager.setSetting(setting);
         byte[] password = "some secret".getBytes();
         kgkManager.decryptKgk(password,
-                kgkManager.getKgkCrypterSalt(), kgkManager.gelLocalKgkBlock());
+                kgkManager.getKgkCrypterSalt(), kgkManager.getLocalKgkBlock());
         byte[] blob = settingsManager.getExportData(kgkManager);
         assertEquals(0x01, blob[0]);
         byte[] encryptedSettings = Arrays.copyOfRange(blob, 145, blob.length);
@@ -128,7 +126,7 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
         byte[] password = "some secret".getBytes();
         try {
             kgkManager.decryptKgk(password,
-                    kgkManager.getKgkCrypterSalt(), kgkManager.gelLocalKgkBlock());
+                    kgkManager.getKgkCrypterSalt(), kgkManager.getLocalKgkBlock());
             byte[] blob = settingsManager.getExportData(kgkManager);
             byte[] encryptedSettings = Arrays.copyOfRange(blob, 145, blob.length);
             for (int i = 0; i < blob.length; i++) {
@@ -208,7 +206,7 @@ public class PasswordSettingsManagerTest extends ActivityInstrumentationTestCase
         settingsManager.setSetting(setting);
         byte[] password = "some secret".getBytes();
         kgkManager.decryptKgk(password,
-                kgkManager.getKgkCrypterSalt(), kgkManager.gelLocalKgkBlock());
+                kgkManager.getKgkCrypterSalt(), kgkManager.getLocalKgkBlock());
         settingsManager.storeLocalSettings(kgkManager);
         PasswordSettingsManager settingsManager2 = new PasswordSettingsManager(
                 getActivity().getBaseContext());

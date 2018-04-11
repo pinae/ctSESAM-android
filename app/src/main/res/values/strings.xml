@@ -1,10 +1,14 @@
 <resources>
     <string name="app_name">ct SESAM</string>
     <string name="unlock">Unlock</string>
+    <string name="create_new_kgk">Start generating passwords</string>
+    <string name="show_expert_options">Show expert options</string>
+    <string name="hide_expert_options">Show expert options</string>
+    <string name="delete_kgk_and_settings">Delete all settings</string>
     <string name="action_copy">Copy the password to the clipboard</string>
     <string name="action_sync">Syncronize password settings</string>
     <string name="domain">Domain:</string>
-    <string name="masterpassword">Master-password:</string>
+    <string name="masterpassword">Masterpassword:</string>
     <string name="username">Username:</string>
     <string name="letters">Letters</string>
     <string name="digits">Digits</string>

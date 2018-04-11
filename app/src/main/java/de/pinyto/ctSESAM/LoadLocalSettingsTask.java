@@ -1,7 +1,6 @@
 package de.pinyto.ctSESAM;
 
 import android.os.AsyncTask;
-import android.util.Log;
 
 import java.lang.ref.WeakReference;
 
@@ -35,7 +34,7 @@ public class LoadLocalSettingsTask extends AsyncTask<byte[], Void, byte[]> {
 
     @Override
     protected void onPostExecute(byte[] ivKey) {
-        byte[] encryptedKgkBlock = kgkManager.gelLocalKgkBlock();
+        byte[] encryptedKgkBlock = kgkManager.getLocalKgkBlock();
         kgkManager.decryptKgk(new Crypter(ivKey), encryptedKgkBlock);
         OnKgkDecryptionFinishedListener finishedListener = finishedListenerWeakRef.get();
         try {

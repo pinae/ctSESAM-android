@@ -16,9 +16,9 @@ import javax.crypto.NoSuchPaddingException;
 public class KgkManager {
     private SharedPreferences savedDomains;
     byte[] kgk;
-    byte[] iv2;
-    byte[] salt2;
-    Crypter kgkCrypter;
+    private byte[] iv2;
+    private byte[] salt2;
+    private Crypter kgkCrypter;
     byte[] salt;
 
     KgkManager(Context contentContext) {
@@ -72,7 +72,7 @@ public class KgkManager {
         return this.kgk;
     }
 
-    public byte[] gelLocalKgkBlock() {
+    public byte[] getLocalKgkBlock() {
         String kgkBase64 = this.savedDomains.getString("KGK", "");
         if (kgkBase64.length() < 152) {
             return new byte[]{};
@@ -185,5 +185,16 @@ public class KgkManager {
         byte[] keyIv = this.kgkCrypter.exportKeyIvAndClear();
         this.reset();
         return keyIv;
+    }
+
+    public void deleteKgkAndSettings() {
+        SharedPreferences.Editor savedDomainsEditor = this.savedDomains.edit();
+        savedDomainsEditor.putString("salt", Base64.encodeToString(
+                new byte[] {},
+                Base64.DEFAULT));
+        savedDomainsEditor.putString("KGK", Base64.encodeToString(
+                new byte[] {},
+                Base64.DEFAULT));
+        savedDomainsEditor.apply();
     }
 }

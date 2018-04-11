@@ -45,4 +45,28 @@
         android:text="@string/unlock"
         android:visibility="visible" />
 
+    <Switch
+        android:id="@+id/showExpertOptinsSwitch"
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="16dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/unlockButton"
+        android:checked="false"
+        android:textOn="@string/hide_expert_options"
+        android:textOff="@string/show_expert_options"
+        android:text="@string/show_expert_options" />
+
+    <Button
+        android:id="@+id/deleteKgkButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/showExpertOptinsSwitch"
+        android:layout_centerVertical="true"
+        android:visibility="invisible"
+        android:text="@string/delete_kgk_and_settings" />
+
 </RelativeLayout>

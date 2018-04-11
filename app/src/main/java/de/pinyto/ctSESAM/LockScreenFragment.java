@@ -8,7 +8,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.TextView;
 
 
@@ -28,6 +30,8 @@ public class LockScreenFragment extends Fragment {
     private PasswordSettingsManager settingsManager;
     private EditText editTextMasterPassword;
     private TextView textViewDecryptionMessage;
+    private Button unlockButton;
+    private Button deleteSettingsButton;
     private LoadLocalSettingsTask.OnKgkDecryptionFinishedListener kgkDecryptionFinishedListener;
     private CreateNewKgkTask.OnNewKgkFinishedListener newKgkFinishedListener;
 
@@ -55,11 +59,32 @@ public class LockScreenFragment extends Fragment {
         View fLayout = inflater.inflate(R.layout.fragment_lock_screen, container, false);
         editTextMasterPassword = (EditText) fLayout.findViewById(R.id.editTextMasterPassword);
         textViewDecryptionMessage = (TextView) fLayout.findViewById(R.id.textViewDecryptionMessage);
-        Button unlockButton = (Button) fLayout.findViewById(R.id.unlockButton);
+        unlockButton = (Button) fLayout.findViewById(R.id.unlockButton);
+        if (kgkManager.getLocalKgkBlock().length == 112) {
+            unlockButton.setText(R.string.unlock);
+        } else {
+            unlockButton.setText(R.string.create_new_kgk);
+        }
         unlockButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 tryToUnlockKgk();
+            }
+        });
+        deleteSettingsButton = (Button) fLayout.findViewById(R.id.deleteKgkButton);
+        deleteSettingsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                kgkManager.deleteKgkAndSettings();
+                kgkManager.reset();
+                unlockButton.setText(R.string.create_new_kgk);
+            }
+        });
+        Switch expertOptionsSwitch = (Switch) fLayout.findViewById(R.id.showExpertOptinsSwitch);
+        expertOptionsSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                deleteSettingsButton.setVisibility(b ? View.VISIBLE : View.INVISIBLE);
             }
         });
         return fLayout;
@@ -123,7 +148,7 @@ public class LockScreenFragment extends Fragment {
 
     private void tryToUnlockKgk() {
         byte[] password = UTF8.encode(editTextMasterPassword.getText());
-        if (kgkManager.gelLocalKgkBlock().length == 112) {
+        if (kgkManager.getLocalKgkBlock().length == 112) {
             setMessageTextStyle(false);
             textViewDecryptionMessage.setText(getString(R.string.loading));
             kgkDecryptionFinishedListener =
@@ -155,6 +180,7 @@ public class LockScreenFragment extends Fragment {
                         setMessageTextStyle(false);
                         textViewDecryptionMessage.setText(
                                 getString(R.string.KgkCreationFinished));
+                        unlockSuccessfulListener.onUnlock(kgkManager);
                     } else {
                         setMessageTextStyle(true);
                         textViewDecryptionMessage.setText(
