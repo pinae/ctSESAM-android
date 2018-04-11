@@ -53,6 +53,19 @@ public class LockScreenFragment extends Fragment {
     }
 
     @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            unlockSuccessfulListener = (OnUnlockSuccessfulListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement OnUnlockSuccessfulListener");
+        }
+        kgkManager = new KgkManager(activity.getBaseContext());
+        settingsManager = new PasswordSettingsManager(activity.getBaseContext());
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -60,11 +73,6 @@ public class LockScreenFragment extends Fragment {
         editTextMasterPassword = (EditText) fLayout.findViewById(R.id.editTextMasterPassword);
         textViewDecryptionMessage = (TextView) fLayout.findViewById(R.id.textViewDecryptionMessage);
         unlockButton = (Button) fLayout.findViewById(R.id.unlockButton);
-        if (kgkManager.getLocalKgkBlock().length == 112) {
-            unlockButton.setText(R.string.unlock);
-        } else {
-            unlockButton.setText(R.string.create_new_kgk);
-        }
         unlockButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -75,6 +83,7 @@ public class LockScreenFragment extends Fragment {
         deleteSettingsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                settingsManager.deleteAllSettings();
                 kgkManager.deleteKgkAndSettings();
                 kgkManager.reset();
                 unlockButton.setText(R.string.create_new_kgk);
@@ -91,22 +100,19 @@ public class LockScreenFragment extends Fragment {
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        clearMasterPassword();
+    public void onResume() {
+        super.onResume();
+        if (kgkManager.getLocalKgkBlock().length == 112) {
+            unlockButton.setText(R.string.unlock);
+        } else {
+            unlockButton.setText(R.string.create_new_kgk);
+        }
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        try {
-            unlockSuccessfulListener = (OnUnlockSuccessfulListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement OnUnlockSuccessfulListener");
-        }
-        kgkManager = new KgkManager(activity.getBaseContext());
-        settingsManager = new PasswordSettingsManager(activity.getBaseContext());
+    public void onPause() {
+        super.onPause();
+        clearMasterPassword();
     }
 
     @Override
@@ -138,8 +144,8 @@ public class LockScreenFragment extends Fragment {
 
     private void setMessageTextStyle(boolean error) {
         if (error) {
-            textViewDecryptionMessage.setTextColor(0xffa00000);
-            textViewDecryptionMessage.setTextSize(50);
+            textViewDecryptionMessage.setTextColor(0xffbc0000);
+            textViewDecryptionMessage.setTextSize(30);
         } else {
             textViewDecryptionMessage.setTextColor(0xff000000);
             textViewDecryptionMessage.setTextSize(20);
@@ -170,6 +176,9 @@ public class LockScreenFragment extends Fragment {
                     settingsManager);
             loadLocalSettingsTask.execute(password, kgkManager.getKgkCrypterSalt());
         } else {
+            kgkManager.deleteKgkAndSettings();
+            kgkManager.reset();
+            settingsManager.deleteAllSettings();
             kgkManager.storeSalt(Crypter.createSalt());
             setMessageTextStyle(false);
             textViewDecryptionMessage.setText(getString(R.string.creatingKgk));
@@ -180,6 +189,7 @@ public class LockScreenFragment extends Fragment {
                         setMessageTextStyle(false);
                         textViewDecryptionMessage.setText(
                                 getString(R.string.KgkCreationFinished));
+                        settingsManager.storeLocalSettings(kgkManager);
                         unlockSuccessfulListener.onUnlock(kgkManager);
                     } else {
                         setMessageTextStyle(true);

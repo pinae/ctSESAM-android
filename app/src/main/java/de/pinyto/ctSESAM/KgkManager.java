@@ -15,11 +15,11 @@ import javax.crypto.NoSuchPaddingException;
  */
 public class KgkManager {
     private SharedPreferences savedDomains;
-    byte[] kgk;
+    private byte[] kgk;
     private byte[] iv2;
     private byte[] salt2;
     private Crypter kgkCrypter;
-    byte[] salt;
+    private byte[] salt;
 
     KgkManager(Context contentContext) {
         this.savedDomains = contentContext.getSharedPreferences(
@@ -31,6 +31,7 @@ public class KgkManager {
                 "savedDomains", Context.MODE_PRIVATE);
         this.kgkCrypter = new Crypter(keyIv);
         getKgkCrypterSalt();
+        decryptKgk(kgkCrypter, getLocalKgkBlock());
     }
 
     public byte[] getKgkCrypterSalt() {

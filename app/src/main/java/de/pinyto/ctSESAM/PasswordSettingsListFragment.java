@@ -28,6 +28,7 @@ import java.util.LinkedList;
  */
 public class PasswordSettingsListFragment extends Fragment implements AdapterView.OnItemClickListener {
     private OnSettingSelected settingSelectedListener;
+    private KgkManager kgkManager;
     private PasswordSettingsManager settingsManager;
     private ListView listView;
     private TextView emptyView;
@@ -118,6 +119,21 @@ public class PasswordSettingsListFragment extends Fragment implements AdapterVie
     }
 
     @Override
+    public void onPause() {
+        if (settingsManager.getDomainList().length > 0) {
+            Log.d("List Fragment", "Storing Settings...");
+            for (String domain: settingsManager.getDomainList()) {
+                Log.d("List Fragment List", domain);
+            }
+            if (kgkManager.hasKgk()) settingsManager.storeLocalSettings(kgkManager);
+        } else {
+            settingsManager.deleteAllSettings();
+            kgkManager.deleteKgkAndSettings();
+        }
+        super.onPause();
+    }
+
+    @Override
     public void onDetach() {
         super.onDetach();
         settingSelectedListener = null;
@@ -125,6 +141,7 @@ public class PasswordSettingsListFragment extends Fragment implements AdapterVie
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+        settingsManager.storeLocalSettings(kgkManager);
         this.settingSelectedListener.onSettingSelected(
                 settingsManager.getSetting(filteredDomains.get(i)));
     }
@@ -143,7 +160,9 @@ public class PasswordSettingsListFragment extends Fragment implements AdapterVie
         this.settingSelectedListener = listener;
     }
 
-    public void setSettingsManager(PasswordSettingsManager settingsManager) {
+    public void setKgkAndSettingsManager(KgkManager kgkManager,
+                                         PasswordSettingsManager settingsManager) {
+        this.kgkManager = kgkManager;
         this.settingsManager = settingsManager;
         updateList();
     }
@@ -168,7 +187,6 @@ public class PasswordSettingsListFragment extends Fragment implements AdapterVie
                 }
                 entry.put("settingHints", settingHints);
                 entry.put("icon", getIcon(domain.toLowerCase())+"");
-                Log.d(domain, entry.toString());
                 settingsList.add(entry);
             }
             String[] fromArray = {"domainName", "settingHints", "icon"};

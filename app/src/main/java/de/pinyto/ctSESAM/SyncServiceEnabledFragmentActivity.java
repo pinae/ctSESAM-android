@@ -34,6 +34,14 @@ public abstract class SyncServiceEnabledFragmentActivity extends FragmentActivit
         kgkManager = new KgkManager(this,
                 intent.getByteArrayExtra(UnlockActivity.KEYIVKEY));
         settingsManager = new PasswordSettingsManager(getBaseContext());
+        try {
+            settingsManager.loadLocalSettings(kgkManager);
+        } catch (WrongPasswordException e) {
+            Log.e("Wrong password?", "This should not happen at this point!");
+            Log.e("WrongPasswordException", e.toString());
+            Intent newIntent = new Intent(this, UnlockActivity.class);
+            startActivity(newIntent);
+        }
         setToNotGenerated();
     }
 
@@ -102,7 +110,9 @@ public abstract class SyncServiceEnabledFragmentActivity extends FragmentActivit
             );
             ClipboardManager clipboard =
                     (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-            clipboard.setPrimaryClip(clipDataPassword);
+            if (clipboard != null) {
+                clipboard.setPrimaryClip(clipDataPassword);
+            }
             return true;
         }
 

@@ -58,7 +58,7 @@ public class PasswordSettingsManager {
             return;
         }
         byte[] decrypted = settingsCrypter.decrypt(encrypted);
-        if (decrypted.length < 40) {
+        if (decrypted.length < 35) {
             throw new WrongPasswordException("wrong length: too short");
         }
         String decompressedSettings = Packer.decompress(decrypted);
@@ -128,16 +128,17 @@ public class PasswordSettingsManager {
             jsonError.printStackTrace();
         }
         SharedPreferences.Editor savedDomainsEditor = savedDomains.edit();
-        if (settingsCrypter != null) {
-            byte[] encryptedSettings = settingsCrypter.encrypt(
-                    Packer.compress(storeStructure.toString()));
-            savedDomainsEditor.putString("encryptedSettings",
-                    Base64.encodeToString(
-                            encryptedSettings,
-                            Base64.DEFAULT));
-            savedDomainsEditor.apply();
-            kgkManager.storeLocalKgkBlock();
-        }
+        Log.d("storing", storeStructure.toString());
+        Log.d("compressed length", Integer.toString(Packer.compress(storeStructure.toString()).length));
+        byte[] encryptedSettings = settingsCrypter.encrypt(
+                Packer.compress(storeStructure.toString()));
+        Log.d("cyphertext length", Integer.toString(encryptedSettings.length));
+        savedDomainsEditor.putString("encryptedSettings",
+                Base64.encodeToString(
+                        encryptedSettings,
+                        Base64.DEFAULT));
+        savedDomainsEditor.apply();
+        kgkManager.storeLocalKgkBlock();
     }
 
     public PasswordSetting getSetting(String domain) {
@@ -302,5 +303,14 @@ public class PasswordSettingsManager {
         for (PasswordSetting setting : this.settings) {
             setting.setSynced(true);
         }
+    }
+
+    public void deleteAllSettings() {
+        SharedPreferences.Editor savedDomainsEditor = savedDomains.edit();
+        savedDomainsEditor.putString("encryptedSettings",
+                Base64.encodeToString(
+                        new byte[] {},
+                        Base64.DEFAULT));
+        savedDomainsEditor.apply();
     }
 }

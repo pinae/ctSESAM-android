@@ -19,7 +19,7 @@ public class PasswordSettingsListActivity extends SyncServiceEnabledFragmentActi
         listScreen = (PasswordSettingsListFragment) getFragmentManager().findFragmentById(
                 R.id.passwordSettingsListFragment);
         listScreen.setSettingSelectedListener(this);
-        listScreen.setSettingsManager(settingsManager);
+        listScreen.setKgkAndSettingsManager(kgkManager, settingsManager);
     }
 
     @Override
@@ -39,7 +39,7 @@ public class PasswordSettingsListActivity extends SyncServiceEnabledFragmentActi
     private void setDomainFieldFromClipboard() {
         ClipboardManager clipboard =
                 (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-        if (clipboard.hasPrimaryClip()) {
+        if (clipboard != null && clipboard.hasPrimaryClip()) {
             ClipData clipDataCurrent = clipboard.getPrimaryClip();
             CharSequence pasteData = clipDataCurrent.getItemAt(0).getText();
             if (pasteData != null) {
