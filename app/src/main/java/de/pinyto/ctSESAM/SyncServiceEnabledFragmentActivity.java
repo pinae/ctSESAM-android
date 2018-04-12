@@ -46,6 +46,27 @@ public abstract class SyncServiceEnabledFragmentActivity extends FragmentActivit
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (kgkManager == null || !kgkManager.hasKgk() || settingsManager == null) {
+            Intent intent = getIntent();
+            Log.d("KEYIVKEY len", Integer.toString(intent.getByteArrayExtra(UnlockActivity.KEYIVKEY).length));
+            kgkManager = new KgkManager(this,
+                    intent.getByteArrayExtra(UnlockActivity.KEYIVKEY));
+            settingsManager = new PasswordSettingsManager(getBaseContext());
+            try {
+                settingsManager.loadLocalSettings(kgkManager);
+            } catch (WrongPasswordException e) {
+                Log.e("Wrong password?", "This should not happen at this point!");
+                Log.e("WrongPasswordException", e.toString());
+                Intent newIntent = new Intent(this, UnlockActivity.class);
+                startActivity(newIntent);
+            }
+            setToNotGenerated();
+        }
+    }
+
+    @Override
     protected void onStart() {
         super.onStart();
         if (isAppInstalled(SyncResponseHandler.syncAppName)) {
@@ -103,7 +124,7 @@ public abstract class SyncServiceEnabledFragmentActivity extends FragmentActivit
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_copy) {
-            TextView textViewPassword = (TextView) findViewById(R.id.textViewPassword);
+            TextView textViewPassword = (TextView) findViewById(R.id.editTextPassword);
             ClipData clipDataPassword = ClipData.newPlainText(
                     "password",
                     textViewPassword.getText()

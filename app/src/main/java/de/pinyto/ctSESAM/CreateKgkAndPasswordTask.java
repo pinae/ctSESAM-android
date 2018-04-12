@@ -15,9 +15,9 @@ class CreateKgkAndPasswordTask extends AsyncTask<byte[], Void, byte[]> {
     int iterations;
     private KgkManager kgkManager;
     private PasswordSettingsManager settingsManager;
-    private WeakReference<MainActivity> mainActivityWeakRef;
+    private WeakReference<UnlockActivity> mainActivityWeakRef;
 
-    CreateKgkAndPasswordTask(MainActivity mainActivity,
+    CreateKgkAndPasswordTask(UnlockActivity mainActivity,
                              int iterations,
                              KgkManager kgkManager,
                              PasswordSettingsManager settingsManager) {
@@ -42,7 +42,7 @@ class CreateKgkAndPasswordTask extends AsyncTask<byte[], Void, byte[]> {
     @Override
     protected void onPostExecute(byte[] ivKey) {
         kgkManager.createAndStoreNewKgkBlock(new Crypter(ivKey));
-        MainActivity activity = mainActivityWeakRef.get();
+        UnlockActivity activity = mainActivityWeakRef.get();
         if (activity != null && !activity.isFinishing()) {
             //AutoCompleteTextView autoCompleteTextViewDomain =
             //        (AutoCompleteTextView) activity.findViewById(R.id.autoCompleteTextViewDomain);

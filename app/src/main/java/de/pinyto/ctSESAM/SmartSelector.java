@@ -172,11 +172,6 @@ public class SmartSelector extends View {
         return true;
     }
 
-    /*@Override
-    public boolean performClick() {
-        return super.performClick();
-    }*/
-
     public void setCharacterCounts(int digitCount, int lowerCount,
                                    int upperCount, int extraCount) {
         this.digitCount = digitCount;
@@ -200,7 +195,7 @@ public class SmartSelector extends View {
     }
 
     public void setSelectedComplexity(int complexity) {
-        this.selectedComplexity = complexity;
+        this.selectedComplexity = colorMatrix[0].length-1-complexity;
     }
 
     public void setSelectedLength(int length) {

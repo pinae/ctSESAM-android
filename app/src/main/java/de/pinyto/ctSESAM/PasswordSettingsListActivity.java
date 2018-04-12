@@ -8,8 +8,10 @@ import android.os.Bundle;
 import android.widget.AutoCompleteTextView;
 
 public class PasswordSettingsListActivity extends SyncServiceEnabledFragmentActivity
-        implements PasswordSettingsListFragment.OnSettingSelected {
+        implements PasswordSettingsListFragment.OnSettingSelected,
+        PasswordSettingsListFragment.OnNewSetting {
     public static final String DOMAIN = "de.pinyto.ctsesam.DOMAIN";
+    public static final String ISNEWSETTING = "de.pinyto.ctsesam.ISNEWSETTING";
     private PasswordSettingsListFragment listScreen;
 
     @Override
@@ -18,8 +20,6 @@ public class PasswordSettingsListActivity extends SyncServiceEnabledFragmentActi
         setContentView(R.layout.activity_password_settings_list);
         listScreen = (PasswordSettingsListFragment) getFragmentManager().findFragmentById(
                 R.id.passwordSettingsListFragment);
-        listScreen.setSettingSelectedListener(this);
-        listScreen.setKgkAndSettingsManager(kgkManager, settingsManager);
     }
 
     @Override
@@ -29,10 +29,25 @@ public class PasswordSettingsListActivity extends SyncServiceEnabledFragmentActi
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        listScreen.setKgkAndSettingsManager(kgkManager, settingsManager);
+    }
+
+    @Override
     public void onSettingSelected(PasswordSetting setting) {
         Intent intent = new Intent(this, DomainDetailsActivity.class);
         intent.putExtra(UnlockActivity.KEYIVKEY, kgkManager.exportKeyIvAndReset());
         intent.putExtra(DOMAIN, setting.getDomain());
+        startActivity(intent);
+    }
+
+    @Override
+    public void onNewSetting(PasswordSetting setting) {
+        Intent intent = new Intent(this, DomainDetailsActivity.class);
+        intent.putExtra(UnlockActivity.KEYIVKEY, kgkManager.exportKeyIvAndReset());
+        intent.putExtra(DOMAIN, setting.getDomain());
+        intent.putExtra(ISNEWSETTING, true);
         startActivity(intent);
     }
 

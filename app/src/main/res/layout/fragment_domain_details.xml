@@ -16,43 +16,11 @@
         android:id="@+id/textViewDomainHeading" />
 
     <TextView
+        android:id="@+id/textViewDomain"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/textViewDomainHeading"
-        android:id="@+id/textViewDomain" />
-
-    <TextView
-        android:text="@string/username"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/textViewDomain"
-        android:id="@+id/textViewUsernameHeading" />
-
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="text"
-        android:id="@+id/editTextUsername"
-        android:layout_below="@+id/textViewUsernameHeading"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
-    <de.pinyto.ctSESAM.SmartSelector
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/editTextUsername"
-        android:id="@+id/smartSelector" />
-
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/generator_button"
-        android:id="@+id/generatorButton"
-        android:layout_centerVertical="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:visibility="visible"
-        android:layout_below="@+id/smartSelector" />
+        android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <TextView
         android:text="@string/password"
@@ -61,20 +29,153 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:id="@+id/textViewPasswordHeading"
-        android:visibility="invisible"
-        android:layout_below="@+id/smartSelector" />
+        android:visibility="visible"
+        android:layout_below="@+id/textViewDomain" />
 
-    <TextView
+    <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="@string/init_password"
-        android:id="@+id/textViewPassword"
+        android:id="@+id/editTextPassword"
         android:layout_below="@+id/textViewPasswordHeading"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:gravity="center"
-        android:visibility="invisible"
         android:textAlignment="center" />
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/editTextPassword"
+        android:background="?android:attr/listDivider" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/divider">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:text="@string/url"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/textViewUrlHeading" />
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textUri"
+                android:id="@+id/editTextUrl" />
+
+            <TextView
+                android:text="@string/username"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/textViewUsernameHeading" />
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:id="@+id/editTextUsername" />
+
+            <Switch
+                android:id="@+id/switchLegacyPassword"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:switchPadding="8dp"
+                android:text="@string/legacy_password_switch"
+                android:textIsSelectable="false" />
+
+            <RelativeLayout
+                android:id="@+id/iterationCountLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/iterationCountHeading"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:text="@string/iteration_count" />
+
+                <EditText
+                    android:id="@+id/iterationCount"
+                    android:layout_toRightOf="@+id/iterationCountHeading"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="numberDecimal" />
+
+            </RelativeLayout>
+
+            <de.pinyto.ctSESAM.SmartSelector
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/smartSelector" />
+
+            <LinearLayout
+                android:id="@+id/lengthComplexityLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content" >
+
+                    <TextView
+                        android:text="@string/length"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:id="@+id/textViewLength"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content" >
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/saveButtonLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <Button
+                    android:id="@+id/saveButton"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="@string/save_button" />
+
+                <Button
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dismiss_changes_button"
+                    android:id="@+id/dismissChangesButton" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
 
 </RelativeLayout>

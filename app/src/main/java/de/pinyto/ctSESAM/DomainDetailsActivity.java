@@ -14,9 +14,12 @@ public class DomainDetailsActivity extends SyncServiceEnabledFragmentActivity {
         Intent intent = getIntent();
         setting = this.settingsManager.getSetting(
                 intent.getStringExtra(PasswordSettingsListActivity.DOMAIN));
+        boolean isNewSetting = intent.getBooleanExtra(
+                PasswordSettingsListActivity.ISNEWSETTING, false);
         domainDetailsFragment = (DomainDetailsFragment) getFragmentManager().findFragmentById(
                 R.id.domainDetailsFragment);
-        domainDetailsFragment.setSetting(setting);
+        domainDetailsFragment.setSettingsManagerAndKgkManager(settingsManager, kgkManager);
+        domainDetailsFragment.setSetting(setting, isNewSetting);
         setToNotGenerated();
     }
 

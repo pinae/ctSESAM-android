@@ -134,11 +134,7 @@ public class LockScreenFragment extends Fragment {
     }
 
     private void clearMasterPassword() {
-        Editable password = editTextMasterPassword.getText();
-        CharSequence zero = "0";
-        for (int i = 0; i < password.length(); i++) {
-            password.replace(i, i+1, zero);
-        }
+        Clearer.zero(editTextMasterPassword.getText());
         editTextMasterPassword.setText("", TextView.BufferType.EDITABLE);
     }
 

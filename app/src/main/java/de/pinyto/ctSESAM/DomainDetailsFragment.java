@@ -8,7 +8,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import java.nio.ByteBuffer;
@@ -16,6 +20,7 @@ import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 
 /**
@@ -23,53 +28,29 @@ import java.util.List;
  * Activities that contain this fragment must implement the
  * {@link DomainDetailsFragment.OnPasswordGeneratedListener} interface
  * to handle interaction events.
- * Use the {@link DomainDetailsFragment#newInstance} factory method to
- * create an instance of this fragment.
  */
 public class DomainDetailsFragment extends Fragment implements SmartSelector.OnStrengthSelectedEventListener {
     private KgkManager kgkManager;
     private PasswordSettingsManager settingsManager;
     private PasswordSetting setting;
+    private boolean isNewSetting;
     private PasswordGenerator passwordGenerator;
     private OnPasswordGeneratedListener passwordGeneratedListener;
     private TextView domainView;
+    private EditText editTextPassword;
+    private EditText urlView;
     private EditText usernameView;
-    private TextView textViewPassword;
-    private TextView passwordHeading;
+    private Switch legacyPasswordSwitch;
+    private RelativeLayout iterationCountLayout;
+    private EditText editTextIterationCount;
+    private LinearLayout lengthComplexityLayout;
+    private TextView textViewLength;
     private SmartSelector smartSelector;
-    private Button generateButton;
-    private boolean showSettings = false;
-    private boolean showPassword = false;
+    private Button saveButton;
+    private Button dismissChangesButton;
 
     public DomainDetailsFragment() {
         // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param kgkManager No password generation without a KgkManager
-     * @param settingsManager The settingsManager is used to store changes in the current setting
-     * @param setting The PasswordSetting object which contains the domain name
-     * @return A new instance of fragment DomainDetailsFragment.
-     */
-    public static DomainDetailsFragment newInstance(KgkManager kgkManager,
-                                                    PasswordSettingsManager settingsManager,
-                                                    PasswordSetting setting) {
-        DomainDetailsFragment fragment = new DomainDetailsFragment();
-        Bundle args = new Bundle();
-        //args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            //mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
@@ -78,24 +59,30 @@ public class DomainDetailsFragment extends Fragment implements SmartSelector.OnS
         // Inflate the layout for this fragment
         View fLayout = inflater.inflate(R.layout.fragment_domain_details, container, false);
         domainView = (TextView) fLayout.findViewById(R.id.textViewDomain);
+        urlView = (EditText) fLayout.findViewById(R.id.editTextUrl);
         usernameView = (EditText) fLayout.findViewById(R.id.editTextUsername);
-        textViewPassword = (TextView) fLayout.findViewById(R.id.textViewPassword);
-        passwordHeading = (TextView) fLayout.findViewById(R.id.textViewPasswordHeading);
+        editTextPassword = (EditText) fLayout.findViewById(R.id.editTextPassword);
+        legacyPasswordSwitch = (Switch) fLayout.findViewById(R.id.switchLegacyPassword);
+        iterationCountLayout = (RelativeLayout) fLayout.findViewById(R.id.iterationCountLayout);
+        editTextIterationCount = (EditText) fLayout.findViewById(R.id.iterationCount);
         smartSelector = (SmartSelector) fLayout.findViewById(R.id.smartSelector);
         smartSelector.setOnStrengthSelectedEventListener(this);
-        generateButton = (Button) fLayout.findViewById(R.id.generatorButton);
-        generateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                generatePassword();
-            }
-        });
+        lengthComplexityLayout = (LinearLayout) fLayout.findViewById(R.id.lengthComplexityLayout);
+        textViewLength = (TextView) fLayout.findViewById(R.id.textViewLength);
+        saveButton = (Button) fLayout.findViewById(R.id.saveButton);
+        dismissChangesButton = (Button) fLayout.findViewById(R.id.dismissChangesButton);
         return fLayout;
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        updateView();
+    }
+
+    @Override
     public void onPause() {
-        textViewPassword.setText("");
+        editTextPassword.setText("");
         passwordGenerator = null;
         super.onPause();
     }
@@ -131,6 +118,7 @@ public class DomainDetailsFragment extends Fragment implements SmartSelector.OnS
         }
         String shuffledTemplate = shuffleString(template.toString());
         setting.setTemplate(shuffledTemplate);
+        updateView();
     }
 
     /**
@@ -159,7 +147,7 @@ public class DomainDetailsFragment extends Fragment implements SmartSelector.OnS
                         Log.e("Password Setting Error",
                                 "Iterations too small: " +
                                         Integer.toString(setting.getIterations()) +
-                                        "Setting to 4096.");
+                                        ". Setting to 4096.");
                         setting.setIterations(4096);
                     }
                     generatePasswordTask.execute(
@@ -172,15 +160,9 @@ public class DomainDetailsFragment extends Fragment implements SmartSelector.OnS
                 } else {
                     this.settingsManager.setSetting(setting);
                     this.settingsManager.storeLocalSettings(this.kgkManager);
-                    textViewPassword.setText(this.passwordGenerator.getPassword(setting));
-                    this.showPassword = true;
-                    this.updateView();
-                    //this.invalidateOptionsMenu();
-                    // load settings because the domain might be new
-                    //ArrayAdapter<String> adapter = new ArrayAdapter<>(getBaseContext(),
-                    //        android.R.layout.simple_dropdown_item_1line,
-                    //        this.settingsManager.getDomainList());
-                    //autoCompleteTextViewDomain.setAdapter(adapter);
+                    editTextPassword.setText(this.passwordGenerator.getPassword(setting));
+                    if (passwordGeneratedListener != null)
+                        passwordGeneratedListener.onPasswordGenerated();
                 }
             }
         } else {
@@ -188,54 +170,104 @@ public class DomainDetailsFragment extends Fragment implements SmartSelector.OnS
                     "There should never be a kgkManager without a kgk at this point.");
         }
         if (setting.hasLegacyPassword()) {
-            textViewPassword.setText(setting.getLegacyPassword());
-            this.showPassword = true;
+            editTextPassword.setText(setting.getLegacyPassword());
             this.updateView();
-            //this.invalidateOptionsMenu();
+            if (passwordGeneratedListener != null)
+                passwordGeneratedListener.onPasswordGenerated();
         }
     }
 
     private void updateView() {
         domainView.setText(setting.getDomain());
+        urlView.setText(setting.getUrl());
         usernameView.setText(setting.getUsername());
-        smartSelector.setSelectedLength(setting.getLength());
-        smartSelector.setSelectedComplexity(setting.getComplexity());
-        if (this.showSettings) {
-            if (this.showPassword) {
-                generateButton.setVisibility(View.INVISIBLE);
-                passwordHeading.setVisibility(View.VISIBLE);
-                textViewPassword.setVisibility(View.VISIBLE);
-            } else {
-                generateButton.setVisibility(View.VISIBLE);
-                passwordHeading.setVisibility(View.INVISIBLE);
-                textViewPassword.setVisibility(View.INVISIBLE);
-            }
+        legacyPasswordSwitch.setChecked(setting.hasLegacyPassword());
+        if (setting.hasLegacyPassword()) {
+            editTextPassword.setEnabled(true);
+            iterationCountLayout.setVisibility(View.INVISIBLE);
+            smartSelector.setVisibility(View.INVISIBLE);
+            lengthComplexityLayout.setVisibility(View.INVISIBLE);
         } else {
-            generateButton.setVisibility(View.INVISIBLE);
-            passwordHeading.setVisibility(View.INVISIBLE);
-            textViewPassword.setVisibility(View.INVISIBLE);
+            editTextPassword.setEnabled(false);
+            iterationCountLayout.setVisibility(View.VISIBLE);
+            smartSelector.setVisibility(View.VISIBLE);
+            lengthComplexityLayout.setVisibility(View.VISIBLE);
         }
+        editTextIterationCount.setText(String.format(Locale.GERMANY, "%d",
+                setting.getIterations()));
+        smartSelector.setSelectedLength(setting.getLength()-4);
+        smartSelector.setSelectedComplexity(setting.getComplexity());
+        textViewLength.setText(String.format(Locale.GERMANY, "%d", setting.getLength()));
+        generatePassword();
     }
 
     private static String shuffleString(String string)
     {
         List<String> letters = Arrays.asList(string.split(""));
         Collections.shuffle(letters);
-        String shuffled = "";
+        StringBuilder shuffled = new StringBuilder();
         for (String letter : letters) {
-            shuffled += letter;
+            shuffled.append(letter);
         }
-        return shuffled;
+        return shuffled.toString();
     }
 
     public void clearPassword() {
-        if (textViewPassword != null) {
-            textViewPassword.setText("");
+        if (editTextPassword != null) {
+            Clearer.zero(editTextPassword.getText());
+            editTextPassword.setText("");
         }
     }
 
-    public void setSetting(PasswordSetting setting) {
-        this.setting = setting;
+    public void setSetting(PasswordSetting newSetting, boolean isNewSetting) {
+        this.setting = newSetting;
+        this.isNewSetting = isNewSetting;
+        smartSelector.setCharacterCounts(
+                setting.getDigitsCharacterSet().size(),
+                setting.getLowerCaseLettersCharacterSet().size(),
+                setting.getUpperCaseLettersCharacterSet().size(),
+                setting.getExtraCharacterSet().size());
+        legacyPasswordSwitch.setOnCheckedChangeListener(
+            new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                    if (b) {
+                        setting.setLegacyPassword(editTextPassword.getText().toString());
+                        updateView();
+                    } else {
+                        setting.setLegacyPassword(null);
+                        generatePassword();
+                        updateView();
+                    }
+                }
+            });
         this.updateView();
+    }
+
+    public void setSettingsManagerAndKgkManager(PasswordSettingsManager newSettingsManager,
+                                                KgkManager newKgkManager) {
+        this.kgkManager = newKgkManager;
+        this.settingsManager = newSettingsManager;
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                settingsManager.setSetting(setting);
+                settingsManager.storeLocalSettings(kgkManager);
+                updateView();
+            }
+        });
+        dismissChangesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (isNewSetting) {
+                    settingsManager.deleteSetting(setting.getDomain());
+                    settingsManager.storeLocalSettings(kgkManager);
+                    getActivity().finish();
+                } else {
+                    setting = settingsManager.getSetting(setting.getDomain());
+                    updateView();
+                }
+            }
+        });
     }
 }

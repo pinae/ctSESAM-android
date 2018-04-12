@@ -50,6 +50,9 @@ public class PasswordSettingsManager {
     }
 
     public void loadLocalSettings(KgkManager kgkManager) throws WrongPasswordException {
+        if (!kgkManager.hasKgk()) {
+            throw new WrongPasswordException("KGK manager has no KGK");
+        }
         Crypter settingsCrypter = this.getSettingsCrypter(kgkManager);
         byte[] encrypted = Base64.decode(
                 this.savedDomains.getString("encryptedSettings", ""),

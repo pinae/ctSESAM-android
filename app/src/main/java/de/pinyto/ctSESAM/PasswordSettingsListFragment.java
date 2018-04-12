@@ -28,6 +28,7 @@ import java.util.LinkedList;
  */
 public class PasswordSettingsListFragment extends Fragment implements AdapterView.OnItemClickListener {
     private OnSettingSelected settingSelectedListener;
+    private OnNewSetting newSettingListener;
     private KgkManager kgkManager;
     private PasswordSettingsManager settingsManager;
     private ListView listView;
@@ -64,46 +65,6 @@ public class PasswordSettingsListFragment extends Fragment implements AdapterVie
         emptyView = (TextView) layout.findViewById(R.id.domainListEmpty);
         addNewDomainButton = (ImageButton) layout.findViewById(R.id.addNewDomainButton);
         domainEntry = (EditText) layout.findViewById(R.id.domainEntry);
-        domainEntry.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                if (charSequence.length() > 0) {
-                    boolean domainFound = false;
-                    for (String domain : settingsManager.getDomainList()) {
-                        if (domain.contentEquals(charSequence)) {
-                            domainFound = true;
-                        }
-                    }
-                    if (domainFound) {
-                        addNewDomainButton.setVisibility(View.INVISIBLE);
-                    } else {
-                        addNewDomainButton.setVisibility(View.VISIBLE);
-                    }
-                } else {
-                    addNewDomainButton.setVisibility(View.INVISIBLE);
-                }
-                updateList();
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
-        });
-        addNewDomainButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                PasswordSetting newSetting = new PasswordSetting(domainEntry.getText().toString());
-                settingsManager.setSetting(newSetting);
-                view.setVisibility(View.INVISIBLE);
-                updateList();
-            }
-        });
         return layout;
     }
 
@@ -115,6 +76,12 @@ public class PasswordSettingsListFragment extends Fragment implements AdapterVie
         } else {
             throw new RuntimeException(activity.toString()
                     + " must implement OnSettingSelected");
+        }
+        if (activity instanceof OnNewSetting) {
+            newSettingListener = (OnNewSetting) activity;
+        } else {
+            throw new RuntimeException(activity.toString()
+                    + " must implement OnNewSetting");
         }
     }
 
@@ -147,7 +114,7 @@ public class PasswordSettingsListFragment extends Fragment implements AdapterVie
     }
 
     /**
-     * This interface must be implemented by activities that contain this
+     * This interfaces must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
      * to the activity and potentially other fragments contained in that
      * activity.
@@ -156,28 +123,82 @@ public class PasswordSettingsListFragment extends Fragment implements AdapterVie
         void onSettingSelected(PasswordSetting setting);
     }
 
-    public void setSettingSelectedListener(OnSettingSelected listener) {
-        this.settingSelectedListener = listener;
+    public interface OnNewSetting {
+        void onNewSetting(PasswordSetting setting);
     }
 
-    public void setKgkAndSettingsManager(KgkManager kgkManager,
-                                         PasswordSettingsManager settingsManager) {
-        this.kgkManager = kgkManager;
-        this.settingsManager = settingsManager;
+    public void setKgkAndSettingsManager(KgkManager newKgkManager,
+                                         PasswordSettingsManager newSettingsManager) {
+        this.kgkManager = newKgkManager;
+        this.settingsManager = newSettingsManager;
+        setListeners();
         updateList();
+    }
+
+    private void setListeners() {
+        if (settingsManager != null)
+        domainEntry.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                if (charSequence.length() > 0) {
+                    boolean domainFound = false;
+                    for (String domain : settingsManager.getDomainList()) {
+                        if (domain.contentEquals(charSequence)) {
+                            domainFound = true;
+                        }
+                    }
+                    if (domainFound) {
+                        addNewDomainButton.setVisibility(View.INVISIBLE);
+                    } else {
+                        addNewDomainButton.setVisibility(View.VISIBLE);
+                    }
+                } else {
+                    addNewDomainButton.setVisibility(View.INVISIBLE);
+                }
+                updateList();
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+        if (kgkManager != null && kgkManager.hasKgk() && settingsManager != null)
+        addNewDomainButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                PasswordSetting newSetting = new PasswordSetting(domainEntry.getText().toString());
+                settingsManager.setSetting(newSetting);
+                settingsManager.storeLocalSettings(kgkManager);
+                view.setVisibility(View.INVISIBLE);
+                updateList();
+                if (newSettingListener != null) newSettingListener.onNewSetting(newSetting);
+            }
+        });
     }
 
     private void updateList() {
         if (settingsManager != null) {
             ArrayList<HashMap<String,String>> settingsList=new ArrayList<>();
             String[] allDomains = settingsManager.getDomainList();
-            String filter = domainEntry.getText().toString().toLowerCase();
+            String domainEntryString = domainEntry.getText().toString();
+            String filter = domainEntryString.toLowerCase();
             filteredDomains.clear();
+            boolean addButtonVisible = true;
             for (String domain : allDomains) {
                 if (domain.toLowerCase().contains(filter)) {
                     filteredDomains.add(domain);
                 }
+                if (domain.equals(domainEntryString)) {
+                    addButtonVisible = false;
+                }
             }
+            addNewDomainButton.setVisibility(addButtonVisible ? View.VISIBLE : View.INVISIBLE);
             for (String domain : filteredDomains) {
                 HashMap<String, String> entry = new HashMap<>();
                 entry.put("domainName", domain);
@@ -217,6 +238,7 @@ public class PasswordSettingsListFragment extends Fragment implements AdapterVie
     public void setDomainFilter(CharSequence sequence) {
         if (domainEntry != null) {
             domainEntry.setText(sequence);
+            updateList();
         } else {
             Log.e("Paste error", "domainEntry object does not exist.");
         }
