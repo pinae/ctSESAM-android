@@ -3,8 +3,10 @@ package de.pinyto.ctSESAM;
 import android.content.Intent;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.Log;
 
-public class UnlockActivity extends FragmentActivity implements LockScreenFragment.OnUnlockSuccessfulListener {
+public class UnlockActivity extends FragmentActivity
+        implements LockScreenFragment.OnUnlockSuccessfulListener {
     public static final String KEYIVKEY = "de.pinyto.ctsesam.KEYIV";
 
     @Override
@@ -18,8 +20,9 @@ public class UnlockActivity extends FragmentActivity implements LockScreenFragme
 
     @Override
     public void onUnlock(KgkManager kgkManager) {
+        Log.d("initial KGK manager", kgkManager.toString());
         Intent intent = new Intent(this, PasswordSettingsListActivity.class);
-        intent.putExtra(KEYIVKEY, kgkManager.exportKeyIvAndReset());
+        intent.putExtra(KEYIVKEY, kgkManager.exportKeyIv());
         startActivity(intent);
     }
 }

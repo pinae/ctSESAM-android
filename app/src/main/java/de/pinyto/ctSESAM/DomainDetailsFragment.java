@@ -82,14 +82,19 @@ public class DomainDetailsFragment extends Fragment implements SmartSelector.OnS
 
     @Override
     public void onPause() {
+        editTextPassword.setText("");
+        passwordGenerator = null;
+        super.onPause();
+    }
+
+    @Override
+    public void onStop() {
         if (isNewSetting) {
             applyChanges();
         } else {
             dismissChanges();
         }
-        editTextPassword.setText("");
-        passwordGenerator = null;
-        super.onPause();
+        super.onStop();
     }
 
     @Override

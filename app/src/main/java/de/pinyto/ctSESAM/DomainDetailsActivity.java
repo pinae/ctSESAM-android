@@ -2,6 +2,7 @@ package de.pinyto.ctSESAM;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 
 public class DomainDetailsActivity extends SyncServiceEnabledFragmentActivity {
     private PasswordSetting setting;
@@ -10,6 +11,7 @@ public class DomainDetailsActivity extends SyncServiceEnabledFragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("details create: KGK mng", kgkManager.toString());
         setContentView(R.layout.activity_domain_details);
         Intent intent = getIntent();
         setting = this.settingsManager.getSetting(
@@ -26,6 +28,7 @@ public class DomainDetailsActivity extends SyncServiceEnabledFragmentActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        Log.d("details resume: KGK mng", kgkManager.toString());
         domainDetailsFragment.setSettingsManagerAndKgkManager(settingsManager, kgkManager);
     }
 

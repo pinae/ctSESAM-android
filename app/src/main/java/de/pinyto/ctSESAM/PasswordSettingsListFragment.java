@@ -26,7 +26,9 @@ import java.util.LinkedList;
  * Activities containing this fragment MUST implement the {@link OnSettingSelected}
  * interface.
  */
-public class PasswordSettingsListFragment extends Fragment implements AdapterView.OnItemClickListener {
+public class PasswordSettingsListFragment extends Fragment
+        implements AdapterView.OnItemClickListener {
+    public static final String KEYIVKEY = "de.pinyto.ctsesam.KEYIV";
     private OnSettingSelected settingSelectedListener;
     private OnNewSetting newSettingListener;
     private KgkManager kgkManager;
@@ -54,6 +56,11 @@ public class PasswordSettingsListFragment extends Fragment implements AdapterVie
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            kgkManager = new KgkManager(getActivity(),
+                    savedInstanceState.getByteArray(KEYIVKEY));
+            settingsManager = new PasswordSettingsManager(getActivity());
+        }
     }
 
     @Override
@@ -86,6 +93,11 @@ public class PasswordSettingsListFragment extends Fragment implements AdapterVie
     }
 
     @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putByteArray(KEYIVKEY, kgkManager.exportKeyIv());
+    }
+
+    @Override
     public void onPause() {
         if (settingsManager.getDomainList().length > 0) {
             Log.d("List Fragment", "Storing Settings...");
@@ -102,6 +114,7 @@ public class PasswordSettingsListFragment extends Fragment implements AdapterVie
 
     @Override
     public void onDetach() {
+        kgkManager.reset();
         super.onDetach();
         settingSelectedListener = null;
     }

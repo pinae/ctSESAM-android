@@ -171,6 +171,7 @@ public class KgkManager {
     }
 
     public void reset() {
+        if (this.kgkCrypter != null) this.kgkCrypter.clear();
         Clearer.zero(this.salt);
         Clearer.zero(this.iv2);
         Clearer.zero(this.salt2);
@@ -182,10 +183,8 @@ public class KgkManager {
         this.kgkCrypter = null;
     }
 
-    public byte[] exportKeyIvAndReset() {
-        byte[] keyIv = this.kgkCrypter.exportKeyIvAndClear();
-        this.reset();
-        return keyIv;
+    public byte[] exportKeyIv() {
+        return this.kgkCrypter.exportKeyIv();
     }
 
     public void deleteKgkAndSettings() {
@@ -197,5 +196,15 @@ public class KgkManager {
                 new byte[] {},
                 Base64.DEFAULT));
         savedDomainsEditor.apply();
+    }
+
+    public String toString() {
+        String s = super.toString();
+        s += hasKgk() ? " KGK is: " : "no KGK: ";
+        s += Hextools.bytesToHex(kgk);
+        s += " salt: " + Hextools.bytesToHex(salt);
+        s += " iv2: " + Hextools.bytesToHex(iv2);
+        s += " salt2: " + Hextools.bytesToHex(salt2);
+        return s;
     }
 }

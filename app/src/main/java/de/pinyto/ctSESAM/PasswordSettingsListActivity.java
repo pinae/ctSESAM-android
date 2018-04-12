@@ -5,6 +5,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.AutoCompleteTextView;
 
 public class PasswordSettingsListActivity extends SyncServiceEnabledFragmentActivity
@@ -20,6 +21,7 @@ public class PasswordSettingsListActivity extends SyncServiceEnabledFragmentActi
         setContentView(R.layout.activity_password_settings_list);
         listScreen = (PasswordSettingsListFragment) getFragmentManager().findFragmentById(
                 R.id.passwordSettingsListFragment);
+        Log.d("list create: KGK mng", kgkManager.toString());
     }
 
     @Override
@@ -31,13 +33,14 @@ public class PasswordSettingsListActivity extends SyncServiceEnabledFragmentActi
     @Override
     protected void onResume() {
         super.onResume();
+        Log.d("list resume: KGK mng", kgkManager.toString());
         listScreen.setKgkAndSettingsManager(kgkManager, settingsManager);
     }
 
     @Override
     public void onSettingSelected(PasswordSetting setting) {
         Intent intent = new Intent(this, DomainDetailsActivity.class);
-        intent.putExtra(UnlockActivity.KEYIVKEY, kgkManager.exportKeyIvAndReset());
+        intent.putExtra(UnlockActivity.KEYIVKEY, kgkManager.exportKeyIv());
         intent.putExtra(DOMAIN, setting.getDomain());
         startActivity(intent);
     }
@@ -45,7 +48,7 @@ public class PasswordSettingsListActivity extends SyncServiceEnabledFragmentActi
     @Override
     public void onNewSetting(PasswordSetting setting) {
         Intent intent = new Intent(this, DomainDetailsActivity.class);
-        intent.putExtra(UnlockActivity.KEYIVKEY, kgkManager.exportKeyIvAndReset());
+        intent.putExtra(UnlockActivity.KEYIVKEY, kgkManager.exportKeyIv());
         intent.putExtra(DOMAIN, setting.getDomain());
         intent.putExtra(ISNEWSETTING, true);
         startActivity(intent);

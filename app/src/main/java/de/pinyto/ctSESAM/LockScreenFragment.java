@@ -121,6 +121,12 @@ public class LockScreenFragment extends Fragment {
         unlockSuccessfulListener = null;
     }
 
+    @Override
+    public void onDestroy() {
+        kgkManager.reset();
+        super.onDestroy();
+    }
+
     /**
      * Implement this interface to register if the user successfully
      * unlocked the KGK.

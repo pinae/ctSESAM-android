@@ -30,9 +30,14 @@ public abstract class SyncServiceEnabledFragmentActivity extends FragmentActivit
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Intent intent = getIntent();
-        kgkManager = new KgkManager(this,
-                intent.getByteArrayExtra(UnlockActivity.KEYIVKEY));
+        if (savedInstanceState != null) {
+            kgkManager = new KgkManager(this,
+                    savedInstanceState.getByteArray(UnlockActivity.KEYIVKEY));
+        } else {
+            Intent intent = getIntent();
+            kgkManager = new KgkManager(this,
+                    intent.getByteArrayExtra(UnlockActivity.KEYIVKEY));
+        }
         settingsManager = new PasswordSettingsManager(getBaseContext());
         try {
             settingsManager.loadLocalSettings(kgkManager);
@@ -53,6 +58,8 @@ public abstract class SyncServiceEnabledFragmentActivity extends FragmentActivit
             Log.d("KEYIVKEY len", Integer.toString(intent.getByteArrayExtra(UnlockActivity.KEYIVKEY).length));
             kgkManager = new KgkManager(this,
                     intent.getByteArrayExtra(UnlockActivity.KEYIVKEY));
+            Log.d("Resuming Activity", kgkManager.hasKgk() ? "We have a KGK" : "We have no KGK!");
+            Log.d("KGK info: ", kgkManager.toString());
             settingsManager = new PasswordSettingsManager(getBaseContext());
             try {
                 settingsManager.loadLocalSettings(kgkManager);
@@ -79,6 +86,17 @@ public abstract class SyncServiceEnabledFragmentActivity extends FragmentActivit
             bindService(intent, syncServiceConnection, Context.BIND_AUTO_CREATE);
         }
         invalidateOptionsMenu();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putByteArray(UnlockActivity.KEYIVKEY, kgkManager.exportKeyIv());
+    }
+
+    @Override
+    protected void onDestroy() {
+        kgkManager.reset();
+        super.onDestroy();
     }
 
     private ServiceConnection syncServiceConnection = new ServiceConnection() {

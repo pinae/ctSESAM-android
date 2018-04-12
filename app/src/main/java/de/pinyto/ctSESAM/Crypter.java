@@ -118,12 +118,15 @@ public class Crypter {
         return new byte[] {};
     }
 
-    public byte[] exportKeyIvAndClear() {
+    public byte[] exportKeyIv() {
         byte[] keyIv;
         keyIv = Arrays.copyOf(this.key, 48);
         System.arraycopy(this.iv, 0, keyIv, 32, 16);
+        return keyIv;
+    }
+
+    public void clear() {
         Clearer.zero(this.key);
         Clearer.zero(this.iv);
-        return keyIv;
     }
 }
