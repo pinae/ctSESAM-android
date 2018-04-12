@@ -23,6 +23,12 @@ public class DomainDetailsActivity extends SyncServiceEnabledFragmentActivity {
         setToNotGenerated();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        domainDetailsFragment.setSettingsManagerAndKgkManager(settingsManager, kgkManager);
+    }
+
     protected void setToNotGenerated() {
         super.setToNotGenerated();
         if (domainDetailsFragment != null) {

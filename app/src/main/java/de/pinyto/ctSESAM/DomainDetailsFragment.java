@@ -82,6 +82,11 @@ public class DomainDetailsFragment extends Fragment implements SmartSelector.OnS
 
     @Override
     public void onPause() {
+        if (isNewSetting) {
+            applyChanges();
+        } else {
+            dismissChanges();
+        }
         editTextPassword.setText("");
         passwordGenerator = null;
         super.onPause();
@@ -171,7 +176,6 @@ public class DomainDetailsFragment extends Fragment implements SmartSelector.OnS
         }
         if (setting.hasLegacyPassword()) {
             editTextPassword.setText(setting.getLegacyPassword());
-            this.updateView();
             if (passwordGeneratedListener != null)
                 passwordGeneratedListener.onPasswordGenerated();
         }
@@ -251,23 +255,31 @@ public class DomainDetailsFragment extends Fragment implements SmartSelector.OnS
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                settingsManager.setSetting(setting);
-                settingsManager.storeLocalSettings(kgkManager);
+                applyChanges();
                 updateView();
             }
         });
         dismissChangesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (isNewSetting) {
-                    settingsManager.deleteSetting(setting.getDomain());
-                    settingsManager.storeLocalSettings(kgkManager);
-                    getActivity().finish();
-                } else {
-                    setting = settingsManager.getSetting(setting.getDomain());
-                    updateView();
-                }
+                dismissChanges();
             }
         });
+    }
+
+    private void applyChanges() {
+        settingsManager.setSetting(setting);
+        settingsManager.storeLocalSettings(kgkManager);
+    }
+
+    private void dismissChanges() {
+        if (isNewSetting) {
+            settingsManager.deleteSetting(setting.getDomain());
+            settingsManager.storeLocalSettings(kgkManager);
+            getActivity().finish();
+        } else {
+            setting = settingsManager.getSetting(setting.getDomain());
+            updateView();
+        }
     }
 }
