@@ -124,10 +124,6 @@ public abstract class SyncServiceEnabledActivity extends AppCompatActivity
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.domain_details_actions, menu);
-        MenuItem copyItem = menu.findItem(R.id.action_copy);
-        copyItem.setVisible(this.passwordGenerator != null);
         MenuItem syncItem = menu.findItem(R.id.action_sync);
         syncItem.setVisible(isAppInstalled(SyncResponseHandler.syncAppName));
         return super.onCreateOptionsMenu(menu);
@@ -137,21 +133,6 @@ public abstract class SyncServiceEnabledActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_copy) {
-            TextView textViewPassword = (TextView) findViewById(R.id.editTextPassword);
-            ClipData clipDataPassword = ClipData.newPlainText(
-                    "password",
-                    textViewPassword.getText()
-            );
-            ClipboardManager clipboard =
-                    (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-            if (clipboard != null) {
-                clipboard.setPrimaryClip(clipDataPassword);
-            }
-            return true;
-        }
 
         if (id == R.id.action_sync) {
             if (!syncServiceBound) {

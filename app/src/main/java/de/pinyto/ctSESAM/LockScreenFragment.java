@@ -79,24 +79,14 @@ public class LockScreenFragment extends Fragment {
                 tryToUnlockKgk();
             }
         });
-        deleteSettingsButton = (Button) fLayout.findViewById(R.id.deleteKgkButton);
-        deleteSettingsButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                settingsManager.deleteAllSettings();
-                kgkManager.deleteKgkAndSettings();
-                kgkManager.reset();
-                unlockButton.setText(R.string.create_new_kgk);
-            }
-        });
-        Switch expertOptionsSwitch = (Switch) fLayout.findViewById(R.id.showExpertOptinsSwitch);
-        expertOptionsSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                deleteSettingsButton.setVisibility(b ? View.VISIBLE : View.INVISIBLE);
-            }
-        });
         return fLayout;
+    }
+
+    public void deleteAllSettings() {
+        settingsManager.deleteAllSettings();
+        kgkManager.deleteKgkAndSettings();
+        kgkManager.reset();
+        unlockButton.setText(R.string.create_new_kgk);
     }
 
     @Override

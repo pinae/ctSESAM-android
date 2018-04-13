@@ -91,7 +91,7 @@ public class PasswordSetting {
     }
 
     public void setLegacyPassword(String legacyPassword) {
-        if (!legacyPassword.equals(this.legacyPassword)) {
+        if (legacyPassword != null && !legacyPassword.equals(this.legacyPassword)) {
             this.synced = false;
         }
         this.legacyPassword = legacyPassword;

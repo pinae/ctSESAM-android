@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 
 public class PasswordSettingsListActivity extends SyncServiceEnabledActivity
         implements PasswordSettingsListFragment.OnSettingSelected,
@@ -36,6 +38,12 @@ public class PasswordSettingsListActivity extends SyncServiceEnabledActivity
         super.onResume();
         Log.d("list resume: KGK mng", kgkManager.toString());
         listScreen.setKgkAndSettingsManager(kgkManager, settingsManager);
+    }
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.settings_list_actions, menu);
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override

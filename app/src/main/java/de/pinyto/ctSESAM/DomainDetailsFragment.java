@@ -141,6 +141,10 @@ public class DomainDetailsFragment extends Fragment implements SmartSelector.OnS
         void onPasswordGenerated();
     }
 
+    public void setPasswordGeneratedListener(OnPasswordGeneratedListener listener) {
+        this.passwordGeneratedListener = listener;
+    }
+
     public void generatePassword() {
         if (this.kgkManager.hasKgk()) {
             if (!setting.hasLegacyPassword()) {
@@ -286,5 +290,9 @@ public class DomainDetailsFragment extends Fragment implements SmartSelector.OnS
             setting = settingsManager.getSetting(setting.getDomain());
             updateView();
         }
+    }
+
+    public boolean hasPassword() {
+        return this.passwordGenerator != null;
     }
 }
