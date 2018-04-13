@@ -9,16 +9,19 @@
     tools:context=".UnlockActivity"
     android:baselineAligned="false">
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/sync_toolbar"
+    <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/accent_material_light"
-        android:elevation="4dp"
-        android:minHeight="16dp"
-        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-        app:titleTextAppearance="@style/Base.TextAppearance.Widget.AppCompat.Toolbar.Title" />
+        android:theme="@style/AppBarOverlay">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/sync_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="#00838f"
+            app:popupTheme="@style/PopupOverlay" />
+
+    </android.support.design.widget.AppBarLayout>
 
     <fragment
         android:id="@+id/lockScreenFragment"

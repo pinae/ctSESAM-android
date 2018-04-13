@@ -37,4 +37,6 @@
     <string name="contentDescriptionForce">One of these characters must be in the password.</string>
     <string name="settingsListEmpty">Nothing there.</string>
     <string name="masterPasswordFieldHint">Enter the masterpassword.</string>
+    <string name="title_activity_test">TestActivity</string>
+    <string name="action_settings">Settings</string>
 </resources>
