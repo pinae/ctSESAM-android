@@ -2,17 +2,24 @@ package de.pinyto.ctSESAM;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
+import android.support.v7.app.ActionBar;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MenuItem;
 
-public class DomainDetailsActivity extends SyncServiceEnabledFragmentActivity {
+public class DomainDetailsActivity extends SyncServiceEnabledActivity {
     private PasswordSetting setting;
     private DomainDetailsFragment domainDetailsFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d("details create: KGK mng", kgkManager.toString());
         setContentView(R.layout.activity_domain_details);
+        Toolbar upAndCopyToolbar = (Toolbar) findViewById(R.id.up_and_copy_toolbar);
+        setSupportActionBar(upAndCopyToolbar);
+        ActionBar ab = getSupportActionBar();
+        if (ab != null) ab.setDisplayHomeAsUpEnabled(true);
         Intent intent = getIntent();
         setting = this.settingsManager.getSetting(
                 intent.getStringExtra(PasswordSettingsListActivity.DOMAIN));
@@ -28,7 +35,6 @@ public class DomainDetailsActivity extends SyncServiceEnabledFragmentActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d("details resume: KGK mng", kgkManager.toString());
         domainDetailsFragment.setSettingsManagerAndKgkManager(settingsManager, kgkManager);
     }
 
@@ -37,5 +43,18 @@ public class DomainDetailsActivity extends SyncServiceEnabledFragmentActivity {
         if (domainDetailsFragment != null) {
             domainDetailsFragment.clearPassword();
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            // Respond to the action bar's Up/Home button
+            case android.R.id.home:
+                Intent upIntent = NavUtils.getParentActivityIntent(this);
+                upIntent.putExtra(UnlockActivity.KEYIVKEY, kgkManager.exportKeyIv());
+                NavUtils.navigateUpTo(this, upIntent);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

@@ -5,10 +5,10 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.widget.AutoCompleteTextView;
 
-public class PasswordSettingsListActivity extends SyncServiceEnabledFragmentActivity
+public class PasswordSettingsListActivity extends SyncServiceEnabledActivity
         implements PasswordSettingsListFragment.OnSettingSelected,
         PasswordSettingsListFragment.OnNewSetting {
     public static final String DOMAIN = "de.pinyto.ctsesam.DOMAIN";
@@ -21,7 +21,8 @@ public class PasswordSettingsListActivity extends SyncServiceEnabledFragmentActi
         setContentView(R.layout.activity_password_settings_list);
         listScreen = (PasswordSettingsListFragment) getFragmentManager().findFragmentById(
                 R.id.passwordSettingsListFragment);
-        Log.d("list create: KGK mng", kgkManager.toString());
+        Toolbar listToolbar = (Toolbar) findViewById(R.id.list_toolbar);
+        setSupportActionBar(listToolbar);
     }
 
     @Override

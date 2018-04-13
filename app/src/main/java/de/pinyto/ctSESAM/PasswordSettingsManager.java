@@ -131,11 +131,8 @@ public class PasswordSettingsManager {
             jsonError.printStackTrace();
         }
         SharedPreferences.Editor savedDomainsEditor = savedDomains.edit();
-        Log.d("storing", storeStructure.toString());
-        Log.d("compressed length", Integer.toString(Packer.compress(storeStructure.toString()).length));
         byte[] encryptedSettings = settingsCrypter.encrypt(
                 Packer.compress(storeStructure.toString()));
-        Log.d("cyphertext length", Integer.toString(encryptedSettings.length));
         savedDomainsEditor.putString("encryptedSettings",
                 Base64.encodeToString(
                         encryptedSettings,

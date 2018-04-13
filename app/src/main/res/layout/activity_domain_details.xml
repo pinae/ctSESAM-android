@@ -4,12 +4,25 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".DomainDetailsActivity">
+    android:orientation="vertical"
+    tools:context=".DomainDetailsActivity"
+    android:baselineAligned="false">
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/up_and_copy_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/accent_material_light"
+        android:elevation="4dp"
+        android:minHeight="16dp"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        app:titleTextAppearance="@style/Base.TextAppearance.Widget.AppCompat.Toolbar.Title" />
 
     <fragment android:name="de.pinyto.ctSESAM.DomainDetailsFragment"
         android:id="@+id/domainDetailsFragment"
         android:layout_weight="1"
-        android:layout_width="0dp"
-        android:layout_height="match_parent" />
+        android:layout_width="match_parent"
+        android:layout_height="0dp" />
 
 </LinearLayout>

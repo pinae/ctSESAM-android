@@ -12,14 +12,14 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public abstract class SyncServiceEnabledFragmentActivity extends FragmentActivity
+public abstract class SyncServiceEnabledActivity extends AppCompatActivity
         implements SyncResponseHandler.OnSyncFinishedListener {
     protected Messenger syncServiceMessenger = null;
     protected boolean syncServiceBound;
@@ -30,11 +30,12 @@ public abstract class SyncServiceEnabledFragmentActivity extends FragmentActivit
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (savedInstanceState != null) {
+        if (savedInstanceState != null && savedInstanceState.containsKey(UnlockActivity.KEYIVKEY)) {
             kgkManager = new KgkManager(this,
                     savedInstanceState.getByteArray(UnlockActivity.KEYIVKEY));
-        } else {
-            Intent intent = getIntent();
+        }
+        Intent intent = getIntent();
+        if (intent.hasExtra(UnlockActivity.KEYIVKEY)) {
             kgkManager = new KgkManager(this,
                     intent.getByteArrayExtra(UnlockActivity.KEYIVKEY));
         }
@@ -55,21 +56,20 @@ public abstract class SyncServiceEnabledFragmentActivity extends FragmentActivit
         super.onResume();
         if (kgkManager == null || !kgkManager.hasKgk() || settingsManager == null) {
             Intent intent = getIntent();
-            Log.d("KEYIVKEY len", Integer.toString(intent.getByteArrayExtra(UnlockActivity.KEYIVKEY).length));
-            kgkManager = new KgkManager(this,
-                    intent.getByteArrayExtra(UnlockActivity.KEYIVKEY));
-            Log.d("Resuming Activity", kgkManager.hasKgk() ? "We have a KGK" : "We have no KGK!");
-            Log.d("KGK info: ", kgkManager.toString());
-            settingsManager = new PasswordSettingsManager(getBaseContext());
-            try {
-                settingsManager.loadLocalSettings(kgkManager);
-            } catch (WrongPasswordException e) {
-                Log.e("Wrong password?", "This should not happen at this point!");
-                Log.e("WrongPasswordException", e.toString());
-                Intent newIntent = new Intent(this, UnlockActivity.class);
-                startActivity(newIntent);
+            if (intent.hasExtra(UnlockActivity.KEYIVKEY)) {
+                kgkManager = new KgkManager(this,
+                        intent.getByteArrayExtra(UnlockActivity.KEYIVKEY));
+                settingsManager = new PasswordSettingsManager(getBaseContext());
+                try {
+                    settingsManager.loadLocalSettings(kgkManager);
+                } catch (WrongPasswordException e) {
+                    Log.e("Wrong password?", "This should not happen at this point!");
+                    Log.e("WrongPasswordException", e.toString());
+                    Intent newIntent = new Intent(this, UnlockActivity.class);
+                    startActivity(newIntent);
+                }
+                setToNotGenerated();
             }
-            setToNotGenerated();
         }
     }
 
@@ -125,7 +125,7 @@ public abstract class SyncServiceEnabledFragmentActivity extends FragmentActivit
 
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.activity_main_actions, menu);
+        getMenuInflater().inflate(R.menu.domain_details_actions, menu);
         MenuItem copyItem = menu.findItem(R.id.action_copy);
         copyItem.setVisible(this.passwordGenerator != null);
         MenuItem syncItem = menu.findItem(R.id.action_sync);
@@ -135,9 +135,7 @@ public abstract class SyncServiceEnabledFragmentActivity extends FragmentActivit
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+        // Handle action bar item clicks here.
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
