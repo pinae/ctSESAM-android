@@ -32,6 +32,7 @@ import java.util.Locale;
 public class DomainDetailsFragment extends Fragment
         implements SmartSelector.OnStrengthSelectedEventListener,
         GeneratePasswordTask.OnPasswordGeneratedListener {
+    public static final String KEYIVKEY = "de.pinyto.ctsesam.KEYIV";
     private KgkManager kgkManager;
     private PasswordSettingsManager settingsManager;
     private PasswordSetting setting;
@@ -73,6 +74,13 @@ public class DomainDetailsFragment extends Fragment
         textViewLength = fLayout.findViewById(R.id.textViewLength);
         saveButton = fLayout.findViewById(R.id.saveButton);
         dismissChangesButton = fLayout.findViewById(R.id.dismissChangesButton);
+        // Restore managers if needed
+        if (savedInstanceState != null) {
+            kgkManager = new KgkManager(getActivity(),
+                    savedInstanceState.getByteArray(KEYIVKEY));
+            settingsManager = new PasswordSettingsManager(getActivity());
+            this.setSettingsManagerAndKgkManager(settingsManager, kgkManager);
+        }
         return fLayout;
     }
 
@@ -91,11 +99,16 @@ public class DomainDetailsFragment extends Fragment
     }
 
     @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putByteArray(KEYIVKEY, kgkManager.exportKeyIv());
+    }
+
+    @Override
     public void onStop() {
         if (isNewSetting) {
             applyChanges();
         } else {
-            dismissChanges();
+            dismissChanges(false);
         }
         super.onStop();
     }
@@ -175,8 +188,6 @@ public class DomainDetailsFragment extends Fragment
                             ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN)
                                     .putInt(setting.getIterations()).array());
                 } else {
-                    this.settingsManager.setSetting(setting);
-                    this.settingsManager.storeLocalSettings(this.kgkManager);
                     editTextPassword.setText(this.passwordGenerator.getPassword(setting));
                     if (passwordGeneratedListener != null)
                         passwordGeneratedListener.onPasswordGenerated();
@@ -274,24 +285,34 @@ public class DomainDetailsFragment extends Fragment
         dismissChangesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                dismissChanges();
+                dismissChanges(true);
             }
         });
     }
 
     private void applyChanges() {
         settingsManager.setSetting(setting);
+        try {
+            setting = (PasswordSetting) setting.clone();
+        } catch (CloneNotSupportedException e) {
+            Log.e("Unable to clone setting", e.toString());
+        }
         settingsManager.storeLocalSettings(kgkManager);
     }
 
-    private void dismissChanges() {
+    private void dismissChanges(boolean doGeneratePassword) {
         if (isNewSetting) {
             settingsManager.deleteSetting(setting.getDomain());
             settingsManager.storeLocalSettings(kgkManager);
             getActivity().finish();
         } else {
-            setting = settingsManager.getSetting(setting.getDomain());
-            updateView();
+            try {
+                setting = (PasswordSetting) settingsManager.getSetting(setting.getDomain()).clone();
+                updateView();
+                if (doGeneratePassword) generatePassword();
+            } catch (CloneNotSupportedException e) {
+                Log.e("Unable to clone setting", e.toString());
+            }
         }
     }
 

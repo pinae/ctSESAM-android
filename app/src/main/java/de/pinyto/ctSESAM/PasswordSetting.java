@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 /**
  * PasswordSetting wraps a set of settings for one domain.
  */
-public class PasswordSetting {
+public class PasswordSetting implements Cloneable {
     private String domain;
     private String url;
     private String username;
@@ -48,6 +48,10 @@ public class PasswordSetting {
         this.mDate = this.cDate;
         this.characterSetExtra = this.defaultCharacterSetExtra;
         this.calculateTemplate();
+    }
+
+    protected Object clone() throws CloneNotSupportedException {
+        return super.clone();
     }
 
     public String getDomain() {

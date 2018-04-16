@@ -22,13 +22,17 @@ public class DomainDetailsActivity extends SyncServiceEnabledActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_domain_details);
-        Toolbar upAndCopyToolbar = (Toolbar) findViewById(R.id.up_and_copy_toolbar);
+        Toolbar upAndCopyToolbar = findViewById(R.id.up_and_copy_toolbar);
         setSupportActionBar(upAndCopyToolbar);
         ActionBar ab = getSupportActionBar();
         if (ab != null) ab.setDisplayHomeAsUpEnabled(true);
         Intent intent = getIntent();
-        setting = this.settingsManager.getSetting(
-                intent.getStringExtra(PasswordSettingsListActivity.DOMAIN));
+        try {
+            setting = (PasswordSetting) this.settingsManager.getSetting(
+                    intent.getStringExtra(PasswordSettingsListActivity.DOMAIN)).clone();
+        } catch (CloneNotSupportedException e) {
+            Log.e("Unable to clone setting", e.toString());
+        }
         boolean isNewSetting = intent.getBooleanExtra(
                 PasswordSettingsListActivity.ISNEWSETTING, false);
         domainDetailsFragment = (DomainDetailsFragment) getFragmentManager().findFragmentById(
@@ -71,7 +75,7 @@ public class DomainDetailsActivity extends SyncServiceEnabledActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_copy:
-                TextView textViewPassword = (TextView) findViewById(R.id.editTextPassword);
+                TextView textViewPassword = findViewById(R.id.editTextPassword);
                 ClipData clipDataPassword = ClipData.newPlainText(
                         "password",
                         textViewPassword.getText()
