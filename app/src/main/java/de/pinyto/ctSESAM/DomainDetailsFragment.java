@@ -29,7 +29,9 @@ import java.util.Locale;
  * {@link DomainDetailsFragment.OnPasswordGeneratedListener} interface
  * to handle interaction events.
  */
-public class DomainDetailsFragment extends Fragment implements SmartSelector.OnStrengthSelectedEventListener {
+public class DomainDetailsFragment extends Fragment
+        implements SmartSelector.OnStrengthSelectedEventListener,
+        GeneratePasswordTask.OnPasswordGeneratedListener {
     private KgkManager kgkManager;
     private PasswordSettingsManager settingsManager;
     private PasswordSetting setting;
@@ -58,19 +60,19 @@ public class DomainDetailsFragment extends Fragment implements SmartSelector.OnS
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View fLayout = inflater.inflate(R.layout.fragment_domain_details, container, false);
-        domainView = (TextView) fLayout.findViewById(R.id.textViewDomain);
-        urlView = (EditText) fLayout.findViewById(R.id.editTextUrl);
-        usernameView = (EditText) fLayout.findViewById(R.id.editTextUsername);
-        editTextPassword = (EditText) fLayout.findViewById(R.id.editTextPassword);
-        legacyPasswordSwitch = (Switch) fLayout.findViewById(R.id.switchLegacyPassword);
-        iterationCountLayout = (RelativeLayout) fLayout.findViewById(R.id.iterationCountLayout);
-        editTextIterationCount = (EditText) fLayout.findViewById(R.id.iterationCount);
-        smartSelector = (SmartSelector) fLayout.findViewById(R.id.smartSelector);
+        domainView = fLayout.findViewById(R.id.textViewDomain);
+        urlView = fLayout.findViewById(R.id.editTextUrl);
+        usernameView = fLayout.findViewById(R.id.editTextUsername);
+        editTextPassword = fLayout.findViewById(R.id.editTextPassword);
+        legacyPasswordSwitch = fLayout.findViewById(R.id.switchLegacyPassword);
+        iterationCountLayout = fLayout.findViewById(R.id.iterationCountLayout);
+        editTextIterationCount = fLayout.findViewById(R.id.iterationCount);
+        smartSelector = fLayout.findViewById(R.id.smartSelector);
         smartSelector.setOnStrengthSelectedEventListener(this);
-        lengthComplexityLayout = (LinearLayout) fLayout.findViewById(R.id.lengthComplexityLayout);
-        textViewLength = (TextView) fLayout.findViewById(R.id.textViewLength);
-        saveButton = (Button) fLayout.findViewById(R.id.saveButton);
-        dismissChangesButton = (Button) fLayout.findViewById(R.id.dismissChangesButton);
+        lengthComplexityLayout = fLayout.findViewById(R.id.lengthComplexityLayout);
+        textViewLength = fLayout.findViewById(R.id.textViewLength);
+        saveButton = fLayout.findViewById(R.id.saveButton);
+        dismissChangesButton = fLayout.findViewById(R.id.dismissChangesButton);
         return fLayout;
     }
 
@@ -78,6 +80,7 @@ public class DomainDetailsFragment extends Fragment implements SmartSelector.OnS
     public void onResume() {
         super.onResume();
         updateView();
+        generatePassword();
     }
 
     @Override
@@ -129,6 +132,13 @@ public class DomainDetailsFragment extends Fragment implements SmartSelector.OnS
         String shuffledTemplate = shuffleString(template.toString());
         setting.setTemplate(shuffledTemplate);
         updateView();
+        generatePassword();
+    }
+
+    @Override
+    public void onPasswordGenerationFinished(PasswordGenerator generator) {
+        passwordGenerator = generator;
+        generatePassword();
     }
 
     /**
@@ -149,14 +159,7 @@ public class DomainDetailsFragment extends Fragment implements SmartSelector.OnS
         if (this.kgkManager.hasKgk()) {
             if (!setting.hasLegacyPassword()) {
                 if (this.passwordGenerator == null) {
-                    GeneratePasswordTask generatePasswordTask = new GeneratePasswordTask(
-                            new GeneratePasswordTask.OnPasswordGeneratedListener() {
-                        @Override
-                        public void onFinished(PasswordGenerator generator) {
-                            passwordGenerator = generator;
-                            generatePassword();
-                        }
-                    });
+                    GeneratePasswordTask generatePasswordTask = new GeneratePasswordTask(this);
                     if (setting.getIterations() <= 0) {
                         Log.e("Password Setting Error",
                                 "Iterations too small: " +
@@ -211,7 +214,6 @@ public class DomainDetailsFragment extends Fragment implements SmartSelector.OnS
         smartSelector.setSelectedLength(setting.getLength()-4);
         smartSelector.setSelectedComplexity(setting.getComplexity());
         textViewLength.setText(String.format(Locale.GERMANY, "%d", setting.getLength()));
-        generatePassword();
     }
 
     private static String shuffleString(String string)
@@ -246,15 +248,15 @@ public class DomainDetailsFragment extends Fragment implements SmartSelector.OnS
                 public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                     if (b) {
                         setting.setLegacyPassword(editTextPassword.getText().toString());
-                        updateView();
                     } else {
                         setting.setLegacyPassword(null);
-                        generatePassword();
-                        updateView();
                     }
+                    updateView();
+                    generatePassword();
                 }
             });
         this.updateView();
+        this.generatePassword();
     }
 
     public void setSettingsManagerAndKgkManager(PasswordSettingsManager newSettingsManager,
@@ -266,6 +268,7 @@ public class DomainDetailsFragment extends Fragment implements SmartSelector.OnS
             public void onClick(View view) {
                 applyChanges();
                 updateView();
+                isNewSetting = false;
             }
         });
         dismissChangesButton.setOnClickListener(new View.OnClickListener() {

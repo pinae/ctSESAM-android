@@ -1,6 +1,7 @@
 package de.pinyto.ctSESAM;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
@@ -44,11 +45,11 @@ class GeneratePasswordTask extends AsyncTask<byte[], Void, PasswordGenerator> {
         OnPasswordGeneratedListener passwordGeneratedListener =
                 passwordGeneratedListenerWeakRef.get();
         if (passwordGeneratedListener != null) {
-            passwordGeneratedListener.onFinished(generator);
+            passwordGeneratedListener.onPasswordGenerationFinished(generator);
         }
     }
 
     public interface OnPasswordGeneratedListener {
-        void onFinished(PasswordGenerator generator);
+        void onPasswordGenerationFinished(PasswordGenerator generator);
     }
 }
