@@ -11,7 +11,9 @@
     <string name="domain">Domain:</string>
     <string name="masterpassword">Masterpassword:</string>
     <string name="url">URL:</string>
+    <string name="url_hint">https://web.site.of/the/domain</string>
     <string name="username">Username:</string>
+    <string name="username_hint">username or mail@domain</string>
     <string name="letters">Letters</string>
     <string name="digits">Digits</string>
     <string name="length">Length:</string>

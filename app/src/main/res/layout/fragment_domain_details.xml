@@ -36,13 +36,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
+        android:inputType="text"
         android:text="@string/init_password"
+        android:hint="@string/init_password"
         android:id="@+id/editTextPassword"
         android:layout_below="@+id/textViewPasswordHeading"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:gravity="center"
-        android:textAlignment="center" />
+        android:textAlignment="center"
+        tools:ignore="TextFields" />
 
     <View
         android:id="@+id/divider"
@@ -73,6 +76,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textUri"
+                android:hint="@string/url_hint"
                 android:id="@+id/editTextUrl" />
 
             <TextView
@@ -85,6 +89,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="text"
+                android:hint="@string/username_hint"
                 android:id="@+id/editTextUsername" />
 
             <Switch
@@ -104,14 +109,17 @@
                     android:id="@+id/iterationCountHeading"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
                     android:layout_alignParentLeft="true"
+                    android:paddingBottom="16dp"
                     android:text="@string/iteration_count" />
 
                 <EditText
                     android:id="@+id/iterationCount"
-                    android:layout_toRightOf="@+id/iterationCountHeading"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_toRightOf="@+id/iterationCountHeading"
+                    android:hint="@string/init_password"
                     android:ems="10"
                     android:inputType="numberDecimal" />
 
@@ -123,6 +131,7 @@
                 android:id="@+id/smartSelector" />
 
             <LinearLayout
+                android:baselineAligned="false"
                 android:id="@+id/lengthComplexityLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
@@ -155,6 +164,7 @@
 
             <LinearLayout
                 android:id="@+id/saveButtonLayout"
+                tools:style="?android:attr/buttonBarStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -163,12 +173,14 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
+                    tools:style="?android:attr/buttonBarButtonStyle"
                     android:text="@string/save_button" />
 
                 <Button
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
+                    tools:style="?android:attr/buttonBarButtonStyle"
                     android:text="@string/dismiss_changes_button"
                     android:id="@+id/dismissChangesButton" />
 
