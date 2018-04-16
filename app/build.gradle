@@ -5,12 +5,12 @@ android {
         config {
         }
     }
-    compileSdkVersion 22
+    compileSdkVersion 26
     buildToolsVersion '27.0.3'
     defaultConfig {
         applicationId "de.pinyto.ctSESAM"
         minSdkVersion 16
-        targetSdkVersion 22
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
     }
@@ -26,7 +26,7 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:22.2.1'
+    implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.android.support.constraint:constraint-layout:1.1.0'
-    implementation 'com.android.support:design:22.2.1'
+    implementation 'com.android.support:design:26.1.0'
 }
