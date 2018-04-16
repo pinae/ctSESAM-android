@@ -91,6 +91,14 @@ public abstract class SyncServiceEnabledActivity extends AppCompatActivity
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         savedInstanceState.putByteArray(UnlockActivity.KEYIVKEY, kgkManager.exportKeyIv());
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
+    @Override
+    public void onPause() {
+        unbindService(syncServiceConnection);
+        syncServiceBound = false;
+        super.onPause();
     }
 
     @Override
