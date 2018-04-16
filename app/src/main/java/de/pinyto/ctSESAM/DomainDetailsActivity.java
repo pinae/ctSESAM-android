@@ -58,7 +58,6 @@ public class DomainDetailsActivity extends SyncServiceEnabledActivity
 
     @Override
     public void onPasswordGenerated() {
-        Log.d("password", "generated");
         invalidateOptionsMenu();
     }
 
@@ -67,7 +66,6 @@ public class DomainDetailsActivity extends SyncServiceEnabledActivity
         getMenuInflater().inflate(R.menu.domain_details_actions, menu);
         MenuItem copyItem = menu.findItem(R.id.action_copy);
         copyItem.setVisible(domainDetailsFragment.hasPassword());
-        Log.d("inflating", "menu");
         return super.onCreateOptionsMenu(menu);
     }
 

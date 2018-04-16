@@ -100,10 +100,6 @@ public class PasswordSettingsListFragment extends Fragment
     @Override
     public void onPause() {
         if (settingsManager.getDomainList().length > 0) {
-            Log.d("List Fragment", "Storing Settings...");
-            for (String domain: settingsManager.getDomainList()) {
-                Log.d("List Fragment List", domain);
-            }
             if (kgkManager.hasKgk()) settingsManager.storeLocalSettings(kgkManager);
         } else {
             settingsManager.deleteAllSettings();

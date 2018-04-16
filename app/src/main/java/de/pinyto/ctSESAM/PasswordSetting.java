@@ -98,6 +98,9 @@ public class PasswordSetting implements Cloneable {
         if (legacyPassword != null && !legacyPassword.equals(this.legacyPassword)) {
             this.synced = false;
         }
+        if (legacyPassword == null && this.hasLegacyPassword()) {
+            this.synced = false;
+        }
         this.legacyPassword = legacyPassword;
     }
 

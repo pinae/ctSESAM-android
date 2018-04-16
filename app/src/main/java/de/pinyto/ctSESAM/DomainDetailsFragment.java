@@ -3,6 +3,8 @@ package de.pinyto.ctSESAM;
 import android.app.Activity;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,12 +17,14 @@ import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 
 
 /**
@@ -93,6 +97,7 @@ public class DomainDetailsFragment extends Fragment
 
     @Override
     public void onPause() {
+        Clearer.zero(editTextPassword.getText());
         editTextPassword.setText("");
         passwordGenerator = null;
         super.onPause();
@@ -142,7 +147,7 @@ public class DomainDetailsFragment extends Fragment
         while (template.length() < length) {
             template.append("x");
         }
-        String shuffledTemplate = shuffleString(template.toString());
+        String shuffledTemplate = shuffleString(template.toString(), setting.getSalt());
         setting.setTemplate(shuffledTemplate);
         updateView();
         generatePassword();
@@ -208,6 +213,7 @@ public class DomainDetailsFragment extends Fragment
         domainView.setText(setting.getDomain());
         urlView.setText(setting.getUrl());
         usernameView.setText(setting.getUsername());
+        Log.d("hasLegacyPassword", Boolean.toString(setting.hasLegacyPassword()));
         legacyPasswordSwitch.setChecked(setting.hasLegacyPassword());
         if (setting.hasLegacyPassword()) {
             editTextPassword.setEnabled(true);
@@ -220,17 +226,25 @@ public class DomainDetailsFragment extends Fragment
             smartSelector.setVisibility(View.VISIBLE);
             lengthComplexityLayout.setVisibility(View.VISIBLE);
         }
+        Log.d("setting iterations", String.format(Locale.GERMANY, "%d", setting.getIterations()));
         editTextIterationCount.setText(String.format(Locale.GERMANY, "%d",
                 setting.getIterations()));
+        Log.d("setting complexity", Integer.toString(setting.getLength()-4) + ", " + Integer.toString(setting.getComplexity()));
         smartSelector.setSelectedLength(setting.getLength()-4);
         smartSelector.setSelectedComplexity(setting.getComplexity());
+        Log.d("setting len label", String.format(Locale.GERMANY, "%d", setting.getLength()));
         textViewLength.setText(String.format(Locale.GERMANY, "%d", setting.getLength()));
     }
 
-    private static String shuffleString(String string)
+    private static String shuffleString(String string, byte[] salt)
     {
         List<String> letters = Arrays.asList(string.split(""));
-        Collections.shuffle(letters);
+        /*byte[] seedBuffer = ByteUtils.longToBytes(0);
+        System.arraycopy(salt, 0, seedBuffer, 2, 48 / 8);
+        Log.d("seedBuffer len", Integer.toString(seedBuffer.length));
+        Log.d("seed", Long.toString(ByteUtils.bytesToLong(seedBuffer)));*/
+        Random rng = new Random(0);
+        Collections.shuffle(letters, rng);
         StringBuilder shuffled = new StringBuilder();
         for (String letter : letters) {
             shuffled.append(letter);
@@ -257,8 +271,11 @@ public class DomainDetailsFragment extends Fragment
             new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                    Log.d("switch is ", Boolean.toString(b));
                     if (b) {
-                        setting.setLegacyPassword(editTextPassword.getText().toString());
+                        if (!setting.hasLegacyPassword()) {
+                            setting.setLegacyPassword(editTextPassword.getText().toString());
+                        }
                     } else {
                         setting.setLegacyPassword(null);
                     }
@@ -266,6 +283,27 @@ public class DomainDetailsFragment extends Fragment
                     generatePassword();
                 }
             });
+        editTextIterationCount.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                try {
+                    setting.setIterations(Integer.parseInt(charSequence.toString()));
+                    generatePassword();
+                } catch (NumberFormatException e) {
+                    Log.e("#iterations not an int", e.toString());
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
         this.updateView();
         this.generatePassword();
     }
