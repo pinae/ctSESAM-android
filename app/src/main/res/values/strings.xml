@@ -7,6 +7,7 @@
     <string name="delete_kgk_and_settings">Delete all settings</string>
     <string name="action_copy">Copy the password to the clipboard</string>
     <string name="action_sync">Syncronize password settings</string>
+    <string name="action_initial_sync">Load KGK from syncserver</string>
     <string name="action_up">Back to the list</string>
     <string name="domain">Domain:</string>
     <string name="masterpassword">Masterpassword:</string>

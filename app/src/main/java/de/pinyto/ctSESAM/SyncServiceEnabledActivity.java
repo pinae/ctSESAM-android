@@ -153,7 +153,7 @@ public abstract class SyncServiceEnabledActivity extends AppCompatActivity
                     kgkManager,
                     settingsManager,
                     syncServiceMessenger,
-                    syncServiceBound));
+                    syncServiceBound, false, new byte[]{}));
             try {
                 syncServiceMessenger.send(msg);
             } catch (RemoteException e) {

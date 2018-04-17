@@ -7,10 +7,6 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Base64;
 import android.util.Log;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
-import android.widget.EditText;
-import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,18 +28,24 @@ class SyncResponseHandler extends Handler {
     private PasswordSettingsManager settingsManager;
     private Messenger mService;
     private boolean mBound;
+    private boolean updateKgk;
+    private byte[] masterpassword;
 
     SyncResponseHandler(OnSyncFinishedListener listener,
                         KgkManager kgkManager,
                         PasswordSettingsManager settingsManager,
                         Messenger mService,
-                        boolean mBound) {
+                        boolean mBound,
+                        boolean updateKgk,
+                        byte[] masterpassword) {
         super();
         this.syncFinishedListenerWeakRef = new WeakReference<>(listener);
         this.kgkManager = kgkManager;
         this.settingsManager = settingsManager;
         this.mService = mService;
         this.mBound = mBound;
+        this.updateKgk = updateKgk;
+        this.masterpassword = masterpassword;
     }
 
     @Override
@@ -57,16 +59,26 @@ class SyncResponseHandler extends Handler {
                     String syncData = msg.getData().getString("respData");
                     try {
                         JSONObject syncDataObject = new JSONObject(syncData);
-                        if (!syncDataObject.getString("status").equals("ok")) break;
+                        if (!syncDataObject.getString("status").equals("ok")) {
+                            Log.e("Sync error", "The server did not respond with an 'OK'.");
+                            syncFinishedListener.onSyncFinished(false);
+                            break;
+                        }
+                        if (kgkManager == null || settingsManager == null) {
+                            Log.e("Sync error", "receiving data structures are missing.");
+                            syncFinishedListener.onSyncFinished(false);
+                            break;
+                        }
                         boolean updateRemote = true;
                         if (syncDataObject.has("result")) {
-                            //byte[] password = UTF8.encode(editTextMasterPassword.getText());
                             byte[] blob = Base64.decode(syncDataObject.getString("result"),
                                     Base64.DEFAULT);
-                            //kgkManager.updateFromBlob(password, blob);
+                            if (updateKgk) {
+                                byte[] password = this.masterpassword;
+                                kgkManager.updateFromBlob(password, blob);
+                            }
                             updateRemote = settingsManager.updateFromExportData(
                                     kgkManager, blob);
-                            //Clearer.zero(password);
                         }
                         if (updateRemote) {
                             byte[] encryptedBlob = settingsManager.getExportData(kgkManager);
@@ -77,7 +89,7 @@ class SyncResponseHandler extends Handler {
                                         kgkManager,
                                         settingsManager,
                                         mService,
-                                        mBound));
+                                        mBound, false, new byte[]{}));
                                 Bundle bUpdateMsg = new Bundle();
                                 bUpdateMsg.putString("updatedData",
                                         Base64.encodeToString(encryptedBlob, Base64.DEFAULT));
@@ -88,12 +100,17 @@ class SyncResponseHandler extends Handler {
                                     Log.e("Sync error",
                                             "Could not send update message to sync service.");
                                     e.printStackTrace();
+                                    syncFinishedListener.onSyncFinished(false);
                                 }
+                            } else {
+                                Log.e("Sync error", "No sync service connected.");
+                                syncFinishedListener.onSyncFinished(false);
                             }
                         }
                     } catch (JSONException e) {
                         Log.e("Sync error", "The response is not valid JSON.");
                         e.printStackTrace();
+                        syncFinishedListener.onSyncFinished(false);
                     }
                     break;
                 }
@@ -102,7 +119,7 @@ class SyncResponseHandler extends Handler {
                     try {
                         JSONObject syncDataObject = new JSONObject(updateRequestAnswer);
                         if (syncDataObject.getString("status").equals("ok")) {
-                            settingsManager.setAllSettingsToSynced();
+                            if (settingsManager != null) settingsManager.setAllSettingsToSynced();
                             syncFinishedListener.onSyncFinished(true);
                         } else {
                             syncFinishedListener.onSyncFinished(false);
@@ -110,6 +127,7 @@ class SyncResponseHandler extends Handler {
                     } catch (JSONException e) {
                         Log.e("update Settings error", "Server response is not JSON.");
                         e.printStackTrace();
+                        syncFinishedListener.onSyncFinished(false);
                     }
                     break;
                 }

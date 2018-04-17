@@ -31,7 +31,6 @@ public class LockScreenFragment extends Fragment {
     private EditText editTextMasterPassword;
     private TextView textViewDecryptionMessage;
     private Button unlockButton;
-    private Button deleteSettingsButton;
     private LoadLocalSettingsTask.OnKgkDecryptionFinishedListener kgkDecryptionFinishedListener;
     private CreateNewKgkTask.OnNewKgkFinishedListener newKgkFinishedListener;
 
@@ -70,9 +69,9 @@ public class LockScreenFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View fLayout = inflater.inflate(R.layout.fragment_lock_screen, container, false);
-        editTextMasterPassword = (EditText) fLayout.findViewById(R.id.editTextMasterPassword);
-        textViewDecryptionMessage = (TextView) fLayout.findViewById(R.id.textViewDecryptionMessage);
-        unlockButton = (Button) fLayout.findViewById(R.id.unlockButton);
+        editTextMasterPassword = fLayout.findViewById(R.id.editTextMasterPassword);
+        textViewDecryptionMessage = fLayout.findViewById(R.id.textViewDecryptionMessage);
+        unlockButton = fLayout.findViewById(R.id.unlockButton);
         unlockButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -196,5 +195,17 @@ public class LockScreenFragment extends Fragment {
                     settingsManager);
             createNewKgkTask.execute(password, kgkManager.getKgkCrypterSalt());
         }
+    }
+
+    public KgkManager getKgkManager() {
+        return kgkManager;
+    }
+
+    public PasswordSettingsManager getSettingsManager() {
+        return settingsManager;
+    }
+
+    public byte[] getMasterpassword() {
+        return UTF8.encode(editTextMasterPassword.getText());
     }
 }
