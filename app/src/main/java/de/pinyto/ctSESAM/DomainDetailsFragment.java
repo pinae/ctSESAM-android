@@ -149,6 +149,7 @@ public class DomainDetailsFragment extends Fragment
         }
         String shuffledTemplate = shuffleString(template.toString(), setting.getSalt());
         setting.setTemplate(shuffledTemplate);
+        passwordGenerator = null;
         updateView();
         generatePassword();
     }
@@ -213,7 +214,6 @@ public class DomainDetailsFragment extends Fragment
         domainView.setText(setting.getDomain());
         urlView.setText(setting.getUrl());
         usernameView.setText(setting.getUsername());
-        Log.d("hasLegacyPassword", Boolean.toString(setting.hasLegacyPassword()));
         legacyPasswordSwitch.setChecked(setting.hasLegacyPassword());
         if (setting.hasLegacyPassword()) {
             editTextPassword.setEnabled(true);
@@ -226,24 +226,21 @@ public class DomainDetailsFragment extends Fragment
             smartSelector.setVisibility(View.VISIBLE);
             lengthComplexityLayout.setVisibility(View.VISIBLE);
         }
-        Log.d("setting iterations", String.format(Locale.GERMANY, "%d", setting.getIterations()));
         editTextIterationCount.setText(String.format(Locale.GERMANY, "%d",
                 setting.getIterations()));
-        Log.d("setting complexity", Integer.toString(setting.getLength()-4) + ", " + Integer.toString(setting.getComplexity()));
         smartSelector.setSelectedLength(setting.getLength()-4);
         smartSelector.setSelectedComplexity(setting.getComplexity());
-        Log.d("setting len label", String.format(Locale.GERMANY, "%d", setting.getLength()));
         textViewLength.setText(String.format(Locale.GERMANY, "%d", setting.getLength()));
     }
 
     private static String shuffleString(String string, byte[] salt)
     {
         List<String> letters = Arrays.asList(string.split(""));
-        /*byte[] seedBuffer = ByteUtils.longToBytes(0);
-        System.arraycopy(salt, 0, seedBuffer, 2, 48 / 8);
-        Log.d("seedBuffer len", Integer.toString(seedBuffer.length));
-        Log.d("seed", Long.toString(ByteUtils.bytesToLong(seedBuffer)));*/
-        Random rng = new Random(0);
+        long seed = 0;
+        for (int i=0; i < 48/8; i++) {
+            seed += (long) salt[i] << i*8;
+        }
+        Random rng = new Random(seed);
         Collections.shuffle(letters, rng);
         StringBuilder shuffled = new StringBuilder();
         for (String letter : letters) {
@@ -271,7 +268,6 @@ public class DomainDetailsFragment extends Fragment
             new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                    Log.d("switch is ", Boolean.toString(b));
                     if (b) {
                         if (!setting.hasLegacyPassword()) {
                             setting.setLegacyPassword(editTextPassword.getText().toString());
@@ -293,6 +289,7 @@ public class DomainDetailsFragment extends Fragment
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 try {
                     setting.setIterations(Integer.parseInt(charSequence.toString()));
+                    passwordGenerator = null;
                     generatePassword();
                 } catch (NumberFormatException e) {
                     Log.e("#iterations not an int", e.toString());
@@ -304,7 +301,42 @@ public class DomainDetailsFragment extends Fragment
 
             }
         });
+        usernameView.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                setting.setUsername(charSequence.toString());
+                passwordGenerator = null;
+                generatePassword();
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+        urlView.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                setting.setUrl(charSequence.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
         this.updateView();
+        passwordGenerator = null;
         this.generatePassword();
     }
 
