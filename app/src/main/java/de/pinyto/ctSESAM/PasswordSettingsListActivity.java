@@ -16,21 +16,26 @@ public class PasswordSettingsListActivity extends SyncServiceEnabledActivity
     public static final String DOMAIN = "de.pinyto.ctsesam.DOMAIN";
     public static final String ISNEWSETTING = "de.pinyto.ctsesam.ISNEWSETTING";
     private PasswordSettingsListFragment listScreen;
+    private boolean freshlyUnlocked = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Intent intent = getIntent();
+        if (intent.hasExtra(UnlockActivity.FRESHLYUNLOCKED)) {
+            freshlyUnlocked = intent.getBooleanExtra(UnlockActivity.FRESHLYUNLOCKED, false);
+        }
         setContentView(R.layout.activity_password_settings_list);
         listScreen = (PasswordSettingsListFragment) getFragmentManager().findFragmentById(
                 R.id.passwordSettingsListFragment);
-        Toolbar listToolbar = (Toolbar) findViewById(R.id.list_toolbar);
+        Toolbar listToolbar = findViewById(R.id.list_toolbar);
         setSupportActionBar(listToolbar);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        setDomainFieldFromClipboard();
+        if (freshlyUnlocked) setDomainFieldFromClipboard();
     }
 
     @Override

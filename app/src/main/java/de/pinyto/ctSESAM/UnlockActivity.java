@@ -11,6 +11,7 @@ import android.view.MenuItem;
 public class UnlockActivity extends AppCompatActivity
         implements LockScreenFragment.OnUnlockSuccessfulListener {
     public static final String KEYIVKEY = "de.pinyto.ctsesam.KEYIV";
+    public static final String FRESHLYUNLOCKED = "de.pinyto.ctsesam.FRESHLYUNLOCKED";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,7 +20,7 @@ public class UnlockActivity extends AppCompatActivity
         LockScreenFragment lockScreenFragment = (LockScreenFragment)
                 getFragmentManager().findFragmentById(R.id.lockScreenFragment);
         lockScreenFragment.setUnlockSuccessfulListener(this);
-        Toolbar syncToolbar = (Toolbar) findViewById(R.id.sync_toolbar);
+        Toolbar syncToolbar = findViewById(R.id.sync_toolbar);
         setSupportActionBar(syncToolbar);
     }
 
@@ -34,6 +35,7 @@ public class UnlockActivity extends AppCompatActivity
         Log.d("initial KGK manager", kgkManager.toString());
         Intent intent = new Intent(this, PasswordSettingsListActivity.class);
         intent.putExtra(KEYIVKEY, kgkManager.exportKeyIv());
+        intent.putExtra(FRESHLYUNLOCKED, true);
         startActivity(intent);
     }
 
