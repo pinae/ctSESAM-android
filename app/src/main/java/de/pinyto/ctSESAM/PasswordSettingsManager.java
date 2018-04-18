@@ -13,6 +13,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -109,10 +110,10 @@ public class PasswordSettingsManager {
                 }
             }
         } catch (JSONException jsonError) {
-            Log.d("Settings loading error", "The loaded settings are not in JSON format.");
+            Log.e("Settings loading error", "The loaded settings are not in JSON format.");
             jsonError.printStackTrace();
         } catch (ParseException timeFormatError) {
-            Log.d("Settings loading error",
+            Log.e("Settings loading error",
                     "The loaded settings contain time information in a wrong format.");
             timeFormatError.printStackTrace();
         }
@@ -127,7 +128,7 @@ public class PasswordSettingsManager {
             storeStructure.put("settings", this.getSettingsAsJSON());
             storeStructure.put("synced", this.getSyncedSettings());
         } catch (JSONException jsonError) {
-            Log.d("Settings saving error", "Could not construct JSON structure for storage.");
+            Log.e("Settings saving error", "Could not construct JSON structure for storage.");
             jsonError.printStackTrace();
         }
         SharedPreferences.Editor savedDomainsEditor = savedDomains.edit();
@@ -187,7 +188,7 @@ public class PasswordSettingsManager {
                 settings.put(setting.getDomain(), setting.toJSON());
             }
         } catch (JSONException jsonError) {
-            Log.d("Settings packing error", "Could not create json.");
+            Log.e("Settings packing error", "Could not create json.");
             jsonError.printStackTrace();
         }
         return settings;
@@ -223,10 +224,10 @@ public class PasswordSettingsManager {
         return exportData;
     }
 
-    public boolean updateFromExportData(KgkManager kgkManager, byte[] blob) {
+    public boolean updateFromExportData(KgkManager kgkManager, byte[] blob)
+            throws JSONException, ParseException, SyncDataFormatException {
         if (!(blob[0] == 0x01)) {
-            Log.d("Version error", "Wrong data format. Could not import anything.");
-            return true;
+            throw new SyncDataFormatException("Wrong data format. Could not import anything.");
         }
         byte[] encryptedSettings = Arrays.copyOfRange(blob, 145, blob.length);
         Crypter settingsCrypter = this.getSettingsCrypter(kgkManager);
@@ -237,66 +238,59 @@ public class PasswordSettingsManager {
             return false;
         }
         String jsonString = Packer.decompress(decryptedSettings);
-        try {
-            JSONObject loadedSettings = new JSONObject(jsonString);
-            boolean updateRemote = false;
-            Iterator<String> loadedSettingsIterator = loadedSettings.keys();
-            while (loadedSettingsIterator.hasNext()) {
-                JSONObject loadedSetting = loadedSettings.getJSONObject(
-                        loadedSettingsIterator.next());
-                boolean found = false;
-                for (String domain : this.getDomainList()) {
-                    PasswordSetting setting = this.getSetting(domain);
-                    if (setting.getDomain().equals(loadedSetting.getString("domain"))) {
-                        found = true;
-                        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss",
-                                Locale.ENGLISH);
-                        Date modifiedRemote = df.parse(loadedSetting.getString("mDate"));
-                        if (modifiedRemote.after(setting.getMDate())) {
-                            setting.loadFromJSON(loadedSetting);
-                            this.setSetting(setting);
-                        } else {
-                            updateRemote = true;
-                        }
-                        setting.setSynced(true);
-                        break;
-                    }
-                }
-                if (!found) {
-                    PasswordSetting newSetting = new PasswordSetting(
-                            loadedSetting.getString("domain"));
-                    newSetting.loadFromJSON(loadedSetting);
-                    newSetting.setSynced(true);
-                    this.setSetting(newSetting);
-                }
-            }
+        JSONObject loadedSettings = new JSONObject(jsonString);
+        boolean updateRemote = false;
+        Iterator<String> loadedSettingsIterator = loadedSettings.keys();
+        while (loadedSettingsIterator.hasNext()) {
+            JSONObject loadedSetting = loadedSettings.getJSONObject(
+                    loadedSettingsIterator.next());
+            boolean found = false;
             for (String domain : this.getDomainList()) {
                 PasswordSetting setting = this.getSetting(domain);
-                boolean found = false;
-                Iterator<String> loadedSettingsIterator2 = loadedSettings.keys();
-                while (loadedSettingsIterator2.hasNext()) {
-                    JSONObject loadedSetting = loadedSettings.getJSONObject(
-                            loadedSettingsIterator2.next());
-                    if (setting.getDomain().equals(loadedSetting.getString("domain"))) {
-                        found = true;
-                        break;
+                if (setting.getDomain().equals(loadedSetting.getString("domain"))) {
+                    found = true;
+                    DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss",
+                            Locale.ENGLISH);
+                    Date modifiedRemote = Calendar.getInstance().getTime();
+                    if (loadedSetting.has("mDate")) {
+                        modifiedRemote = df.parse(loadedSetting.getString("mDate"));
                     }
-                }
-                if (!found && setting.isSynced()) {
-                    updateRemote = true;
+                    if (modifiedRemote.after(setting.getMDate())) {
+                        setting.loadFromJSON(loadedSetting);
+                        this.setSetting(setting);
+                    } else {
+                        updateRemote = true;
+                    }
+                    setting.setSynced(true);
+                    break;
                 }
             }
-            this.storeLocalSettings(kgkManager);
-            return updateRemote;
-        } catch (JSONException e) {
-            Log.d("Update settings error", "Unable to read JSON data.");
-            e.printStackTrace();
-            return false;
-        } catch (ParseException e) {
-            Log.d("Update settings error", "Unable to parse the date.");
-            e.printStackTrace();
-            return false;
+            if (!found) {
+                PasswordSetting newSetting = new PasswordSetting(
+                        loadedSetting.getString("domain"));
+                newSetting.loadFromJSON(loadedSetting);
+                newSetting.setSynced(true);
+                this.setSetting(newSetting);
+            }
         }
+        for (String domain : this.getDomainList()) {
+            PasswordSetting setting = this.getSetting(domain);
+            boolean found = false;
+            Iterator<String> loadedSettingsIterator2 = loadedSettings.keys();
+            while (loadedSettingsIterator2.hasNext()) {
+                JSONObject loadedSetting = loadedSettings.getJSONObject(
+                        loadedSettingsIterator2.next());
+                if (setting.getDomain().equals(loadedSetting.getString("domain"))) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found && setting.isSynced()) {
+                updateRemote = true;
+            }
+        }
+        this.storeLocalSettings(kgkManager);
+        return updateRemote;
     }
 
     public void setAllSettingsToSynced() {

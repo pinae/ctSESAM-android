@@ -28,7 +28,7 @@ import java.util.LinkedList;
  */
 public class PasswordSettingsListFragment extends Fragment
         implements AdapterView.OnItemClickListener {
-    public static final String KEYIVKEY = "de.pinyto.ctsesam.KEYIV";
+    public static final String KGKMANAGER = "de.pinyto.ctsesam.KGKMANAGER";
     private OnSettingSelected settingSelectedListener;
     private OnNewSetting newSettingListener;
     private KgkManager kgkManager;
@@ -57,8 +57,8 @@ public class PasswordSettingsListFragment extends Fragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
-            kgkManager = new KgkManager(getActivity(),
-                    savedInstanceState.getByteArray(KEYIVKEY));
+            kgkManager = savedInstanceState.getParcelable(KGKMANAGER);
+            kgkManager.loadSharedPreferences(getActivity());
             settingsManager = new PasswordSettingsManager(getActivity());
         }
     }
@@ -67,11 +67,11 @@ public class PasswordSettingsListFragment extends Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View layout = inflater.inflate(R.layout.fragment_passwordsetting_list, container, false);
-        listView = (ListView) layout.findViewById(R.id.domainList);
+        listView = layout.findViewById(R.id.domainList);
         listView.setOnItemClickListener(this);
-        emptyView = (TextView) layout.findViewById(R.id.domainListEmpty);
-        addNewDomainButton = (ImageButton) layout.findViewById(R.id.addNewDomainButton);
-        domainEntry = (EditText) layout.findViewById(R.id.domainEntry);
+        emptyView = layout.findViewById(R.id.domainListEmpty);
+        addNewDomainButton = layout.findViewById(R.id.addNewDomainButton);
+        domainEntry = layout.findViewById(R.id.domainEntry);
         return layout;
     }
 
@@ -94,7 +94,7 @@ public class PasswordSettingsListFragment extends Fragment
 
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
-        savedInstanceState.putByteArray(KEYIVKEY, kgkManager.exportKeyIv());
+        savedInstanceState.putParcelable(KGKMANAGER, kgkManager);
     }
 
     @Override

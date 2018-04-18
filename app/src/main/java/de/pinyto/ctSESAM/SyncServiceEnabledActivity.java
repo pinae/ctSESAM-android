@@ -1,7 +1,5 @@
 package de.pinyto.ctSESAM;
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -16,7 +14,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.TextView;
 import android.widget.Toast;
 
 public abstract class SyncServiceEnabledActivity extends AppCompatActivity
@@ -30,14 +27,18 @@ public abstract class SyncServiceEnabledActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (savedInstanceState != null && savedInstanceState.containsKey(UnlockActivity.KEYIVKEY)) {
-            kgkManager = new KgkManager(this,
-                    savedInstanceState.getByteArray(UnlockActivity.KEYIVKEY));
+        if (savedInstanceState != null && savedInstanceState.containsKey(UnlockActivity.KGKMANAGER)) {
+            kgkManager = savedInstanceState.getParcelable(UnlockActivity.KGKMANAGER);
+            if (kgkManager != null) {
+                kgkManager.loadSharedPreferences(this);
+            }
         }
         Intent intent = getIntent();
-        if (intent.hasExtra(UnlockActivity.KEYIVKEY)) {
-            kgkManager = new KgkManager(this,
-                    intent.getByteArrayExtra(UnlockActivity.KEYIVKEY));
+        if (intent.hasExtra(UnlockActivity.KGKMANAGER)) {
+            kgkManager = intent.getParcelableExtra(UnlockActivity.KGKMANAGER);
+            if (kgkManager != null) {
+                kgkManager.loadSharedPreferences(this);
+            }
         }
         settingsManager = new PasswordSettingsManager(getBaseContext());
         try {
@@ -56,9 +57,11 @@ public abstract class SyncServiceEnabledActivity extends AppCompatActivity
         super.onResume();
         if (kgkManager == null || !kgkManager.hasKgk() || settingsManager == null) {
             Intent intent = getIntent();
-            if (intent.hasExtra(UnlockActivity.KEYIVKEY)) {
-                kgkManager = new KgkManager(this,
-                        intent.getByteArrayExtra(UnlockActivity.KEYIVKEY));
+            if (intent.hasExtra(UnlockActivity.KGKMANAGER)) {
+                kgkManager = intent.getParcelableExtra(UnlockActivity.KGKMANAGER);
+                if (kgkManager != null) {
+                    kgkManager.loadSharedPreferences(this);
+                }
                 settingsManager = new PasswordSettingsManager(getBaseContext());
                 try {
                     settingsManager.loadLocalSettings(kgkManager);
@@ -90,7 +93,7 @@ public abstract class SyncServiceEnabledActivity extends AppCompatActivity
 
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
-        savedInstanceState.putByteArray(UnlockActivity.KEYIVKEY, kgkManager.exportKeyIv());
+        savedInstanceState.putParcelable(UnlockActivity.KGKMANAGER, kgkManager);
         super.onSaveInstanceState(savedInstanceState);
     }
 
@@ -144,7 +147,7 @@ public abstract class SyncServiceEnabledActivity extends AppCompatActivity
 
         if (id == R.id.action_sync) {
             if (!syncServiceBound) {
-                Log.d("Sync error", "Sync service is not bound. This button should not be visible.");
+                Log.e("Sync error", "Sync service is not bound. This button should not be visible.");
                 return true;
             }
             Message msg = Message.obtain(null, SyncResponseHandler.REQUEST_SYNC, 0, 0);
@@ -157,7 +160,7 @@ public abstract class SyncServiceEnabledActivity extends AppCompatActivity
             try {
                 syncServiceMessenger.send(msg);
             } catch (RemoteException e) {
-                Log.d("Sync error", "Could not send message to sync service.");
+                Log.e("Sync error", "Could not send message to sync service.");
                 e.printStackTrace();
             }
             return true;

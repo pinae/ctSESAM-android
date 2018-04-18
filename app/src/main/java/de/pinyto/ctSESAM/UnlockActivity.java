@@ -20,7 +20,7 @@ import android.widget.Toast;
 public class UnlockActivity extends AppCompatActivity
         implements LockScreenFragment.OnUnlockSuccessfulListener,
         SyncResponseHandler.OnSyncFinishedListener {
-    public static final String KEYIVKEY = "de.pinyto.ctsesam.KEYIV";
+    public static final String KGKMANAGER = "de.pinyto.ctsesam.KGKMANAGER";
     public static final String FRESHLYUNLOCKED = "de.pinyto.ctsesam.FRESHLYUNLOCKED";
     protected Messenger syncServiceMessenger = null;
     protected boolean syncServiceBound;
@@ -63,7 +63,7 @@ public class UnlockActivity extends AppCompatActivity
     @Override
     public void onUnlock(KgkManager kgkManager) {
         Intent intent = new Intent(this, PasswordSettingsListActivity.class);
-        intent.putExtra(KEYIVKEY, kgkManager.exportKeyIv());
+        intent.putExtra(KGKMANAGER, kgkManager);
         intent.putExtra(FRESHLYUNLOCKED, true);
         startActivity(intent);
     }

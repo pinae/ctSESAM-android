@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuItem;
 
 public class PasswordSettingsListActivity extends SyncServiceEnabledActivity
         implements PasswordSettingsListFragment.OnSettingSelected,
@@ -41,7 +40,6 @@ public class PasswordSettingsListActivity extends SyncServiceEnabledActivity
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d("list resume: KGK mng", kgkManager.toString());
         listScreen.setKgkAndSettingsManager(kgkManager, settingsManager);
     }
 
@@ -54,7 +52,7 @@ public class PasswordSettingsListActivity extends SyncServiceEnabledActivity
     @Override
     public void onSettingSelected(PasswordSetting setting) {
         Intent intent = new Intent(this, DomainDetailsActivity.class);
-        intent.putExtra(UnlockActivity.KEYIVKEY, kgkManager.exportKeyIv());
+        intent.putExtra(UnlockActivity.KGKMANAGER, kgkManager);
         intent.putExtra(DOMAIN, setting.getDomain());
         startActivity(intent);
     }
@@ -62,7 +60,7 @@ public class PasswordSettingsListActivity extends SyncServiceEnabledActivity
     @Override
     public void onNewSetting(PasswordSetting setting) {
         Intent intent = new Intent(this, DomainDetailsActivity.class);
-        intent.putExtra(UnlockActivity.KEYIVKEY, kgkManager.exportKeyIv());
+        intent.putExtra(UnlockActivity.KGKMANAGER, kgkManager);
         intent.putExtra(DOMAIN, setting.getDomain());
         intent.putExtra(ISNEWSETTING, true);
         startActivity(intent);

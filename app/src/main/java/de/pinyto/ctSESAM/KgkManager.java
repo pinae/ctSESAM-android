@@ -9,9 +9,6 @@ import android.util.Log;
 
 import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Stack;
 
 import javax.crypto.NoSuchPaddingException;
 
@@ -92,7 +89,7 @@ public class KgkManager implements Parcelable {
         return this.kgkCrypter;
     }
 
-    public byte[] createNewKgk() {
+    private byte[] createNewKgk() {
         Clearer.zero(this.salt2);
         Clearer.zero(this.iv2);
         Clearer.zero(this.kgk);
@@ -183,12 +180,21 @@ public class KgkManager implements Parcelable {
 
     public void updateFromBlob(byte[] password, byte[] blob) {
         if (!(blob[0] == 0x01) || blob.length < 145) {
-            Log.d("Version error", "Wrong data format. Could not import anything.");
+            Log.e("Version error", "Wrong data format. Could not import anything.");
             return;
         }
         byte[] salt = Arrays.copyOfRange(blob, 1, 33);
         byte[] kgkBlock =  Arrays.copyOfRange(blob, 33, 145);
         this.decryptKgk(password, salt, kgkBlock);
+    }
+
+    public void updateIv2Salt2(byte[] blob) {
+        if (!(blob[0] == 0x01) || blob.length < 145) {
+            Log.e("Version error", "Wrong data format. Could not import anything.");
+            return;
+        }
+        byte[] kgkBlock =  Arrays.copyOfRange(blob, 33, 145);
+        this.decryptKgk(this.kgkCrypter, kgkBlock);
     }
 
     public void storeLocalKgkBlock() {

@@ -17,7 +17,6 @@ import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
@@ -36,7 +35,7 @@ import java.util.Random;
 public class DomainDetailsFragment extends Fragment
         implements SmartSelector.OnStrengthSelectedEventListener,
         GeneratePasswordTask.OnPasswordGeneratedListener {
-    public static final String KEYIVKEY = "de.pinyto.ctsesam.KEYIV";
+    public static final String KGKMANAGER = "de.pinyto.ctsesam.KGKMANAGER";
     private KgkManager kgkManager;
     private PasswordSettingsManager settingsManager;
     private PasswordSetting setting;
@@ -80,8 +79,8 @@ public class DomainDetailsFragment extends Fragment
         dismissChangesButton = fLayout.findViewById(R.id.dismissChangesButton);
         // Restore managers if needed
         if (savedInstanceState != null) {
-            kgkManager = new KgkManager(getActivity(),
-                    savedInstanceState.getByteArray(KEYIVKEY));
+            kgkManager = savedInstanceState.getParcelable(KGKMANAGER);
+            kgkManager.loadSharedPreferences(getActivity());
             settingsManager = new PasswordSettingsManager(getActivity());
             this.setSettingsManagerAndKgkManager(settingsManager, kgkManager);
         }
@@ -105,7 +104,7 @@ public class DomainDetailsFragment extends Fragment
 
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
-        savedInstanceState.putByteArray(KEYIVKEY, kgkManager.exportKeyIv());
+        savedInstanceState.putParcelable(KGKMANAGER, kgkManager);
     }
 
     @Override

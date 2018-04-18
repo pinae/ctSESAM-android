@@ -1,5 +1,6 @@
 package de.pinyto.ctSESAM;
 
+import android.os.Parcelable;
 import android.util.Log;
 
 import java.io.UnsupportedEncodingException;
@@ -23,7 +24,7 @@ public class Crypter {
     private byte[] key;
     private byte[] iv;
 
-    public Crypter(byte[] keyIv) {
+    Crypter(byte[] keyIv) {
         this.key = Arrays.copyOfRange(keyIv, 0, 32);
         this.iv = Arrays.copyOfRange(keyIv, 32, 48);
         Clearer.zero(keyIv);
@@ -62,22 +63,22 @@ public class Crypter {
             cipher.init(Cipher.ENCRYPT_MODE, skeySpec, new IvParameterSpec(this.iv));
             return cipher.doFinal(data);
         } catch (NoSuchAlgorithmException e) {
-            Log.d("Encryption error", "AES/CBC is not implemented.");
+            Log.e("Encryption error", "AES/CBC is not implemented.");
             e.printStackTrace();
         } catch (NoSuchPaddingException e) {
-            Log.d("Encryption error", padding + " is not implemented.");
+            Log.e("Encryption error", padding + " is not implemented.");
             e.printStackTrace();
         } catch (InvalidAlgorithmParameterException e) {
-            Log.d("Encryption error", "Invalid IV.");
+            Log.e("Encryption error", "Invalid IV.");
             e.printStackTrace();
         } catch (InvalidKeyException e) {
-            Log.d("Encryption error", "Invalid key.");
+            Log.e("Encryption error", "Invalid key.");
             e.printStackTrace();
         } catch (IllegalBlockSizeException e) {
-            Log.d("Encryption error", "Illegal block size of the data.");
+            Log.e("Encryption error", "Illegal block size of the data.");
             e.printStackTrace();
         } catch (BadPaddingException e) {
-            Log.d("Encryption error", "Bad padding of the data.");
+            Log.e("Encryption error", "Bad padding of the data.");
             e.printStackTrace();
         }
         return new byte[] {};
@@ -87,7 +88,7 @@ public class Crypter {
         try {
             return this.decrypt(data, "PKCS7Padding");
         } catch (NoSuchPaddingException paddingError) {
-            Log.d("Encryption error", "PKCS7Padding is not implemented.");
+            Log.e("Encryption error", "PKCS7Padding is not implemented.");
             paddingError.printStackTrace();
             return new byte[] {};
         }
@@ -100,19 +101,19 @@ public class Crypter {
             cipher.init(Cipher.DECRYPT_MODE, skeySpec, new IvParameterSpec(iv));
             return cipher.doFinal(encryptedData);
         } catch (NoSuchAlgorithmException e) {
-            Log.d("Encryption error", "AES/CBC is not implemented.");
+            Log.e("Encryption error", "AES/CBC is not implemented.");
             e.printStackTrace();
         } catch (InvalidAlgorithmParameterException e) {
-            Log.d("Encryption error", "Invalid IV.");
+            Log.e("Encryption error", "Invalid IV.");
             e.printStackTrace();
         } catch (InvalidKeyException e) {
-            Log.d("Encryption error", "Invalid key.");
+            Log.e("Encryption error", "Invalid key.");
             e.printStackTrace();
         } catch (IllegalBlockSizeException e) {
-            Log.d("Encryption error", "Illegal block size of the data.");
+            Log.e("Encryption error", "Illegal block size of the data.");
             e.printStackTrace();
         } catch (BadPaddingException e) {
-            Log.d("Encryption error", "Bad padding of the data.");
+            Log.e("Encryption error", "Bad padding of the data.");
             e.printStackTrace();
         }
         return new byte[] {};

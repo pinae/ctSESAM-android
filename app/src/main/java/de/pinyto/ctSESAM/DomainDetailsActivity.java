@@ -87,7 +87,7 @@ public class DomainDetailsActivity extends SyncServiceEnabledActivity
             // Respond to the action bar's Up/Home button
             case android.R.id.home:
                 Intent upIntent = NavUtils.getParentActivityIntent(this);
-                upIntent.putExtra(UnlockActivity.KEYIVKEY, kgkManager.exportKeyIv());
+                upIntent.putExtra(UnlockActivity.KGKMANAGER, kgkManager);
                 NavUtils.navigateUpTo(this, upIntent);
                 return true;
         }

@@ -12,6 +12,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
+import java.text.ParseException;
 
 /**
  * Handles the responses from the sync service if the sync app is installed.
@@ -20,9 +21,9 @@ class SyncResponseHandler extends Handler {
     public static final String syncAppName = "de.pinyto.ctSESAMsync";
     public static final String syncServiceName = "SyncService";
     static final int REQUEST_SYNC = 1;
-    static final int SEND_UPDATE = 2;
-    static final int SYNC_RESPONSE = 1;
-    static final int SEND_UPDATE_RESPONSE = 2;
+    private static final int SEND_UPDATE = 2;
+    private static final int SYNC_RESPONSE = 1;
+    private static final int SEND_UPDATE_RESPONSE = 2;
     private WeakReference<OnSyncFinishedListener> syncFinishedListenerWeakRef;
     private KgkManager kgkManager;
     private PasswordSettingsManager settingsManager;
@@ -76,9 +77,28 @@ class SyncResponseHandler extends Handler {
                             if (updateKgk) {
                                 byte[] password = this.masterpassword;
                                 kgkManager.updateFromBlob(password, blob);
+                            } else {
+                                kgkManager.updateIv2Salt2(blob);
                             }
-                            updateRemote = settingsManager.updateFromExportData(
-                                    kgkManager, blob);
+                            try {
+                                updateRemote = settingsManager.updateFromExportData(
+                                        kgkManager, blob);
+                            } catch (JSONException e) {
+                                Log.e("Update settings error", "Unable to read JSON data.");
+                                e.printStackTrace();
+                                syncFinishedListener.onSyncFinished(false);
+                                break;
+                            } catch (ParseException e) {
+                                Log.e("Update settings error", "Unable to parse the date.");
+                                e.printStackTrace();
+                                syncFinishedListener.onSyncFinished(false);
+                                break;
+                            } catch (SyncDataFormatException e) {
+                                Log.e("Version error", "Wrong data format. Could not import anything.");
+                                e.printStackTrace();
+                                syncFinishedListener.onSyncFinished(false);
+                                break;
+                            }
                         }
                         if (updateRemote) {
                             byte[] encryptedBlob = settingsManager.getExportData(kgkManager);
@@ -106,6 +126,8 @@ class SyncResponseHandler extends Handler {
                                 Log.e("Sync error", "No sync service connected.");
                                 syncFinishedListener.onSyncFinished(false);
                             }
+                        } else {
+                            syncFinishedListener.onSyncFinished(true);
                         }
                     } catch (JSONException e) {
                         Log.e("Sync error", "The response is not valid JSON.");
