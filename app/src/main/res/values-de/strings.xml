@@ -29,4 +29,15 @@
     <string name="settingsListEmpty">Nichts.</string>
     <string name="KgkCreationFinished">Der neue Kgk wurde erzeugt. Versuchen Sie zu entsperren.</string>
     <string name="masterPasswordFieldHint">Masterpasswort</string>
+    <string name="create_new_kgk">Passwort-Safe erzeugen</string>
+    <string name="show_expert_options">Expertenoptionen anzeigen</string>
+    <string name="hide_expert_options">Expertenoptionen verbergen</string>
+    <string name="delete_kgk_and_settings">Lösche alle Einstellungen</string>
+    <string name="action_up">Zurück zur Liste</string>
+    <string name="save_button">Speichern</string>
+    <string name="dismiss_changes_button">Verwerfen</string>
+    <string name="iteration_count"># Iterationen:</string>
+    <string name="legacy_password_switch">Speichere nur ein bestehendes Passwort</string>
+    <string name="action_settings">Einstellungen</string>
+    <string name="action_initial_sync">Lade den KGK vom Syncserver</string>
 </resources>
