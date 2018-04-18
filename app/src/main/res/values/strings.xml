@@ -2,8 +2,6 @@
     <string name="app_name">ct SESAM</string>
     <string name="unlock">Unlock</string>
     <string name="create_new_kgk">Start generating passwords</string>
-    <string name="show_expert_options">Show expert options</string>
-    <string name="hide_expert_options">Show expert options</string>
     <string name="delete_kgk_and_settings">Delete all settings</string>
     <string name="action_copy">Copy the password to the clipboard</string>
     <string name="action_sync">Syncronize password settings</string>
@@ -18,16 +16,13 @@
     <string name="letters">Letters</string>
     <string name="digits">Digits</string>
     <string name="length">Length:</string>
-    <string name="length_init">10</string>
     <string name="save_button">Save</string>
     <string name="dismiss_changes_button">Dismiss changes</string>
-    <string name="re_generator_button">Create another password</string>
     <string name="password">Password:</string>
     <string name="init_password" />
     <string name="iteration_count"># iterations:</string>
     <string name="legacy_password_switch">Just save an existing password</string>
     <string name="special_characters">Special characters</string>
-    <string name="sync_loaded">Loaded settings</string>
     <string name="sync_successful">Successfully synchronized settings</string>
     <string name="sync_error">Could not synchronize settings</string>
     <string name="local_wrong_password">Could not load settings. Wrong password?</string>
@@ -36,9 +31,6 @@
     <string name="creatingKgk">… creating a fresh key encryption key …</string>
     <string name="KgkCreationFinished">You now have a brand new Kgk. Try to unlock with it.</string>
     <string name="KgkCreationError">There was an error creating your new Kgk.</string>
-    <string name="contentDescriptionInSet">These characters can be in the password.</string>
-    <string name="contentDescriptionForce">One of these characters must be in the password.</string>
     <string name="settingsListEmpty">Nothing there.</string>
     <string name="masterPasswordFieldHint">Enter the masterpassword.</string>
-    <string name="action_settings">Settings</string>
 </resources>

@@ -2,15 +2,11 @@
 <resources>
     <string name="domain">Domain:</string>
     <string name="action_copy">Passwort in die Zwischenablage kopieren</string>
-    <string name="generator_button">Erzeugen</string>
-    <string name="iteration_count_beginning">Das Passwort wurde</string>
-    <string name="iteration_count_end">mal gehasht.</string>
     <string name="length">Länge:</string>
     <string name="letters">Buchstaben</string>
     <string name="masterpassword">Master-Passwort:</string>
     <string name="digits">Zahlen</string>
     <string name="password">Passwort:</string>
-    <string name="re_generator_button">anderes Passwort Erzeugen</string>
     <string name="special_characters">Sonderzeichen</string>
     <string name="init_password"/>
     <string name="action_sync">Einstellungen synchronisieren</string>
@@ -21,23 +17,21 @@
     <string name="username">Benutzername:</string>
     <string name="loading">… entschlüssele Einstellungen …</string>
     <string name="creatingKgk">… erzeuge einen neuen Schlüsselverschlüsselungsschlüssel …</string>
-    <string name="sync_loaded">Einstellungen geladen</string>
-    <string name="contentDescriptionForce">Eines dieser Zeichen muss im Passwort vorkommen</string>
-    <string name="contentDescriptionInSet">Diese Zeichen können im Passwort vorkommen</string>
     <string name="unlock">Entsperren</string>
     <string name="KgkCreationError">Es gab einen Fehler beim erzeugen des Kgk.</string>
     <string name="settingsListEmpty">Nichts.</string>
     <string name="KgkCreationFinished">Der neue Kgk wurde erzeugt. Versuchen Sie zu entsperren.</string>
     <string name="masterPasswordFieldHint">Masterpasswort</string>
     <string name="create_new_kgk">Passwort-Safe erzeugen</string>
-    <string name="show_expert_options">Expertenoptionen anzeigen</string>
-    <string name="hide_expert_options">Expertenoptionen verbergen</string>
     <string name="delete_kgk_and_settings">Lösche alle Einstellungen</string>
     <string name="action_up">Zurück zur Liste</string>
     <string name="save_button">Speichern</string>
     <string name="dismiss_changes_button">Verwerfen</string>
     <string name="iteration_count"># Iterationen:</string>
     <string name="legacy_password_switch">Speichere nur ein bestehendes Passwort</string>
-    <string name="action_settings">Einstellungen</string>
     <string name="action_initial_sync">Lade den KGK vom Syncserver</string>
+    <string name="app_name">c\'t SESAM</string>
+    <string name="url">URL:</string>
+    <string name="url_hint">https://web.seite.de/r/domain</string>
+    <string name="username_hint">Benutzername oder mail@domain</string>
 </resources>
