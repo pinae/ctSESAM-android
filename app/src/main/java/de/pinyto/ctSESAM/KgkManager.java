@@ -2,24 +2,40 @@ package de.pinyto.ctSESAM;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Base64;
 import android.util.Log;
 
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Stack;
 
 import javax.crypto.NoSuchPaddingException;
 
 /**
  * Stores and manages the key-generation-key.
  */
-public class KgkManager {
+public class KgkManager implements Parcelable {
     private SharedPreferences savedDomains;
     private byte[] kgk;
     private byte[] iv2;
     private byte[] salt2;
     private Crypter kgkCrypter;
     private byte[] salt;
+
+    public static final Parcelable.Creator<KgkManager> CREATOR
+            = new Parcelable.Creator<KgkManager>() {
+        public KgkManager createFromParcel(Parcel in) {
+            return new KgkManager(in);
+        }
+
+        public KgkManager[] newArray(int size) {
+            return new KgkManager[size];
+        }
+    };
 
     KgkManager(Context contentContext) {
         this.savedDomains = contentContext.getSharedPreferences(
@@ -32,6 +48,21 @@ public class KgkManager {
         this.kgkCrypter = new Crypter(keyIv);
         getKgkCrypterSalt();
         decryptKgk(kgkCrypter, getLocalKgkBlock());
+    }
+
+    KgkManager(Parcel parcel) {
+        byte[] keyIv = new byte[48];
+        parcel.readByteArray(keyIv);
+        this.kgkCrypter = new Crypter(keyIv);
+    }
+
+    public void loadSharedPreferences(Context contentContext) {
+        this.savedDomains = contentContext.getSharedPreferences(
+                "savedDomains", Context.MODE_PRIVATE);
+        getKgkCrypterSalt();
+        if (this.kgkCrypter != null) {
+            decryptKgk(this.kgkCrypter, getLocalKgkBlock());
+        }
     }
 
     public byte[] getKgkCrypterSalt() {
@@ -183,10 +214,6 @@ public class KgkManager {
         this.kgkCrypter = null;
     }
 
-    public byte[] exportKeyIv() {
-        return this.kgkCrypter.exportKeyIv();
-    }
-
     public void deleteKgkAndSettings() {
         SharedPreferences.Editor savedDomainsEditor = this.savedDomains.edit();
         savedDomainsEditor.putString("salt", Base64.encodeToString(
@@ -206,5 +233,15 @@ public class KgkManager {
         s += " iv2: " + Hextools.bytesToHex(iv2);
         s += " salt2: " + Hextools.bytesToHex(salt2);
         return s;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeByteArray(this.kgkCrypter.exportKeyIv());
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
     }
 }
