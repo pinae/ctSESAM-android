@@ -6,6 +6,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.os.Build;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -18,6 +21,7 @@ import android.view.View;
  * password (green) or not (red).
  */
 public class SmartSelector extends View {
+    private Context context;
     private int tileHeight = 60;
     private int contentWidth;
     private Rect wholeCanvasRect;
@@ -35,16 +39,19 @@ public class SmartSelector extends View {
 
     public SmartSelector(Context context) {
         super(context);
+        this.context = context;
         init(null, 0);
     }
 
     public SmartSelector(Context context, AttributeSet attrs) {
         super(context, attrs);
+        this.context = context;
         init(attrs, 0);
     }
 
     public SmartSelector(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        this.context = context;
         init(attrs, defStyle);
     }
 
@@ -143,8 +150,25 @@ public class SmartSelector extends View {
 
     private void selectTile(float x, float y) {
         float tileWidth = (float) (contentWidth-1) / (maxLength-minLength+1);
-        selectedLength = (int) (x / tileWidth);
-        selectedComplexity = (int) (y / tileHeight);
+        int newSelectedLength = (int) (x / tileWidth);
+        int newSelectedComplexity = (int) (y / tileHeight);
+        if (newSelectedLength != selectedLength || newSelectedComplexity != selectedComplexity) {
+            Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+            int vibrationLen = ((colorMatrix[newSelectedLength][newSelectedComplexity] & 0x00ff0000) >> 16) / 20;
+            vibrationLen = vibrationLen * vibrationLen;
+            // Vibrate for a few milliseconds
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && v != null) {
+                v.vibrate(VibrationEffect.createOneShot(vibrationLen,
+                        VibrationEffect.DEFAULT_AMPLITUDE));
+            } else {
+                if (v != null) {
+                    //deprecated in API 26
+                    v.vibrate(vibrationLen);
+                }
+            }
+        }
+        selectedLength = newSelectedLength;
+        selectedComplexity = newSelectedComplexity;
         if (StrengthSelectedListener != null) {
             StrengthSelectedListener.onStrengthSelected(minLength+selectedLength,
                     colorMatrix[0].length-1-selectedComplexity);
