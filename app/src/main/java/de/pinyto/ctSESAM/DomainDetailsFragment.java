@@ -386,6 +386,6 @@ public class DomainDetailsFragment extends Fragment
     }
 
     public boolean hasPassword() {
-        return this.passwordGenerator != null;
+        return this.passwordGenerator != null || this.setting.hasLegacyPassword();
     }
 }
