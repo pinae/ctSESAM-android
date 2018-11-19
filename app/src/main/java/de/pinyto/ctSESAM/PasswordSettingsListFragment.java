@@ -35,6 +35,7 @@ public class PasswordSettingsListFragment extends Fragment
     private PasswordSettingsManager settingsManager;
     private ListView listView;
     private TextView emptyView;
+    private ImageButton clearDomainButton;
     private ImageButton addNewDomainButton;
     private EditText domainEntry;
     private LinkedList<String> filteredDomains = new LinkedList<>();
@@ -70,6 +71,7 @@ public class PasswordSettingsListFragment extends Fragment
         listView = layout.findViewById(R.id.domainList);
         listView.setOnItemClickListener(this);
         emptyView = layout.findViewById(R.id.domainListEmpty);
+        clearDomainButton = layout.findViewById(R.id.clearDomainButton);
         addNewDomainButton = layout.findViewById(R.id.addNewDomainButton);
         domainEntry = layout.findViewById(R.id.domainEntry);
         return layout;
@@ -187,6 +189,12 @@ public class PasswordSettingsListFragment extends Fragment
                 view.setVisibility(View.INVISIBLE);
                 updateList();
                 if (newSettingListener != null) newSettingListener.onNewSetting(newSetting);
+            }
+        });
+        clearDomainButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                domainEntry.setText("");
             }
         });
     }

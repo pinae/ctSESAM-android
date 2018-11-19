@@ -20,6 +20,7 @@
     <string name="dismiss_changes_button">Dismiss changes</string>
     <string name="password">Password:</string>
     <string name="init_password" />
+    <string name="notes">Notes:</string>
     <string name="iteration_count"># iterations:</string>
     <string name="legacy_password_switch">Just save an existing password</string>
     <string name="special_characters">Special characters</string>

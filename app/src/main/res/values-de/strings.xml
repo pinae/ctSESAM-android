@@ -34,4 +34,5 @@
     <string name="url">URL:</string>
     <string name="url_hint">https://web.seite.de/r/domain</string>
     <string name="username_hint">Benutzername oder mail@domain</string>
+    <string name="notes">Notizen:</string>
 </resources>

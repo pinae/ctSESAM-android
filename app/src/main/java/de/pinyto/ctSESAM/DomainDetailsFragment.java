@@ -46,6 +46,7 @@ public class DomainDetailsFragment extends Fragment
     private EditText editTextPassword;
     private EditText urlView;
     private EditText usernameView;
+    private EditText notesView;
     private Switch legacyPasswordSwitch;
     private RelativeLayout iterationCountLayout;
     private EditText editTextIterationCount;
@@ -67,6 +68,7 @@ public class DomainDetailsFragment extends Fragment
         domainView = fLayout.findViewById(R.id.textViewDomain);
         urlView = fLayout.findViewById(R.id.editTextUrl);
         usernameView = fLayout.findViewById(R.id.editTextUsername);
+        notesView = fLayout.findViewById(R.id.editTextNotes);
         editTextPassword = fLayout.findViewById(R.id.editTextPassword);
         legacyPasswordSwitch = fLayout.findViewById(R.id.switchLegacyPassword);
         iterationCountLayout = fLayout.findViewById(R.id.iterationCountLayout);
@@ -213,6 +215,7 @@ public class DomainDetailsFragment extends Fragment
         domainView.setText(setting.getDomain());
         urlView.setText(setting.getUrl());
         usernameView.setText(setting.getUsername());
+        notesView.setText(setting.getNotes());
         legacyPasswordSwitch.setChecked(setting.hasLegacyPassword());
         if (setting.hasLegacyPassword()) {
             editTextPassword.setEnabled(true);
@@ -327,6 +330,22 @@ public class DomainDetailsFragment extends Fragment
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 setting.setUrl(charSequence.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+        notesView.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                setting.setNotes(charSequence.toString());
             }
 
             @Override

@@ -92,6 +92,18 @@
                 android:hint="@string/username_hint"
                 android:id="@+id/editTextUsername" />
 
+            <TextView
+                android:text="@string/notes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/textViewNotes"/>
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:id="@+id/editTextNotes" />
+
             <Switch
                 android:id="@+id/switchLegacyPassword"
                 android:layout_width="wrap_content"
